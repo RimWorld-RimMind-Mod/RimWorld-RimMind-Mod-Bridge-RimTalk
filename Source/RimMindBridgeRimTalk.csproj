@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <GameVersion Condition=" '$(GameVersion)' == '' ">1.6</GameVersion>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <RootNamespace>RimMind.Bridge.RimTalk</RootNamespace>
+    <AssemblyName>RimMindBridgeRimTalk</AssemblyName>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>../$(GameVersion)/Assemblies/</OutputPath>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);V$(GameVersion.Replace('.', '_'))</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="$(GameVersion).*-*" PrivateAssets="All" />
+    <PackageReference Include="Lib.Harmony.Ref" Version="2.*" PrivateAssets="All" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.*" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="RimMindCore">
+      <HintPath>../../RimMind-Core/$(GameVersion)/Assemblies/RimMindCore.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RimMindDialogue">
+      <HintPath>../../RimMind-Dialogue/$(GameVersion)/Assemblies/RimMindDialogue.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RimMindPersonality">
+      <HintPath>../../RimMind-Personality/$(GameVersion)/Assemblies/RimMindPersonality.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RimMindMemory">
+      <HintPath>../../RimMind-Memory/$(GameVersion)/Assemblies/RimMindMemory.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RimMindStoryteller">
+      <HintPath>../../RimMind-Storyteller/$(GameVersion)/Assemblies/RimMindStoryteller.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RimMindAdvisor">
+      <HintPath>../../RimMind-Advisor/$(GameVersion)/Assemblies/RimMindAdvisor.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="DeployToModsFolder" AfterTargets="Build"
+          Condition=" '$(RIMWORLD_DIR)' != '' ">
+    <PropertyGroup>
+      <DeployPath>$(RIMWORLD_DIR)\Mods\RimMind-Bridge-RimTalk\</DeployPath>
+    </PropertyGroup>
+    <MakeDir Directories="$(DeployPath)" />
+    <Exec Command='robocopy "$(ProjectDir)..\About"      "$(DeployPath)About"     /MIR' IgnoreExitCode="true"/>
+    <Exec Command='robocopy "$(ProjectDir)..\Languages"  "$(DeployPath)Languages" /MIR' IgnoreExitCode="true"/>
+    <Exec Command='robocopy "$(ProjectDir)..\$(GameVersion)" "$(DeployPath)$(GameVersion)" /MIR' IgnoreExitCode="true"/>
+    <Message Text="--- RimMind-Bridge-RimTalk deployed to $(DeployPath) ---" Importance="high"/>
+  </Target>
+
+</Project>
