@@ -29,13 +29,19 @@ namespace RimMind.Bridge.RimTalk
             DialogueGate.RegisterSkipChecks();
             Log.Message("[RimMind-Bridge-RimTalk] DialogueGate registered.");
 
+            ContextPullBridge.Register();
+            Log.Message("[RimMind-Bridge-RimTalk] ContextPull registered.");
+
             if (RimTalkDetector.IsRimTalkApiAvailable)
             {
                 ContextPushBridge.Register();
                 Log.Message("[RimMind-Bridge-RimTalk] ContextPush registered.");
 
-                PersonaPushBridge.Register();
-                Log.Message("[RimMind-Bridge-RimTalk] PersonaPush registered.");
+                if (BridgeRimTalkSettings.Get().pushPersonality)
+                {
+                    PersonaPushBridge.Register();
+                    Log.Message("[RimMind-Bridge-RimTalk] PersonaPush registered.");
+                }
             }
             else
             {
@@ -45,7 +51,7 @@ namespace RimMind.Bridge.RimTalk
             Log.Message("[RimMind-Bridge-RimTalk] Initialized.");
         }
 
-        public override string SettingsCategory() => "RimMind - Bridge (RimTalk)";
+        public override string SettingsCategory() => "RimMind.BridgeRimTalk.Settings.Category".Translate();
 
         public override void DoSettingsWindowContents(UnityEngine.Rect rect)
         {

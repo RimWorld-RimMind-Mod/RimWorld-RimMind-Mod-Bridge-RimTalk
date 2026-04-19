@@ -21,7 +21,7 @@ RimMind 套件与 RimTalk 模组的协调层，当两个模组同时激活时实
 
 ## 建议配图
 
-1. 设置界面截图（展示对话门控、上下文推送、人格推送三个分区）
+1. 设置界面截图（展示对话门控、上下文推送、上下文拉取三个分区）
 2. RimTalk 对话窗口截图（展示 RimMind 上下文变量的注入效果）
 
 ---
@@ -49,5 +49,5 @@ The coordination layer between the RimMind suite and RimTalk mod, enabling data 
 
 ## Suggested Screenshots
 
-1. Settings interface (showing Dialogue Gate, Context Push, Persona Push sections)
+1. Settings interface (showing Dialogue Gate, Context Push, Context Pull sections)
 2. RimTalk conversation window (showing injected RimMind context variables)

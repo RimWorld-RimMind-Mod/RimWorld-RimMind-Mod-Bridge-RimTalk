@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-    <name>RimMind - Bridge: RimTalk</name>
+  <name>RimMind - Bridge (RimTalk)</name>
     <author>mcocdaa</author>
     <packageId>mcocdaa.RimMindBridgeRimTalk</packageId>
+    <modVersion>0.0.1</modVersion>
     <supportedVersions>
         <li>1.6</li>
     </supportedVersions>
@@ -16,6 +17,7 @@
         <li>
             <packageId>mcocdaa.RimMindCore</packageId>
             <displayName>RimMind - Core</displayName>
+            <downloadUrl>https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Core</downloadUrl>
         </li>
     </modDependencies>
     <loadAfter>

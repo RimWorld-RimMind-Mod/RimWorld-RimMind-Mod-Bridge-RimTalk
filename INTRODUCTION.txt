@@ -1,0 +1,50 @@
+[h1]RimMind - Bridge: RimTalk[/h1]
+RimMind 套件与 RimTalk 模组的协调层，当两个模组同时激活时实现数据互通与对话互斥。
+
+[h2] RimMind 是什么 [/h2]
+RimMind 是一套 AI 驱动的 RimWorld 模组套件，通过接入大语言模型 (LLM)，让殖民者拥有人格、记忆、对话和自主决策能力。
+
+[h2] 子模组列表与依赖关系 [/h2]
+[table][tr][td][b] 模组 [/b][/td][td][b] 职责 [/b][/td][td][b] 依赖 [/b][/td][td][b] GitHub [/b][/td][/tr][tr][td] RimMind-Core [/td][td] API 客户端、请求调度、上下文打包 [/td][td] Harmony [/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Core] 链接 [/url][/td][/tr][tr][td] RimMind-Actions [/td][td] AI 控制小人的动作执行库 [/td][td] Core [/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Actions] 链接 [/url][/td][/tr][tr][td] RimMind-Advisor [/td][td] AI 扮演小人做出工作决策 [/td][td] Core, Actions [/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Advisor] 链接 [/url][/td][/tr][tr][td] RimMind-Dialogue [/td][td] AI 驱动的对话系统 [/td][td] Core [/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Dialogue] 链接 [/url][/td][/tr][tr][td] RimMind-Memory [/td][td] 记忆采集与上下文注入 [/td][td] Core [/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Memory] 链接 [/url][/td][/tr][tr][td] RimMind-Personality [/td][td] AI 生成人格与想法 [/td][td] Core [/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Personality] 链接 [/url][/td][/tr][tr][td] RimMind-Storyteller [/td][td] AI 叙事者，智能选择事件 [/td][td] Core [/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Storyteller] 链接 [/url][/td][/tr][/table]
+[code]Core ── Actions ── Advisor
+  ├── Dialogue
+  ├── Memory
+  ├── Personality
+  └── Storyteller[/code]
+
+[h2] 核心能力 [/h2]
+[b] 对话门控 [/b] - 当 RimTalk 激活时，自动跳过 RimMind-Dialogue 的重复对话触发（闲聊、自动对话、玩家对话），避免两个 AI 对话系统冲突。
+[b] 上下文推送 [/b] - 将 RimMind 的人格档案、记忆数据、叙述者状态、顾问日志、塑造历史注册为 RimTalk 的 Prompt 变量，让 RimTalk 的对话也能感知 RimMind 的 AI 数据。
+[b] 人格推送 [/b] - 将 RimMind 人格数据以更细粒度注入 RimTalk 的上下文分类（特质、情绪），通过 Hook 机制增强 RimTalk 对殖民者的理解。
+[b] 对话历史拉取 [/b] - 可选地将 RimTalk 的对话历史注册为 RimMind 的上下文 Provider，实现 RimTalk → RimMind 的反向数据流。
+
+[h2] 技术亮点 [/h2]
+[list]
+[*] 纯反射调用 RimTalk API（RimTalkApiShim），无编译期依赖，RimTalk 未安装时静默跳过
+[*] 双向数据流：RimMind → RimTalk（推送）+ RimTalk → RimMind（拉取）
+[*] 可配置的对话门控策略，按触发类型独立控制
+[*] 15 个可配置选项，精确控制推送内容
+[/list]
+
+[h2] 数据流 [/h2]
+[b] 推送方向：RimMind → RimTalk [/b]
+[table][tr][td][b] 变量名 [/b][/td][td][b] 类型 [/b][/td][td][b] 数据来源 [/b][/td][td][b] 默认 [/b][/td][/tr][tr][td] rimmind_personality [/td][td] Pawn [/td][td] 人格档案 [/td][td] 推送 [/td][/tr][tr][td] rimmind_storyteller [/td][td] Environment [/td][td] 叙事者状态 [/td][td] 推送 [/td][/tr][tr][td] rimmind_memory [/td][td] Pawn [/td][td] 记忆数据 [/td][td] 不推送 [/td][/tr][tr][td] rimmind_shaping [/td][td] Pawn [/td][td] 塑造历史 [/td][td] 不推送 [/td][/tr][tr][td] rimmind_advisor_log [/td][td] Pawn [/td][td] 顾问日志 [/td][td] 推送 [/td][/tr][tr][td] rimmind_persona_desc [/td][td] Pawn [/td][td] 人格描述（细粒度） [/td][td] 推送 [/td][/tr][tr][td] rimmind_persona_work [/td][td] Pawn [/td][td] 工作倾向（细粒度） [/td][td] 推送 [/td][/tr][tr][td] rimmind_persona_social [/td][td] Pawn [/td][td] 社交倾向（细粒度） [/td][td] 推送 [/td][/tr][tr][td] rimmind_persona_narrative [/td][td] Pawn [/td][td] AI 叙事（细粒度） [/td][td] 推送 [/td][/tr][/table]
+
+[b] Hook 注入 [/b]
+[table][tr][td][b] 分类 [/b][/td][td][b] 操作 [/b][/td][td][b] 说明 [/b][/td][td][b] 默认 [/b][/td][/tr][tr][td] Traits [/td][td] 追加 [/td][td] 追加人格描述到特质上下文 [/td][td] 不注入 [/td][/tr][tr][td] Mood [/td][td] 追加 [/td][td] 追加 AI 叙事到情绪上下文 [/td][td] 不注入 [/td][/tr][/table]
+
+[b] 拉取方向：RimTalk → RimMind [/b]
+将 RimTalk 对话历史注册为 rimmind_rimtalk_history Provider（默认开启）。
+
+[h2] 设置项 [/h2]
+[table][tr][td][b] 设置 [/b][/td][td][b] 默认值 [/b][/td][td][b] 说明 [/b][/td][/tr][tr][td] 启用对话门控 [/td][td] 开启 [/td][td] RimTalk 激活时跳过 RimMind 对话 [/td][/tr][tr][td] 跳过闲聊 [/td][td] 开启 [/td][td] 跳过 Chitchat 触发 [/td][/tr][tr][td] 跳过自动对话 [/td][td] 开启 [/td][td] 跳过 Auto 触发 [/td][/tr][tr][td] 跳过玩家对话 [/td][td] 开启 [/td][td] 跳过 PlayerInput 触发 [/td][/tr][tr][td] 强制 RimMind 对话 [/td][td] 关闭 [/td][td] 即使门控开启也保留 RimMind 对话 [/td][/tr][tr][td] 启用上下文推送 [/td][td] 开启 [/td][td] 将 RimMind 数据推送到 RimTalk [/td][/tr][tr][td] 推送人格 [/td][td] 开启 [/td][td] 推送人格档案变量 [/td][/tr][tr][td] 推送叙事者 [/td][td] 开启 [/td][td] 推送叙事者状态变量 [/td][/tr][tr][td] 推送记忆 [/td][td] 关闭 [/td][td] 推送记忆数据变量 [/td][/tr][tr][td] 推送顾问日志 [/td][td] 开启 [/td][td] 推送顾问日志变量 [/td][/tr][tr][td] 推送塑造历史 [/td][td] 关闭 [/td][td] 推送塑造历史变量 [/td][/tr][tr][td] 注入人格到特质 [/td][td] 关闭 [/td][td] Hook 追加人格描述到特质上下文 [/td][/tr][tr][td] 注入人格到情绪 [/td][td] 关闭 [/td][td] Hook 追加 AI 叙事到情绪上下文 [/td][/tr][tr][td] 启用上下文拉取 [/td][td] 开启 [/td][td] 从 RimTalk 拉取对话历史 [/td][/tr][tr][td] 拉取 RimTalk 历史 [/td][td] 开启 [/td][td] 注册为 RimMind Provider [/td][/tr][/table]
+
+[h2] 常见问题 [/h2]
+[b] Q: 不安装 RimTalk 可以用吗？ [/b]
+A: 可以。RimTalk 未安装时所有门控和推送自动失效，本模组不产生任何影响。
+
+[b] Q: 推送和拉取有什么区别？ [/b]
+A: 推送是将 RimMind 的数据注入 RimTalk 的 Prompt 系统，让 RimTalk 对话时能感知 RimMind 的信息；拉取是将 RimTalk 的对话历史注入 RimMind 的上下文，让 RimMind 的 AI 请求也能参考 RimTalk 的对话。
+
+[b] Q: Hook 注入是什么？ [/b]
+A: Hook 是 RimTalk 的上下文增强机制。启用后，RimMind 的人格描述会追加到 RimTalk 的特质上下文中，AI 叙事会追加到情绪上下文中，让 RimTalk 更好地理解殖民者。

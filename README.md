@@ -18,14 +18,14 @@ RimTalk 是另一个流行的 RimWorld AI 对话模组。当 RimMind 和 RimTalk
 
 | 模组 | 职责 | 依赖 | GitHub |
 |------|------|------|--------|
-| **RimMind-Core** | API 客户端、请求调度、上下文打包 | Harmony | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Core) |
-| RimMind-Actions | AI 控制小人的动作执行库 | Core | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Actions) |
-| RimMind-Advisor | AI 扮演小人做出工作决策 | Core, Actions | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Advisor) |
-| RimMind-Dialogue | AI 驱动的对话系统 | Core | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Dialogue) |
-| RimMind-Memory | 记忆采集与上下文注入 | Core | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Memory) |
-| RimMind-Personality | AI 生成人格与想法 | Core | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Personality) |
-| RimMind-Storyteller | AI 叙事者，智能选择事件 | Core | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Storyteller) |
-| **RimMind-Bridge-RimTalk** | RimTalk 协调层 | Core, RimTalk(可选) | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Bridge-RimTalk) |
+| **RimMind-Core** | API 客户端、请求调度、上下文打包 | Harmony | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Core) |
+| RimMind-Actions | AI 控制小人的动作执行库 | Core | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Actions) |
+| RimMind-Advisor | AI 扮演小人做出工作决策 | Core, Actions | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Advisor) |
+| RimMind-Dialogue | AI 驱动的对话系统 | Core | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Dialogue) |
+| RimMind-Memory | 记忆采集与上下文注入 | Core | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Memory) |
+| RimMind-Personality | AI 生成人格与想法 | Core | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Personality) |
+| RimMind-Storyteller | AI 叙事者，智能选择事件 | Core | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Storyteller) |
+| **RimMind-Bridge-RimTalk** | RimTalk 协调层 | Core, RimTalk(可选) | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk) |
 
 ```
 Core ── Actions ── Advisor
@@ -42,14 +42,14 @@ Core ── Actions ── Advisor
 
 **Linux/macOS:**
 ```bash
-git clone git@github.com:mcocdaa/RimWorld-RimMind-Mod-Bridge-RimTalk.git
+git clone git@github.com:RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk.git
 cd RimWorld-RimMind-Mod-Bridge-RimTalk
 ./script/deploy-single.sh <your RimWorld path>
 ```
 
 **Windows:**
 ```powershell
-git clone git@github.com:mcocdaa/RimWorld-RimMind-Mod-Bridge-RimTalk.git
+git clone git@github.com:RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk.git
 cd RimWorld-RimMind-Mod-Bridge-RimTalk
 ./script/deploy-single.ps1 <your RimWorld path>
 ```
@@ -101,7 +101,7 @@ cd RimWorld-RimMind-Mod-Bridge-RimTalk
 
 ### 人格推送
 
-将 RimMind 人格数据以更细粒度注入 RimTalk 的上下文分类（默认关闭）：
+将 RimMind 人格数据以更细粒度注入 RimTalk 的上下文分类（默认关闭，需在上下文推送中开启推送人格数据后可见）：
 
 - **注入到特质上下文**：将人格描述追加到 RimTalk 的 Traits 分类
 - **注入到情绪上下文**：将 AI 叙事追加到 RimTalk 的 Mood 分类
@@ -127,20 +127,20 @@ cd RimWorld-RimMind-Mod-Bridge-RimTalk
 | 设置 | 默认值 | 说明 |
 |------|--------|------|
 | 启用上下文推送 | 开启 | 将 RimMind 数据注册到 RimTalk Prompt |
-| 推送人格数据 | 开启 | 注册 rimmind_personality 变量 |
-| 推送叙述者状态 | 开启 | 注册 rimmind_storyteller 变量 |
+| 推送人格数据 | 开启 | 注册 rimmind_personality 变量及细粒度人格变量 |
+| 推送叙述者状态 | 开启 | 注册 rimmind_storyteller 环境变量 |
 | 推送记忆数据 | 关闭 | 注册 rimmind_memory 变量 |
 | 推送塑造历史 | 关闭 | 注册 rimmind_shaping 变量 |
 | 推送顾问日志 | 开启 | 注册 rimmind_advisor_log 变量 |
-| 拉取 RimTalk 对话历史 | 开启 | 将 RimTalk 对话历史注入 RimMind 上下文 |
+| 注入到特质上下文 | 关闭 | 追加人格描述到 RimTalk Traits 分类（需开启推送人格数据） |
+| 注入到情绪上下文 | 关闭 | 追加 AI 叙事到 RimTalk Mood 分类（需开启推送人格数据） |
 
-### 人格推送
+### 上下文拉取
 
 | 设置 | 默认值 | 说明 |
 |------|--------|------|
-| 启用人格推送 | 关闭 | 将人格数据注册为 RimTalk 变量和 Hook |
-| 注入到特质上下文 | 开启 | 追加人格描述到 Traits 分类 |
-| 注入到情绪上下文 | 关闭 | 追加 AI 叙事到 Mood 分类 |
+| 启用上下文拉取 | 开启 | 从 RimTalk 拉取数据注册为 RimMind 上下文 Provider |
+| 拉取 RimTalk 对话历史 | 开启 | 将 RimTalk 对话历史注入 RimMind 上下文 |
 
 ## 常见问题
 
@@ -193,14 +193,14 @@ RimTalk is another popular RimWorld AI dialogue mod. When both RimMind and RimTa
 
 | Module | Role | Depends On | GitHub |
 |--------|------|------------|--------|
-| **RimMind-Core** | API client, request dispatch, context packaging | Harmony | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Core) |
-| RimMind-Actions | AI-controlled pawn action execution | Core | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Actions) |
-| RimMind-Advisor | AI role-plays colonists for work decisions | Core, Actions | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Advisor) |
-| RimMind-Dialogue | AI-driven dialogue system | Core | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Dialogue) |
-| RimMind-Memory | Memory collection & context injection | Core | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Memory) |
-| RimMind-Personality | AI-generated personality & thoughts | Core | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Personality) |
-| RimMind-Storyteller | AI storyteller, smart event selection | Core | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Storyteller) |
-| **RimMind-Bridge-RimTalk** | RimTalk coordination layer | Core, RimTalk (optional) | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Bridge-RimTalk) |
+| **RimMind-Core** | API client, request dispatch, context packaging | Harmony | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Core) |
+| RimMind-Actions | AI-controlled pawn action execution | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Actions) |
+| RimMind-Advisor | AI role-plays colonists for work decisions | Core, Actions | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Advisor) |
+| RimMind-Dialogue | AI-driven dialogue system | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Dialogue) |
+| RimMind-Memory | Memory collection & context injection | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Memory) |
+| RimMind-Personality | AI-generated personality & thoughts | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Personality) |
+| RimMind-Storyteller | AI storyteller, smart event selection | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Storyteller) |
+| **RimMind-Bridge-RimTalk** | RimTalk coordination layer | Core, RimTalk (optional) | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk) |
 
 ## Installation
 
@@ -208,14 +208,14 @@ RimTalk is another popular RimWorld AI dialogue mod. When both RimMind and RimTa
 
 **Linux/macOS:**
 ```bash
-git clone git@github.com:mcocdaa/RimWorld-RimMind-Mod-Bridge-RimTalk.git
+git clone git@github.com:RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk.git
 cd RimWorld-RimMind-Mod-Bridge-RimTalk
 ./script/deploy-single.sh <your RimWorld path>
 ```
 
 **Windows:**
 ```powershell
-git clone git@github.com:mcocdaa/RimWorld-RimMind-Mod-Bridge-RimTalk.git
+git clone git@github.com:RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk.git
 cd RimWorld-RimMind-Mod-Bridge-RimTalk
 ./script/deploy-single.ps1 <your RimWorld path>
 ```
@@ -263,7 +263,7 @@ Registers RimMind context data into RimTalk's prompt system, allowing RimTalk to
 
 ### Persona Push
 
-Injects RimMind persona data into RimTalk's context categories with fine-grained control (default: off):
+Injects RimMind persona data into RimTalk's context categories with fine-grained control (default: off, visible after enabling Push personality data in Context Push):
 
 - **Inject into traits context**: Append personality description to RimTalk's Traits category
 - **Inject into mood context**: Append AI narrative to RimTalk's Mood category
@@ -289,20 +289,20 @@ Optionally registers RimTalk's dialogue history as a RimMind context provider, e
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Enable context push | On | Register RimMind data into RimTalk prompts |
-| Push personality data | On | Register rimmind_personality variable |
-| Push storyteller state | On | Register rimmind_storyteller variable |
+| Push personality data | On | Register rimmind_personality variable and fine-grained persona variables |
+| Push storyteller state | On | Register rimmind_storyteller environment variable |
 | Push memory data | Off | Register rimmind_memory variable |
 | Push shaping history | Off | Register rimmind_shaping variable |
 | Push advisor log | On | Register rimmind_advisor_log variable |
-| Pull RimTalk dialogue history | On | Inject RimTalk dialogue history into RimMind context |
+| Inject into traits context | Off | Append personality description to RimTalk Traits category (requires Push personality data) |
+| Inject into mood context | Off | Append AI narrative to RimTalk Mood category (requires Push personality data) |
 
-### Persona Push
+### Context Pull
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| Enable persona push | Off | Register persona data as RimTalk variables and hooks |
-| Inject into traits context | On | Append personality description to Traits category |
-| Inject into mood context | Off | Append AI narrative to Mood category |
+| Enable context pull | On | Pull data from RimTalk and register as RimMind context providers |
+| Pull RimTalk dialogue history | On | Inject RimTalk dialogue history into RimMind context |
 
 ## FAQ
 
