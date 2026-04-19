@@ -18,11 +18,11 @@ namespace RimMind.Bridge.RimTalk.Settings
         public bool pushMemory = false;
         public bool pushAdvisorLog = true;
         public bool pushShaping = false;
-        public bool enableRimTalkHistoryPull = true;
+        public bool injectPersonaToTraits = false;
+        public bool injectPersonaToMood = false;
 
-        public bool enablePersonaPush = false;
-        public bool pushPersonaToTraits = true;
-        public bool pushPersonaToMood = false;
+        public bool enableContextPull = true;
+        public bool pullRimTalkHistory = true;
 
         private static BridgeRimTalkSettings? _instance;
         public static BridgeRimTalkSettings Get() => _instance ?? new BridgeRimTalkSettings();
@@ -47,11 +47,11 @@ namespace RimMind.Bridge.RimTalk.Settings
             Scribe_Values.Look(ref pushMemory, "pushMemory", false);
             Scribe_Values.Look(ref pushAdvisorLog, "pushAdvisorLog", true);
             Scribe_Values.Look(ref pushShaping, "pushShaping", false);
-            Scribe_Values.Look(ref enableRimTalkHistoryPull, "enableRimTalkHistoryPull", true);
+            Scribe_Values.Look(ref injectPersonaToTraits, "injectPersonaToTraits", false);
+            Scribe_Values.Look(ref injectPersonaToMood, "injectPersonaToMood", false);
 
-            Scribe_Values.Look(ref enablePersonaPush, "enablePersonaPush", false);
-            Scribe_Values.Look(ref pushPersonaToTraits, "pushPersonaToTraits", true);
-            Scribe_Values.Look(ref pushPersonaToMood, "pushPersonaToMood", false);
+            Scribe_Values.Look(ref enableContextPull, "enableContextPull", true);
+            Scribe_Values.Look(ref pullRimTalkHistory, "pullRimTalkHistory", true);
         }
 
         private static Vector2 _scrollPos = Vector2.zero;
@@ -76,18 +76,18 @@ namespace RimMind.Bridge.RimTalk.Settings
                 "RimMind.BridgeRimTalk.Settings.EnableDialogueGate.Desc".Translate());
             if (s.enableDialogueGate)
             {
-                listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.SkipChitchat".Translate(),
+                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.SkipChitchat".Translate(),
                     ref s.skipChitchat,
                     "RimMind.BridgeRimTalk.Settings.SkipChitchat.Desc".Translate());
-                listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.SkipAutoDialogue".Translate(),
+                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.SkipAutoDialogue".Translate(),
                     ref s.skipAutoDialogue,
                     "RimMind.BridgeRimTalk.Settings.SkipAutoDialogue.Desc".Translate());
-                listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.SkipPlayerDialogue".Translate(),
+                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.SkipPlayerDialogue".Translate(),
                     ref s.skipPlayerDialogue,
                     "RimMind.BridgeRimTalk.Settings.SkipPlayerDialogue.Desc".Translate());
                 if (s.skipPlayerDialogue)
                 {
-                    listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue".Translate(),
+                    listing.CheckboxLabeled("    " + "RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue".Translate(),
                         ref s.forceRimMindPlayerDialogue,
                         "RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue.Desc".Translate());
                 }
@@ -100,30 +100,40 @@ namespace RimMind.Bridge.RimTalk.Settings
             if (s.enableContextPush)
             {
                 listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushPersonality".Translate(),
-                    ref s.pushPersonality);
+                    ref s.pushPersonality,
+                    "RimMind.BridgeRimTalk.Settings.PushPersonality.Desc".Translate());
                 listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushStoryteller".Translate(),
-                    ref s.pushStoryteller);
+                    ref s.pushStoryteller,
+                    "RimMind.BridgeRimTalk.Settings.PushStoryteller.Desc".Translate());
                 listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushMemory".Translate(),
-                    ref s.pushMemory);
-                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushShaping".Translate(),
-                    ref s.pushShaping);
+                    ref s.pushMemory,
+                    "RimMind.BridgeRimTalk.Settings.PushMemory.Desc".Translate());
                 listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushAdvisorLog".Translate(),
-                    ref s.pushAdvisorLog);
-                listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnableRimTalkHistoryPull".Translate(),
-                    ref s.enableRimTalkHistoryPull,
-                    "RimMind.BridgeRimTalk.Settings.EnableRimTalkHistoryPull.Desc".Translate());
+                    ref s.pushAdvisorLog,
+                    "RimMind.BridgeRimTalk.Settings.PushAdvisorLog.Desc".Translate());
+                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushShaping".Translate(),
+                    ref s.pushShaping,
+                    "RimMind.BridgeRimTalk.Settings.PushShaping.Desc".Translate());
+                if (s.pushPersonality)
+                {
+                    listing.CheckboxLabeled("    " + "RimMind.BridgeRimTalk.Settings.InjectPersonaToTraits".Translate(),
+                        ref s.injectPersonaToTraits,
+                        "RimMind.BridgeRimTalk.Settings.InjectPersonaToTraits.Desc".Translate());
+                    listing.CheckboxLabeled("    " + "RimMind.BridgeRimTalk.Settings.InjectPersonaToMood".Translate(),
+                        ref s.injectPersonaToMood,
+                        "RimMind.BridgeRimTalk.Settings.InjectPersonaToMood.Desc".Translate());
+                }
             }
 
-            SettingsUIHelper.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.PersonaPush".Translate());
-            listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnablePersonaPush".Translate(),
-                ref s.enablePersonaPush,
-                "RimMind.BridgeRimTalk.Settings.EnablePersonaPush.Desc".Translate());
-            if (s.enablePersonaPush)
+            SettingsUIHelper.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPull".Translate());
+            listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnableContextPull".Translate(),
+                ref s.enableContextPull,
+                "RimMind.BridgeRimTalk.Settings.EnableContextPull.Desc".Translate());
+            if (s.enableContextPull)
             {
-                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushPersonaToTraits".Translate(),
-                    ref s.pushPersonaToTraits);
-                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushPersonaToMood".Translate(),
-                    ref s.pushPersonaToMood);
+                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PullRimTalkHistory".Translate(),
+                    ref s.pullRimTalkHistory,
+                    "RimMind.BridgeRimTalk.Settings.PullRimTalkHistory.Desc".Translate());
             }
 
             listing.End();
@@ -142,10 +152,10 @@ namespace RimMind.Bridge.RimTalk.Settings
                 s.pushMemory = false;
                 s.pushShaping = false;
                 s.pushAdvisorLog = true;
-                s.enableRimTalkHistoryPull = true;
-                s.enablePersonaPush = false;
-                s.pushPersonaToTraits = true;
-                s.pushPersonaToMood = false;
+                s.injectPersonaToTraits = false;
+                s.injectPersonaToMood = false;
+                s.enableContextPull = true;
+                s.pullRimTalkHistory = true;
             });
 
             Get().Write();
@@ -159,10 +169,14 @@ namespace RimMind.Bridge.RimTalk.Settings
                 h += 24f * 3 + (s.skipPlayerDialogue ? 24f : 0f);
             h += 24f + 24f;
             if (s.enableContextPush)
-                h += 24f * 6;
+            {
+                h += 24f * 5;
+                if (s.pushPersonality)
+                    h += 24f * 2;
+            }
             h += 24f + 24f;
-            if (s.enablePersonaPush)
-                h += 24f * 2;
+            if (s.enableContextPull)
+                h += 24f;
             return h + 40f;
         }
     }

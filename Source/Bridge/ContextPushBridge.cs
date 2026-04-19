@@ -1,14 +1,9 @@
-using System.Reflection;
 using System.Text;
-using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
-using RimMind.Core;
-using RimMind.Core.Prompt;
 using RimMind.Advisor.Data;
 using RimMind.Memory.Data;
 using RimMind.Personality.Data;
-using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
 {
@@ -21,27 +16,26 @@ namespace RimMind.Bridge.RimTalk.Bridge
             if (!RimTalkDetector.IsRimTalkApiAvailable) return;
 
             var settings = BridgeRimTalkSettings.Get();
-            if (!settings.enableContextPush) return;
 
-            if (settings.pushPersonality)
-                RegisterPersonalityVariable();
+            if (settings.enableContextPush)
+            {
+                if (settings.pushPersonality)
+                    RegisterPersonalityVariable();
 
-            if (settings.pushStoryteller)
-                RegisterStorytellerVariable();
+                if (settings.pushStoryteller)
+                    RegisterStorytellerVariable();
 
-            if (settings.pushMemory)
-                RegisterMemoryVariable();
+                if (settings.pushMemory)
+                    RegisterMemoryVariable();
 
-            if (settings.pushShaping)
-                RegisterShapingVariable();
+                if (settings.pushShaping)
+                    RegisterShapingVariable();
 
-            if (settings.pushAdvisorLog)
-                RegisterAdvisorLogVariable();
+                if (settings.pushAdvisorLog)
+                    RegisterAdvisorLogVariable();
 
-            RegisterPromptEntry();
-
-            if (settings.enableRimTalkHistoryPull)
-                RegisterRimTalkHistoryProvider();
+                RegisterPromptEntry();
+            }
         }
 
         private static void RegisterPersonalityVariable()
@@ -209,77 +203,9 @@ namespace RimMind.Bridge.RimTalk.Bridge
             );
         }
 
-        private static void RegisterRimTalkHistoryProvider()
-        {
-            RimMindAPI.RegisterPawnContextProvider("rimtalk_history", pawn =>
-            {
-                return BuildRimTalkHistoryContext(pawn);
-            }, PromptSection.PriorityMemory, ModId);
-        }
-
-        private static string? BuildRimTalkHistoryContext(Pawn pawn)
-        {
-            if (!RimTalkDetector.IsRimTalkApiAvailable) return null;
-
-            try
-            {
-                var talkHistoryType = AccessTools.TypeByName("RimTalk.Data.TalkHistory");
-                if (talkHistoryType == null) return null;
-
-                var getMessageHistoryMethod = talkHistoryType.GetMethod("GetMessageHistory",
-                    BindingFlags.Public | BindingFlags.Static);
-                if (getMessageHistoryMethod == null) return null;
-
-                var messages = getMessageHistoryMethod.Invoke(null,
-                    new object?[] { pawn, true }) as System.Collections.IEnumerable;
-                if (messages == null) return null;
-
-                var sb = new StringBuilder("[RimTalk Dialog History]");
-                int count = 0;
-                foreach (var msg in messages)
-                {
-                    if (count >= 6) break;
-                    var msgType = msg.GetType();
-
-                    var roleField = msgType.GetField("Item1",
-                        BindingFlags.Public | BindingFlags.Instance);
-                    var messageField = msgType.GetField("Item2",
-                        BindingFlags.Public | BindingFlags.Instance);
-
-                    if (roleField == null || messageField == null) continue;
-
-                    var roleValue = roleField.GetValue(msg);
-                    var content = messageField.GetValue(msg)?.ToString() ?? "";
-
-                    if (string.IsNullOrEmpty(content)) continue;
-
-                    string roleLabel = roleValue?.ToString() ?? "?";
-                    if (roleValue is int roleInt)
-                    {
-                        roleLabel = roleInt switch
-                        {
-                            0 => "System",
-                            1 => "User",
-                            2 => "AI",
-                            _ => roleInt.ToString()
-                        };
-                    }
-
-                    sb.AppendLine($"[{roleLabel}] {content}");
-                    count++;
-                }
-                return count > 0 ? sb.ToString().TrimEnd() : null;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
         public static void Unregister()
         {
             RimTalkApiShim.Cleanup(ModId);
-            RimMindAPI.UnregisterPawnContextProvider("rimtalk_history");
         }
     }
 }

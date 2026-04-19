@@ -9,7 +9,7 @@ RimMind-Bridge-RimTalk 是 RimMind 套件与 RimTalk 模组之间的协调层。
 1. **对话门控**：避免 RimMind-Dialogue 和 RimTalk 重复触发对话
 2. **上下文推送**：将 RimMind 的人格、记忆、叙述者、顾问日志、塑造历史等数据注入 RimTalk 的 Prompt 系统
 3. **人格推送**：将 RimMind 人格数据作为变量和 Hook 注入 RimTalk 的上下文分类
-4. **对话历史拉取**：将 RimTalk 的对话历史注册为 RimMind 的上下文 Provider
+4. **上下文拉取**：将 RimTalk 的对话历史注册为 RimMind 的上下文 Provider
 
 本模组通过反射调用 RimTalk API（`RimTalkApiShim`），不依赖 RimTalk 的编译期引用，因此 RimTalk 未安装时不会报错。
 
@@ -26,7 +26,7 @@ Source/
 ├── Detection/
 │   └── RimTalkDetector.cs       检测 RimTalk 是否激活及其 API 是否可用
 └── Settings/
-    └── BridgeRimTalkSettings.cs 模组设置（对话门控 + 上下文推送 + 人格推送）
+    └── BridgeRimTalkSettings.cs 模组设置（对话门控 + 上下文推送 + 上下文拉取）
 ```
 
 ## 关键类与 API
@@ -137,7 +137,7 @@ static class ContextPushBridge {
 
 注册的 PromptEntry：`RimMind Context`，包含人格和叙述者模板变量引用。
 
-可选反向注册：`rimtalk_history` Provider（通过 `RimMindAPI.RegisterPawnContextProvider`），将 RimTalk 对话历史注入 RimMind 上下文。
+可选反向注册：`rimtalk_history` Provider（通过 `RimMindAPI.RegisterPawnContextProvider`），将 RimTalk 对话历史注入 RimMind 上下文。由上下文拉取设置控制。
 
 ### PersonaPushBridge
 
@@ -163,8 +163,8 @@ static class PersonaPushBridge {
 
 | 分类 | 操作 | 说明 | 优先级 | 设置开关 |
 |------|------|------|--------|---------|
-| `Traits` | Append(0) | 追加人格描述到特质上下文 | 90 | pushPersonaToTraits |
-| `Mood` | Append(0) | 追加 AI 叙事到情绪上下文 | 90 | pushPersonaToMood |
+| `Traits` | Append(0) | 追加人格描述到特质上下文 | 90 | injectPersonaToTraits |
+| `Mood` | Append(0) | 追加 AI 叙事到情绪上下文 | 90 | injectPersonaToMood |
 
 ### BridgeRimTalkSettings
 
@@ -184,12 +184,12 @@ class BridgeRimTalkSettings : ModSettings {
     bool pushMemory;                  // 默认 false
     bool pushAdvisorLog;              // 默认 true
     bool pushShaping;                 // 默认 false
-    bool enableRimTalkHistoryPull;    // 默认 true
+    bool injectPersonaToTraits;       // 默认 false
+    bool injectPersonaToMood;         // 默认 false
 
-    // 人格推送
-    bool enablePersonaPush;           // 默认 false
-    bool pushPersonaToTraits;         // 默认 true
-    bool pushPersonaToMood;           // 默认 false
+    // 上下文拉取
+    bool enableContextPull;           // 默认 true
+    bool pullRimTalkHistory;          // 默认 true
 
     static BridgeRimTalkSettings Get();
     static void DrawSettingsContent(Rect inRect);
@@ -288,7 +288,7 @@ Harmony → cj.rimtalk → RimMind-Core → RimMind 子模组 → RimMind-Bridge
 
 ### UI 本地化
 
-所有 UI 文本通过 `Languages/ChineseSimplified/DefInjected/RimMind.BridgeRimTalk.Settings.xml` 的 Keyed 翻译，禁止硬编码中文。
+所有 UI 文本通过 `Languages/ChineseSimplified/Keyed/RimMind_BridgeRimTalk.xml` 的 Keyed 翻译，禁止硬编码中文。
 
 ### 设置 UI
 

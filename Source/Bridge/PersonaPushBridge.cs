@@ -15,10 +15,12 @@ namespace RimMind.Bridge.RimTalk.Bridge
             if (!RimTalkDetector.IsRimTalkApiAvailable) return;
 
             var settings = BridgeRimTalkSettings.Get();
-            if (!settings.enablePersonaPush) return;
+            if (!settings.pushPersonality) return;
 
             RegisterPersonaVariables();
-            RegisterPersonaHooks();
+
+            if (settings.injectPersonaToTraits || settings.injectPersonaToMood)
+                RegisterPersonaHooks();
         }
 
         private static void RegisterPersonaVariables()
@@ -80,7 +82,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
         {
             var settings = BridgeRimTalkSettings.Get();
 
-            if (settings.pushPersonaToTraits)
+            if (settings.injectPersonaToTraits)
             {
                 RimTalkApiShim.RegisterPawnHook(
                     ModId,
@@ -106,7 +108,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 );
             }
 
-            if (settings.pushPersonaToMood)
+            if (settings.injectPersonaToMood)
             {
                 RimTalkApiShim.RegisterPawnHook(
                     ModId,

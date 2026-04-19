@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- RimMindBridgeRimTalkMod.cs -->
+  <RimMind.BridgeRimTalk.Settings.Category>桥接（RimTalk）</RimMind.BridgeRimTalk.Settings.Category>
+  <RimMind.BridgeRimTalk.Settings.TabLabel>桥接（RimTalk）</RimMind.BridgeRimTalk.Settings.TabLabel>
+
+  <!-- BridgeRimTalkSettings.cs - 对话门控 -->
+  <RimMind.BridgeRimTalk.Settings.Section.DialogueGate>对话门控</RimMind.BridgeRimTalk.Settings.Section.DialogueGate>
+  <RimMind.BridgeRimTalk.Settings.EnableDialogueGate>启用对话门控</RimMind.BridgeRimTalk.Settings.EnableDialogueGate>
+  <RimMind.BridgeRimTalk.Settings.EnableDialogueGate.Desc>当RimTalk激活时，跳过RimMind-Dialogue的重复对话触发，避免重复对话</RimMind.BridgeRimTalk.Settings.EnableDialogueGate.Desc>
+  <RimMind.BridgeRimTalk.Settings.SkipChitchat>跳过闲聊触发</RimMind.BridgeRimTalk.Settings.SkipChitchat>
+  <RimMind.BridgeRimTalk.Settings.SkipChitchat.Desc>当RimTalk激活时，跳过RimMind的Chitchat对话触发</RimMind.BridgeRimTalk.Settings.SkipChitchat.Desc>
+  <RimMind.BridgeRimTalk.Settings.SkipAutoDialogue>跳过自动对话</RimMind.BridgeRimTalk.Settings.SkipAutoDialogue>
+  <RimMind.BridgeRimTalk.Settings.SkipAutoDialogue.Desc>当RimTalk激活时，跳过RimMind的自动对话触发</RimMind.BridgeRimTalk.Settings.SkipAutoDialogue.Desc>
+  <RimMind.BridgeRimTalk.Settings.SkipPlayerDialogue>跳过玩家对话</RimMind.BridgeRimTalk.Settings.SkipPlayerDialogue>
+  <RimMind.BridgeRimTalk.Settings.SkipPlayerDialogue.Desc>当RimTalk激活时，移除RimMind的"与X对话"浮动菜单选项</RimMind.BridgeRimTalk.Settings.SkipPlayerDialogue.Desc>
+  <RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue>保留RimMind玩家对话</RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue>
+  <RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue.Desc>即使跳过玩家对话，仍保留RimMind的浮动菜单选项，允许两套聊天系统共存</RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue.Desc>
+
+  <!-- BridgeRimTalkSettings.cs - 上下文推送 -->
+  <RimMind.BridgeRimTalk.Settings.Section.ContextPush>上下文推送</RimMind.BridgeRimTalk.Settings.Section.ContextPush>
+  <RimMind.BridgeRimTalk.Settings.EnableContextPush>启用上下文推送</RimMind.BridgeRimTalk.Settings.EnableContextPush>
+  <RimMind.BridgeRimTalk.Settings.EnableContextPush.Desc>将RimMind的数据作为变量和Prompt条目推送到RimTalk的Prompt系统中</RimMind.BridgeRimTalk.Settings.EnableContextPush.Desc>
+  <RimMind.BridgeRimTalk.Settings.PushPersonality>推送人格数据</RimMind.BridgeRimTalk.Settings.PushPersonality>
+  <RimMind.BridgeRimTalk.Settings.PushPersonality.Desc>将RimMind人格档案注册为RimTalk模板变量（如 {{p.rimmind_personality}}）</RimMind.BridgeRimTalk.Settings.PushPersonality.Desc>
+  <RimMind.BridgeRimTalk.Settings.PushStoryteller>推送叙事者状态</RimMind.BridgeRimTalk.Settings.PushStoryteller>
+  <RimMind.BridgeRimTalk.Settings.PushStoryteller.Desc>将叙事者的叙事记录注册为RimTalk环境变量</RimMind.BridgeRimTalk.Settings.PushStoryteller.Desc>
+  <RimMind.BridgeRimTalk.Settings.PushMemory>推送记忆数据</RimMind.BridgeRimTalk.Settings.PushMemory>
+  <RimMind.BridgeRimTalk.Settings.PushMemory.Desc>将殖民者的记忆记录注册为RimTalk Pawn变量</RimMind.BridgeRimTalk.Settings.PushMemory.Desc>
+  <RimMind.BridgeRimTalk.Settings.PushAdvisorLog>推送顾问日志</RimMind.BridgeRimTalk.Settings.PushAdvisorLog>
+  <RimMind.BridgeRimTalk.Settings.PushAdvisorLog.Desc>将顾问的动作历史注册为RimTalk Pawn变量</RimMind.BridgeRimTalk.Settings.PushAdvisorLog.Desc>
+  <RimMind.BridgeRimTalk.Settings.PushShaping>推送塑造数据</RimMind.BridgeRimTalk.Settings.PushShaping>
+  <RimMind.BridgeRimTalk.Settings.PushShaping.Desc>将玩家塑造历史注册为RimTalk Pawn变量</RimMind.BridgeRimTalk.Settings.PushShaping.Desc>
+  <RimMind.BridgeRimTalk.Settings.InjectPersonaToTraits>注入到特质上下文</RimMind.BridgeRimTalk.Settings.InjectPersonaToTraits>
+  <RimMind.BridgeRimTalk.Settings.InjectPersonaToTraits.Desc>将人格描述直接追加到RimTalk的特质上下文段落中（可能与人格变量重复）</RimMind.BridgeRimTalk.Settings.InjectPersonaToTraits.Desc>
+  <RimMind.BridgeRimTalk.Settings.InjectPersonaToMood>注入到情绪上下文</RimMind.BridgeRimTalk.Settings.InjectPersonaToMood>
+  <RimMind.BridgeRimTalk.Settings.InjectPersonaToMood.Desc>将AI叙事直接追加到RimTalk的情绪上下文段落中</RimMind.BridgeRimTalk.Settings.InjectPersonaToMood.Desc>
+
+  <!-- BridgeRimTalkSettings.cs - 上下文拉取 -->
+  <RimMind.BridgeRimTalk.Settings.Section.ContextPull>上下文拉取</RimMind.BridgeRimTalk.Settings.Section.ContextPull>
+  <RimMind.BridgeRimTalk.Settings.EnableContextPull>启用上下文拉取</RimMind.BridgeRimTalk.Settings.EnableContextPull>
+  <RimMind.BridgeRimTalk.Settings.EnableContextPull.Desc>从RimTalk拉取对话历史等数据，注册为RimMind的上下文Provider</RimMind.BridgeRimTalk.Settings.EnableContextPull.Desc>
+  <RimMind.BridgeRimTalk.Settings.PullRimTalkHistory>拉取RimTalk对话历史</RimMind.BridgeRimTalk.Settings.PullRimTalkHistory>
+  <RimMind.BridgeRimTalk.Settings.PullRimTalkHistory.Desc>将RimTalk的对话历史注册为RimMind的上下文Provider，使RimMind能读取过去的RimTalk对话</RimMind.BridgeRimTalk.Settings.PullRimTalkHistory.Desc>
+</LanguageData>
