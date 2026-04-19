@@ -18,14 +18,14 @@ RimTalk 是另一个流行的 RimWorld AI 对话模组。当 RimMind 和 RimTalk
 
 | 模组 | 职责 | 依赖 | GitHub |
 |------|------|------|--------|
-| **RimMind-Core** | API 客户端、请求调度、上下文打包 | Harmony | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Core) |
-| RimMind-Actions | AI 控制小人的动作执行库 | Core | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Actions) |
-| RimMind-Advisor | AI 扮演小人做出工作决策 | Core, Actions | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Advisor) |
-| RimMind-Dialogue | AI 驱动的对话系统 | Core | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Dialogue) |
-| RimMind-Memory | 记忆采集与上下文注入 | Core | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Memory) |
-| RimMind-Personality | AI 生成人格与想法 | Core | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Personality) |
-| RimMind-Storyteller | AI 叙事者，智能选择事件 | Core | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Storyteller) |
-| **RimMind-Bridge-RimTalk** | RimTalk 协调层 | Core, RimTalk(可选) | [链接](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Bridge-RimTalk) |
+| **RimMind-Core** | API 客户端、请求调度、上下文打包 | Harmony | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Core) |
+| RimMind-Actions | AI 控制小人的动作执行库 | Core | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Actions) |
+| RimMind-Advisor | AI 扮演小人做出工作决策 | Core, Actions | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Advisor) |
+| RimMind-Dialogue | AI 驱动的对话系统 | Core | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Dialogue) |
+| RimMind-Memory | 记忆采集与上下文注入 | Core | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Memory) |
+| RimMind-Personality | AI 生成人格与想法 | Core | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Personality) |
+| RimMind-Storyteller | AI 叙事者，智能选择事件 | Core | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Storyteller) |
+| **RimMind-Bridge-RimTalk** | RimTalk 协调层 | Core, RimTalk(可选) | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk) |
 
 ```
 Core ── Actions ── Advisor
@@ -42,14 +42,14 @@ Core ── Actions ── Advisor
 
 **Linux/macOS:**
 ```bash
-git clone git@github.com:mcocdaa/RimWorld-RimMind-Mod-Bridge-RimTalk.git
+git clone git@github.com:RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk.git
 cd RimWorld-RimMind-Mod-Bridge-RimTalk
 ./script/deploy-single.sh <your RimWorld path>
 ```
 
 **Windows:**
 ```powershell
-git clone git@github.com:mcocdaa/RimWorld-RimMind-Mod-Bridge-RimTalk.git
+git clone git@github.com:RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk.git
 cd RimWorld-RimMind-Mod-Bridge-RimTalk
 ./script/deploy-single.ps1 <your RimWorld path>
 ```
@@ -193,14 +193,14 @@ RimTalk is another popular RimWorld AI dialogue mod. When both RimMind and RimTa
 
 | Module | Role | Depends On | GitHub |
 |--------|------|------------|--------|
-| **RimMind-Core** | API client, request dispatch, context packaging | Harmony | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Core) |
-| RimMind-Actions | AI-controlled pawn action execution | Core | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Actions) |
-| RimMind-Advisor | AI role-plays colonists for work decisions | Core, Actions | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Advisor) |
-| RimMind-Dialogue | AI-driven dialogue system | Core | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Dialogue) |
-| RimMind-Memory | Memory collection & context injection | Core | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Memory) |
-| RimMind-Personality | AI-generated personality & thoughts | Core | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Personality) |
-| RimMind-Storyteller | AI storyteller, smart event selection | Core | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Storyteller) |
-| **RimMind-Bridge-RimTalk** | RimTalk coordination layer | Core, RimTalk (optional) | [Link](https://github.com/mcocdaa/RimWorld-RimMind-Mod-Bridge-RimTalk) |
+| **RimMind-Core** | API client, request dispatch, context packaging | Harmony | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Core) |
+| RimMind-Actions | AI-controlled pawn action execution | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Actions) |
+| RimMind-Advisor | AI role-plays colonists for work decisions | Core, Actions | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Advisor) |
+| RimMind-Dialogue | AI-driven dialogue system | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Dialogue) |
+| RimMind-Memory | Memory collection & context injection | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Memory) |
+| RimMind-Personality | AI-generated personality & thoughts | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Personality) |
+| RimMind-Storyteller | AI storyteller, smart event selection | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Storyteller) |
+| **RimMind-Bridge-RimTalk** | RimTalk coordination layer | Core, RimTalk (optional) | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk) |
 
 ## Installation
 
@@ -208,14 +208,14 @@ RimTalk is another popular RimWorld AI dialogue mod. When both RimMind and RimTa
 
 **Linux/macOS:**
 ```bash
-git clone git@github.com:mcocdaa/RimWorld-RimMind-Mod-Bridge-RimTalk.git
+git clone git@github.com:RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk.git
 cd RimWorld-RimMind-Mod-Bridge-RimTalk
 ./script/deploy-single.sh <your RimWorld path>
 ```
 
 **Windows:**
 ```powershell
-git clone git@github.com:mcocdaa/RimWorld-RimMind-Mod-Bridge-RimTalk.git
+git clone git@github.com:RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk.git
 cd RimWorld-RimMind-Mod-Bridge-RimTalk
 ./script/deploy-single.ps1 <your RimWorld path>
 ```
