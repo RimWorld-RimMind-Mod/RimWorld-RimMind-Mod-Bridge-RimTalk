@@ -121,7 +121,7 @@ static class DialogueGate {
 ```csharp
 static class ContextPushBridge {
     void Register()    // 根据设置注册各推送模块
-    void Unregister()  // 清理所有注册（RimTalkApiShim.Cleanup + RimMindAPI.UnregisterPawnContextProvider）
+    void Unregister()  // 清理所有注册（RimTalkApiShim.Cleanup）
 }
 ```
 
@@ -136,8 +136,6 @@ static class ContextPushBridge {
 | `rimmind_advisor_log` | Pawn | AdvisorHistoryStore | 80 | pushAdvisorLog |
 
 注册的 PromptEntry：`RimMind Context`，包含人格和叙述者模板变量引用。
-
-可选反向注册：`rimtalk_history` Provider（通过 `RimMindAPI.RegisterPawnContextProvider`），将 RimTalk 对话历史注入 RimMind 上下文。由上下文拉取设置控制。
 
 ### PersonaPushBridge
 
@@ -165,6 +163,36 @@ static class PersonaPushBridge {
 |------|------|------|--------|---------|
 | `Traits` | Append(0) | 追加人格描述到特质上下文 | 90 | injectPersonaToTraits |
 | `Mood` | Append(0) | 追加 AI 叙事到情绪上下文 | 90 | injectPersonaToMood |
+
+### ContextPullBridge
+
+从 RimTalk 拉取对话历史，注册为 RimMind Provider：
+
+```csharp
+static class ContextPullBridge {
+    void Register()    // 根据设置注册各 Provider
+    void Unregister()  // 清理所有注册（RimMindAPI.UnregisterPawnContextProvider）
+}
+```
+
+注册的 Provider：
+
+| Provider ID | 类型 | 数据来源 | 优先级 | 设置开关 |
+|-------------|------|---------|--------|---------|
+| `rimtalk_history` | PawnContextProvider | RimTalk.Data.TalkHistory（反射） | PriorityMemory | pullRimTalkHistory |
+
+反射目标类型：
+
+| 类型全名 | 用途 |
+|---------|------|
+| `RimTalk.Data.TalkHistory` | 对话历史数据类 |
+| `TalkHistory.GetMessageHistory(Pawn, bool)` | 获取 Pawn 的消息历史 |
+
+拉取逻辑：
+- 遍历地图上所有自由殖民者的对话历史
+- 筛选与目标 Pawn 相关的消息（Pawn 自身的对话 或 内容中包含 Pawn 名称的对话）
+- 取最近 6 条相关消息
+- 角色标签映射：0 → System, 1 → User, 2 → AI
 
 ### BridgeRimTalkSettings
 
@@ -229,13 +257,17 @@ RimMindBridgeRimTalkMod 构造函数
     │       ├── No  → Log + 跳过所有桥接模块
     │       │
     │       └── Yes → DialogueGate.RegisterSkipChecks()
+    │               ContextPullBridge.Register()
     │               │
     │               ├── RimTalkDetector.IsRimTalkApiAvailable?
     │               │       │
     │               │       ├── No  → Log.Warning + 跳过 Push 模块
     │               │       │
     │               │       └── Yes → ContextPushBridge.Register()
-    │               │               PersonaPushBridge.Register()
+    │               │               │
+    │               │               └── pushPersonality?
+    │               │                       ├── Yes → PersonaPushBridge.Register()
+    │               │                       └── No  → 跳过
 ```
 
 ## 代码约定
