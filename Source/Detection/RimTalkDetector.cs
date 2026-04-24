@@ -29,7 +29,10 @@ namespace RimMind.Bridge.RimTalk.Detection
                 if (_cachedResult == null || now - _cacheTick > CacheIntervalTicks)
                 {
                     _cachedResult = ModsConfig.IsActive(RimTalkPackageId);
-                    _cacheTick = now;
+                    if (now > 0)
+                    {
+                        _cacheTick = now;
+                    }
                 }
                 return _cachedResult.Value;
             }

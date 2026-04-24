@@ -97,7 +97,10 @@ namespace RimMind.Bridge.RimTalk.Bridge
                         if (string.IsNullOrEmpty(content)) continue;
 
                         bool isRelevant = otherPawn == pawn
-                            || content.Contains(pawnName);
+                            || (pawnName.Length >= 3 && content.Contains(pawnName))
+                            || content.Contains($"[{pawnName}]")
+                            || content.Contains($"{pawnName}:")
+                            || content.Contains($"{pawnName},");
 
                         if (!isRelevant) continue;
 
