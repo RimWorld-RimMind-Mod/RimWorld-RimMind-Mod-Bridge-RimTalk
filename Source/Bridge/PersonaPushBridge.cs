@@ -8,7 +8,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 {
     public static class PersonaPushBridge
     {
-        private const string ModId = "RimMind.Bridge.RimTalk";
+        private const string ModId = "RimMind.Bridge.RimTalk.Persona";
 
         public static void Register()
         {

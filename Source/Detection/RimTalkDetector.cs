@@ -17,7 +17,7 @@ namespace RimMind.Bridge.RimTalk.Detection
             get
             {
                 try { return Find.TickManager?.TicksGame ?? 0; }
-                catch { return 0; }
+                catch { Log.Warning("[RimMind-Bridge-RimTalk] Failed to access TickManager.TicksGame, returning 0."); return 0; }
             }
         }
 

@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
   <name>RimMind - Bridge (RimTalk)</name>
-    <author>mcocdaa</author>
-    <packageId>mcocdaa.RimMindBridgeRimTalk</packageId>
-    <modVersion>0.0.1</modVersion>
-    <supportedVersions>
-        <li>1.6</li>
-    </supportedVersions>
-    <description>Coordination layer between RimMind suite and RimTalk. Enables dialogue mutual exclusion, context pushing via RimTalkPromptAPI, and persona data sharing.</description>
-    <modDependencies>
-        <li>
-            <packageId>brrainz.harmony</packageId>
-            <displayName>Harmony</displayName>
-            <steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
-        </li>
-        <li>
-            <packageId>mcocdaa.RimMindCore</packageId>
-            <displayName>RimMind - Core</displayName>
-            <downloadUrl>https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Core</downloadUrl>
-        </li>
-    </modDependencies>
-    <loadAfter>
-        <li>brrainz.harmony</li>
-        <li>cj.rimtalk</li>
-        <li>mcocdaa.RimMindCore</li>
-        <li>mcocdaa.RimMindMemory</li>
-        <li>mcocdaa.RimMindPersonality</li>
-        <li>mcocdaa.RimMindDialogue</li>
-        <li>mcocdaa.RimMindAdvisor</li>
-        <li>mcocdaa.RimMindStoryteller</li>
-    </loadAfter>
+  <author>mcocdaa</author>
+  <packageId>mcocdaa.RimMindBridgeRimTalk</packageId>
+  <modVersion>0.0.1</modVersion>
+  <supportedVersions>
+    <li>1.6</li>
+  </supportedVersions>
+  <description>Coordination layer between RimMind suite and RimTalk. Enables dialogue mutual exclusion, context pushing via RimTalkPromptAPI, and persona data sharing.</description>
+  <modDependencies>
+    <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+    </li>
+    <li>
+      <packageId>mcocdaa.RimMindCore</packageId>
+      <displayName>RimMind - Core</displayName>
+      <downloadUrl>https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Core</downloadUrl>
+    </li>
+  </modDependencies>
+  <loadAfter>
+    <li>brrainz.harmony</li>
+    <li>cj.rimtalk</li>
+    <li>mcocdaa.RimMindCore</li>
+    <li>mcocdaa.RimMindMemory</li>
+    <li>mcocdaa.RimMindPersonality</li>
+    <li>mcocdaa.RimMindDialogue</li>
+    <li>mcocdaa.RimMindAdvisor</li>
+    <li>mcocdaa.RimMindStoryteller</li>
+  </loadAfter>
 </ModMetaData>

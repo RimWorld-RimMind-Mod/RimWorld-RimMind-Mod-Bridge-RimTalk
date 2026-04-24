@@ -2,7 +2,6 @@ using System;
 using System.Reflection;
 using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
-using RimMind.Bridge.RimTalk.Settings;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge

@@ -1,4 +1,3 @@
-using HarmonyLib;
 using RimMind.Bridge.RimTalk.Bridge;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
@@ -9,12 +8,9 @@ namespace RimMind.Bridge.RimTalk
 {
     public class RimMindBridgeRimTalkMod : Mod
     {
-        public static BridgeRimTalkSettings Settings = null!;
-
         public RimMindBridgeRimTalkMod(ModContentPack content) : base(content)
         {
-            Settings = GetSettings<BridgeRimTalkSettings>();
-            new Harmony("mcocdaa.RimMindBridgeRimTalk").PatchAll();
+            GetSettings<BridgeRimTalkSettings>();
 
             RimMindAPI.RegisterSettingsTab("bridge_rimtalk",
                 () => "RimMind.BridgeRimTalk.Settings.TabLabel".Translate(),

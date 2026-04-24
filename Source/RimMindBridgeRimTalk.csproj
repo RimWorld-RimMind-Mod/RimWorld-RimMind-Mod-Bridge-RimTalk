@@ -20,7 +20,6 @@
   <ItemGroup>
     <PackageReference Include="Krafs.Rimworld.Ref" Version="$(GameVersion).*-*" PrivateAssets="All" />
     <PackageReference Include="Lib.Harmony.Ref" Version="2.*" PrivateAssets="All" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.*" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,8 +27,8 @@
       <HintPath>../../RimMind-Core/$(GameVersion)/Assemblies/RimMindCore.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="RimMindDialogue">
-      <HintPath>../../RimMind-Dialogue/$(GameVersion)/Assemblies/RimMindDialogue.dll</HintPath>
+    <Reference Include="RimMindAdvisor">
+      <HintPath>../../RimMind-Advisor/$(GameVersion)/Assemblies/RimMindAdvisor.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="RimMindPersonality">
@@ -38,14 +37,6 @@
     </Reference>
     <Reference Include="RimMindMemory">
       <HintPath>../../RimMind-Memory/$(GameVersion)/Assemblies/RimMindMemory.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="RimMindStoryteller">
-      <HintPath>../../RimMind-Storyteller/$(GameVersion)/Assemblies/RimMindStoryteller.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="RimMindAdvisor">
-      <HintPath>../../RimMind-Advisor/$(GameVersion)/Assemblies/RimMindAdvisor.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

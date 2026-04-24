@@ -9,7 +9,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 {
     public static class ContextPushBridge
     {
-        private const string ModId = "RimMind.Bridge.RimTalk";
+        private const string ModId = "RimMind.Bridge.RimTalk.Push";
 
         public static void Register()
         {
@@ -110,8 +110,13 @@ namespace RimMind.Bridge.RimTalk.Bridge
                     if (store.dark.Count > 0)
                     {
                         sb.AppendLine("[Long-term]");
+                        int darkCount = 0;
                         foreach (var m in store.dark)
+                        {
+                            if (darkCount >= 5) break;
                             sb.AppendLine($"- {m.content}");
+                            darkCount++;
+                        }
                     }
                     return sb.ToString().TrimEnd();
                 },
@@ -194,9 +199,36 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 sb.AppendLine("{{rimmind_storyteller}}");
             }
 
+            if (settings.pushMemory)
+            {
+                sb.AppendLine("{{ for p in pawns }}");
+                sb.AppendLine("## {{ p.name }}'s Memory:");
+                sb.AppendLine("{{ p.rimmind_memory }}");
+                sb.AppendLine("{{ end }}");
+            }
+
+            if (settings.pushAdvisorLog)
+            {
+                sb.AppendLine("{{ for p in pawns }}");
+                sb.AppendLine("## {{ p.name }}'s Advisor Log:");
+                sb.AppendLine("{{ p.rimmind_advisor_log }}");
+                sb.AppendLine("{{ end }}");
+            }
+
+            if (settings.pushShaping)
+            {
+                sb.AppendLine("{{ for p in pawns }}");
+                sb.AppendLine("## {{ p.name }}'s Shaping History:");
+                sb.AppendLine("{{ p.rimmind_shaping }}");
+                sb.AppendLine("{{ end }}");
+            }
+
+            string content = sb.ToString().TrimEnd();
+            if (content.Length <= "# RimMind Context".Length) return;
+
             RimTalkApiShim.AddPromptEntry(
                 name: "RimMind Context",
-                content: sb.ToString().TrimEnd(),
+                content: content,
                 roleValue: 0,
                 positionValue: 0,
                 sourceModId: ModId

@@ -21,6 +21,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
         public static void Register()
         {
+            if (!RimTalkDetector.IsRimTalkActive) return;
             var settings = BridgeRimTalkSettings.Get();
             if (!settings.enableContextPull) return;
 
@@ -30,6 +31,11 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
         private static void RegisterRimTalkHistoryProvider()
         {
+            if (!ResolveTypes())
+            {
+                Log.Warning("[RimMind-Bridge-RimTalk] RimTalk history types not available, skipping provider registration.");
+                return;
+            }
             RimMindAPI.RegisterPawnContextProvider("rimtalk_history", pawn =>
             {
                 return BuildRimTalkHistoryContext(pawn);
