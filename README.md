@@ -25,7 +25,7 @@ RimTalk 是另一个流行的 RimWorld AI 对话模组。当 RimMind 和 RimTalk
 | RimMind-Memory | 记忆采集与上下文注入 | Core | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Memory) |
 | RimMind-Personality | AI 生成人格与想法 | Core | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Personality) |
 | RimMind-Storyteller | AI 叙事者，智能选择事件 | Core | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Storyteller) |
-| **RimMind-Bridge-RimTalk** | RimTalk 协调层 | Core, RimTalk(可选) | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk) |
+| **RimMind-Bridge-RimTalk** | RimTalk 协调层 | Core, Personality, Memory, Advisor | [链接](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk) |
 
 ```
 Core ── Actions ── Advisor
@@ -58,12 +58,10 @@ cd RimWorld-RimMind-Mod-Bridge-RimTalk
 
 1. 安装 [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077) 前置模组
 2. 安装 RimMind-Core
-3. 按需安装其他 RimMind 子模组
+3. 按需安装其他 RimMind 子模组（Personality、Memory、Advisor 推荐安装）
 4. 安装 RimTalk（可选，但推荐）
 5. 安装 RimMind-Bridge-RimTalk
 6. 在模组管理器中确保加载顺序：Harmony → RimTalk → Core → 其他子模组 → Bridge-RimTalk
-
-<!-- ![安装步骤](images/install-steps.png) -->
 
 ## 快速开始
 
@@ -75,8 +73,6 @@ cd RimWorld-RimMind-Mod-Bridge-RimTalk
 2. 点击 **选项 → 模组设置 → RimMind-Core**
 3. 切换到 **Bridge (RimTalk)** 标签页
 4. 按需调整对话门控、上下文推送、人格推送选项
-
-<!-- ![设置界面](images/screenshot-settings.png) -->
 
 ## 核心功能
 
@@ -148,7 +144,7 @@ cd RimWorld-RimMind-Mod-Bridge-RimTalk
 A: 可以。本模组通过反射检测 RimTalk，未安装时所有桥接功能静默跳过，不会报错。
 
 **Q: 只安装 RimTalk 不安装其他 RimMind 子模组可以吗？**
-A: 可以，但上下文推送和人格推送功能需要对应的 RimMind 子模组（Personality、Memory、Advisor、Storyteller）才能推送数据。对话门控功能只需 RimMind-Dialogue。
+A: 可以，但上下文推送和人格推送功能需要对应的 RimMind 子模组（Personality、Memory、Advisor）才能推送数据。对话门控功能只需 RimMind-Dialogue。
 
 **Q: 对话门控会不会导致完全没有对话？**
 A: 不会。门控只是跳过 RimMind 的重复触发，RimTalk 的对话系统正常工作。你可以通过设置精确控制跳过哪些类型的触发。
@@ -200,7 +196,7 @@ RimTalk is another popular RimWorld AI dialogue mod. When both RimMind and RimTa
 | RimMind-Memory | Memory collection & context injection | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Memory) |
 | RimMind-Personality | AI-generated personality & thoughts | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Personality) |
 | RimMind-Storyteller | AI storyteller, smart event selection | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Storyteller) |
-| **RimMind-Bridge-RimTalk** | RimTalk coordination layer | Core, RimTalk (optional) | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk) |
+| **RimMind-Bridge-RimTalk** | RimTalk coordination layer | Core, Personality, Memory, Advisor | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk) |
 
 ## Installation
 
@@ -224,7 +220,7 @@ cd RimWorld-RimMind-Mod-Bridge-RimTalk
 
 1. Install [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077)
 2. Install RimMind-Core
-3. Install other RimMind sub-modules as needed
+3. Install other RimMind sub-modules as needed (Personality, Memory, Advisor recommended)
 4. Install RimTalk (optional, but recommended)
 5. Install RimMind-Bridge-RimTalk
 6. Ensure load order: Harmony → RimTalk → Core → other sub-modules → Bridge-RimTalk
@@ -310,7 +306,7 @@ Optionally registers RimTalk's dialogue history as a RimMind context provider, e
 A: Yes. This mod detects RimTalk via reflection and silently skips all bridge features when RimTalk is not installed.
 
 **Q: Can I use this with only RimTalk and no other RimMind sub-modules?**
-A: Yes, but context push and persona push features require the corresponding RimMind sub-modules (Personality, Memory, Advisor, Storyteller) to push data. Dialogue gate only requires RimMind-Dialogue.
+A: Yes, but context push and persona push features require the corresponding RimMind sub-modules (Personality, Memory, Advisor) to push data. Dialogue gate only requires RimMind-Dialogue.
 
 **Q: Will dialogue gate cause no dialogues at all?**
 A: No. The gate only skips RimMind's redundant triggers; RimTalk's dialogue system works normally. You can precisely control which trigger types to skip via settings.

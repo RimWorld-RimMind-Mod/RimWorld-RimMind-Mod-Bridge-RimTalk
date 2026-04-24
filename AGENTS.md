@@ -17,11 +17,12 @@ RimMind-Bridge-RimTalk 是 RimMind 套件与 RimTalk 模组之间的协调层。
 
 ```
 Source/
-├── RimMindBridgeRimTalkMod.cs   Mod 入口，注册 Harmony、Settings Tab，按条件注册桥接模块
+├── RimMindBridgeRimTalkMod.cs   Mod 入口，注册 Settings Tab，按条件注册桥接模块
 ├── Bridge/
 │   ├── DialogueGate.cs          对话门控，注册 SkipCheck 防止重复触发
 │   ├── ContextPushBridge.cs     上下文推送，将 RimMind 数据注册为 RimTalk 变量/PromptEntry
 │   ├── PersonaPushBridge.cs     人格推送，将人格数据注册为 RimTalk 变量和 Hook
+│   ├── ContextPullBridge.cs     上下文拉取，将 RimTalk 对话历史注册为 RimMind Provider
 │   └── RimTalkApiShim.cs        反射封装层，无编译期依赖地调用 RimTalk API
 ├── Detection/
 │   └── RimTalkDetector.cs       检测 RimTalk 是否激活及其 API 是否可用
@@ -41,7 +42,7 @@ static class RimTalkDetector {
 
     bool IsRimTalkActive       // RimTalk 模组是否激活（6000 tick 缓存）
     bool IsRimTalkApiAvailable // RimTalkPromptAPI 类型是否存在（启动时检测一次）
-    void InvalidateCache()     // 手动刷新缓存
+    void InvalidateCache()     // 手动刷新缓存（预留 API，当前未调用）
 }
 ```
 
@@ -70,7 +71,7 @@ static class RimTalkApiShim {
         int roleValue = 0, int positionValue = 0,
         int inChatDepth = 0, string? sourceModId = null)
 
-    // 清理
+    // 清理（注意：仅清理 Hooks 和 PromptEntries，不清理 Variables）
     bool UnregisterAllHooks(string modId)
     int RemovePromptEntriesByModId(string modId)
     void Cleanup(string modId)  // UnregisterAllHooks + RemovePromptEntriesByModId
@@ -120,8 +121,9 @@ static class DialogueGate {
 
 ```csharp
 static class ContextPushBridge {
+    const string ModId = "RimMind.Bridge.RimTalk.Push";
     void Register()    // 根据设置注册各推送模块
-    void Unregister()  // 清理所有注册（RimTalkApiShim.Cleanup）
+    void Unregister()  // 清理所有注册（RimTalkApiShim.Cleanup，预留 API）
 }
 ```
 
@@ -143,8 +145,9 @@ static class ContextPushBridge {
 
 ```csharp
 static class PersonaPushBridge {
+    const string ModId = "RimMind.Bridge.RimTalk.Persona";
     void Register()    // 注册变量和 Hook
-    void Unregister()  // 清理（RimTalkApiShim.Cleanup）
+    void Unregister()  // 清理（RimTalkApiShim.Cleanup，预留 API）
 }
 ```
 
@@ -170,8 +173,9 @@ static class PersonaPushBridge {
 
 ```csharp
 static class ContextPullBridge {
+    const string ModId = "RimMind.BridgeRimTalk";
     void Register()    // 根据设置注册各 Provider
-    void Unregister()  // 清理所有注册（RimMindAPI.UnregisterPawnContextProvider）
+    void Unregister()  // 清理所有注册（RimMindAPI.UnregisterPawnContextProvider，预留 API）
 }
 ```
 
@@ -249,7 +253,6 @@ RimMind-Dialogue 触发  ──DialogueGate──→  跳过/放行
 RimMindBridgeRimTalkMod 构造函数
     │
     ├── GetSettings<BridgeRimTalkSettings>()
-    ├── Harmony("mcocdaa.RimMindBridgeRimTalk").PatchAll()
     ├── RimMindAPI.RegisterSettingsTab("bridge_rimtalk", ...)
     │
     ├── RimTalkDetector.IsRimTalkActive?
@@ -291,12 +294,13 @@ RimMindBridgeRimTalkMod 构造函数
 
 ### ModId
 
-所有 RimTalk API 注册使用统一 ModId：`"RimMind.Bridge.RimTalk"`
+各桥接模块使用独立 ModId，确保 Cleanup 互不干扰：
 
-### Harmony
-
-- Harmony ID：`mcocdaa.RimMindBridgeRimTalk`
-- 当前无 Harmony Patch（预留）
+| 模块 | ModId |
+|------|-------|
+| ContextPushBridge | `RimMind.Bridge.RimTalk.Push` |
+| PersonaPushBridge | `RimMind.Bridge.RimTalk.Persona` |
+| ContextPullBridge | `RimMind.BridgeRimTalk` |
 
 ### 构建
 
@@ -308,8 +312,8 @@ RimMindBridgeRimTalkMod 构造函数
 | RimWorld 版本 | 1.6 |
 | 输出路径 | `../1.6/Assemblies/` |
 | 部署 | 设置 `RIMWORLD_DIR` 环境变量后自动部署 |
-| NuGet 依赖 | `Krafs.Rimworld.Ref 1.6.*-*`, `Lib.Harmony.Ref 2.*`, `Newtonsoft.Json 13.0.*` |
-| 编译期引用 | RimMindCore, RimMindDialogue, RimMindPersonality, RimMindMemory, RimMindStoryteller, RimMindAdvisor（均为 Private=false） |
+| NuGet 依赖 | `Krafs.Rimworld.Ref 1.6.*-*`, `Lib.Harmony.Ref 2.*` |
+| 编译期引用 | RimMindCore, RimMindAdvisor, RimMindPersonality, RimMindMemory（均为 Private=false） |
 | 无编译期引用 | RimTalk（纯反射） |
 
 ### 加载顺序
@@ -320,7 +324,7 @@ Harmony → cj.rimtalk → RimMind-Core → RimMind 子模组 → RimMind-Bridge
 
 ### UI 本地化
 
-所有 UI 文本通过 `Languages/ChineseSimplified/Keyed/RimMind_BridgeRimTalk.xml` 的 Keyed 翻译，禁止硬编码中文。
+所有 UI 文本通过 `Languages/{lang}/Keyed/RimMind_BridgeRimTalk.xml` 的 Keyed 翻译，禁止硬编码中文。英文为权威源。
 
 ### 设置 UI
 
@@ -343,6 +347,6 @@ Harmony → cj.rimtalk → RimMind-Core → RimMind 子模组 → RimMind-Bridge
 
 ### 新增反向数据流（RimTalk → RimMind）
 
-1. 在 `ContextPushBridge` 中通过反射读取 RimTalk 数据
+1. 在 `ContextPullBridge` 中通过反射读取 RimTalk 数据
 2. 使用 `RimMindAPI.RegisterPawnContextProvider` / `RegisterStaticProvider` 注册
 3. 在 `Unregister` 中调用 `RimMindAPI.UnregisterPawnContextProvider` 清理
