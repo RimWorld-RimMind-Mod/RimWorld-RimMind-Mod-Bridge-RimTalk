@@ -16,8 +16,16 @@ namespace RimMind.Bridge.RimTalk.Detection
         {
             get
             {
-                try { return Find.TickManager?.TicksGame ?? 0; }
-                catch { Log.Warning("[RimMind-Bridge-RimTalk] Failed to access TickManager.TicksGame, returning 0."); return 0; }
+                try
+                {
+                    var tm = Find.TickManager;
+                    if (tm == null) return 0;
+                    return tm.TicksGame;
+                }
+                catch
+                {
+                    return 0;
+                }
             }
         }
 
@@ -26,7 +34,7 @@ namespace RimMind.Bridge.RimTalk.Detection
             get
             {
                 int now = SafeTicksGame;
-                if (_cachedResult == null || now - _cacheTick > CacheIntervalTicks)
+                if (_cachedResult == null || (now > 0 && now - _cacheTick > CacheIntervalTicks))
                 {
                     _cachedResult = ModsConfig.IsActive(RimTalkPackageId);
                     if (now > 0)
