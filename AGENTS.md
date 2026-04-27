@@ -325,8 +325,8 @@ Harmony → cj.rimtalk → RimMind-Core → RimMind 子模组 → RimMind-Bridge
 
 - **Cleanup 不清理 Variables**：RimTalk API 不提供 `UnregisterPawnVariable` / `UnregisterEnvironmentVariable`，mod 禁用后变量注册残留至游戏重启
 - **设置变更需重启**：Push/Pull 注册仅在启动时执行，设置变更后需重启游戏
-- **Tuple 反射脆弱**：ContextPullBridge 通过 `Item1`/`Item2` 字段名访问消息对象，若 RimTalk 改为自定义类会静默失败
-- **名字匹配误报**：短名字（<3 字符）的殖民者可能匹配到不相关的对话
+- **Tuple 反射脆弱**：ContextPullBridge 通过 `Item1`/`Item2` 字段名访问消息对象，若 RimTalk 改为自定义类会静默失败（字段为 null 时无日志告警）
+- **DialogueGate 全局门控**：`ShouldSkipDialogue` 的 `pawn` 参数未使用，无法实现按殖民者的细粒度控制
 
 ## 扩展指南
 
