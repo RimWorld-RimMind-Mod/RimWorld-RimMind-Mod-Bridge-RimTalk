@@ -90,7 +90,11 @@ namespace RimMind.Bridge.RimTalk.Bridge
                             BindingFlags.Public | BindingFlags.Instance);
                         var messageField = msgType.GetField("Item2",
                             BindingFlags.Public | BindingFlags.Instance);
-                        if (roleField == null || messageField == null) continue;
+                        if (roleField == null || messageField == null)
+                        {
+                            Log.WarningOnce("ContextPullBridge: RimTalk message tuple fields not found, messages may not be pulled correctly", 84233);
+                            continue;
+                        }
 
                         var roleValue = roleField.GetValue(msg);
                         var content = messageField.GetValue(msg)?.ToString() ?? "";

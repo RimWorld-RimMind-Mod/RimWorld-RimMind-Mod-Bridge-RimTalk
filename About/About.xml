@@ -28,6 +28,5 @@
     <li>mcocdaa.RimMindPersonality</li>
     <li>mcocdaa.RimMindDialogue</li>
     <li>mcocdaa.RimMindAdvisor</li>
-    <li>mcocdaa.RimMindStoryteller</li>
   </loadAfter>
 </ModMetaData>
