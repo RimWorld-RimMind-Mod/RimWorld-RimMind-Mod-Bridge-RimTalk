@@ -1,36 +1,35 @@
 [h1]RimMind - Bridge: RimTalk[/h1]
 
-当两个 AI 灵魂住进同一个殖民者的大脑——它们是争吵还是合作？
+你的殖民者脑子里住了两个 AI——让它们别再打架了。
 
-[h2] 两个 AI，一个殖民者 [/h2]
-你装了 RimMind，殖民者有了人格、记忆和自我意识。你又装了 RimTalk，殖民者能跟 AI 自由聊天。听起来很美好？直到你发现——
+[h2] 为什么需要这个模组？ [/h2]
+你同时装了 RimMind 和 RimTalk。听起来很棒——殖民者既有人格和记忆，又能自由聊天。但很快你会发现：
 
-[b]殖民者刚跟 RimTalk 聊完天气，RimMind 又弹出一个一模一样的对话框。[/b]两个 AI 互不相知，殖民者像失忆一样，在两边说着矛盾的话。
+[b]殖民者刚在 RimTalk 里说自己喜欢独处，转头在 RimMind 里又变成了社交达人。[/b]
 
-Bridge: RimTalk 就是让它们[b]握手言和[/b]的那个模组。
+两个 AI 互不相知，殖民者像失忆一样在两边说着矛盾的话。更糟的是，两个对话系统同时弹出，殖民者被拉扯成两半。
 
-[h2] 它做了什么？ [/h2]
+Bridge: RimTalk 让它们[b]共享记忆、互不干扰[/b]。
+
+[h2] 它让游戏变得更好玩 [/h2]
+
+[b] 殖民者终于有了一致的人格 [/b]
+RimMind 为每个殖民者生成了独特的人格——性格描述、工作偏好、社交风格。Bridge 把这些注入 RimTalk，让 RimTalk 的对话也能[b]感知殖民者的内心[/b]。殖民者不再是 RimTalk 眼中的陌生人——他们在两边说的是同一个人。
+
+[b] 两个 AI 终于有了共同记忆 [/b]
+开启"上下文拉取"后，RimTalk 里发生的对话会流入 RimMind。殖民者在 RimTalk 里倾诉的烦恼，RimMind 也知道。两个系统不再是[b]失忆的两个灵魂[/b]，而是共享记忆的同一个殖民者。
+
+[b] 叙事者、记忆、顾问——全部打通 [/b]
+RimMind 叙事者正在编织的故事线、殖民者深藏的长期记忆、AI 顾问的工作决策——这些都能推送到 RimTalk，让对话[b]更有深度[/b]。殖民者在 RimTalk 里聊天时，不再只是"你好"——而是带着自己的故事和经历。
 
 [b] 对话不再打架 [/b]
-RimTalk 激活时，自动跳过 RimMind 的重复对话。你可以精确控制——只跳过闲聊？还是全部跳过？甚至可以让两套对话系统共存，完全由你决定。
-
-[b] RimTalk 终于认识你的殖民者了 [/b]
-RimMind 为每个殖民者生成了独特的人格档案——性格描述、工作倾向、社交风格、AI 叙事。Bridge 把这些数据注入 RimTalk 的 Prompt，让 RimTalk 的对话也能[b]感知殖民者的内心世界[/b]。你的殖民者不再是 RimTalk 眼中的陌生人。
-
-[b] 叙事者、记忆、顾问——全部共享 [/b]
-不只是人格。RimMind 叙事者正在编织的故事线、殖民者的短期和长期记忆、AI 顾问的工作决策记录、你作为玩家对殖民者人格的塑造——这些都可以推送到 RimTalk，让对话更有深度。
-
-[b] RimMind 也能听到 RimTalk 的对话 [/b]
-开启"上下文拉取"后，RimTalk 里发生过的对话会流入 RimMind 的上下文。两个系统终于有了[b]共同记忆[/b]——殖民者在 RimTalk 里说的话，RimMind 也知道。
-
-[b] 人格注入——让 RimTalk 真正理解你的殖民者 [/b]
-通过 Hook 机制，RimMind 的人格数据可以直接注入 RimTalk 的上下文分类——人格描述追加到特质，AI 叙事追加到情绪。RimTalk 不再只看到冰冷的特质标签，而是理解殖民者[b]真正的性格[/b]。
+RimTalk 激活时，自动跳过 RimMind 的重复对话触发。你可以精确控制——只跳闲聊？全部跳过？还是让两套对话系统共存？[b]完全由你决定[/b]。
 
 [h2] 装了就用，没装也没事 [/h2]
-不需要任何配置。安装后 RimTalk 激活时自动启用桥接。没装 RimTalk？完全没问题——本模组通过反射检测，未安装时[b]静默跳过[/b]，不报错不影响游戏。15 个可配置选项让你精确控制，但默认设置已经覆盖最常见的场景。
+不需要任何配置。RimTalk 激活时自动启用桥接。没装 RimTalk？完全没问题——本模组[b]静默跳过[/b]，不报错不影响游戏。15 个可配置选项让你精确控制，但默认设置已经覆盖最常见的场景。
 
 [h2] 推荐搭配 [/h2]
-[table][tr][td][b] 模组 [/b][/td][td][b] 为什么推荐 [/b][/td][/tr][tr][td] RimMind-Core [/td][td] 必装，RimMind 套件核心 [/td][/tr][tr][td] RimMind-Personality [/td][td] 提供人格数据，让 RimTalk 感知殖民者性格 [/td][/tr][tr][td] RimMind-Memory [/td][td] 提供记忆和叙事者数据，丰富对话深度 [/td][/tr][tr][td] RimMind-Advisor [/td][td] 提供顾问决策记录，让 RimTalk 知道殖民者的工作选择 [/td][/tr][tr][td] RimMind-Dialogue [/td][td] 对话门控需要此模组 [/td][/tr][tr][td] RimTalk [/td][td] 另一个 AI 对话系统，本模组的桥接对象 [/td][/tr][/table]
+[table][tr][td][b] 模组 [/b][/td][td][b] 为什么推荐 [/b][/td][/tr][tr][td] RimMind-Core [/td][td] 必装，RimMind 套件核心 [/td][/tr][tr][td] RimMind-Personality [/td][td] 提供人格数据，让 RimTalk 感知殖民者性格 [/td][/tr][tr][td] RimMind-Memory [/td][td] 提供记忆和叙事者数据，丰富对话深度 [/td][/tr][tr][td] RimMind-Advisor [/td][td] 提供顾问决策记录，让对话更有背景 [/td][/tr][tr][td] RimMind-Dialogue [/td][td] 对话门控需要此模组 [/td][/tr][tr][td] RimTalk [/td][td] 另一个 AI 对话系统，本模组的桥接对象 [/td][/tr][/table]
 
 [h2] 常见问题 [/h2]
 [b] Q: 不装 RimTalk 可以用吗？ [/b]
