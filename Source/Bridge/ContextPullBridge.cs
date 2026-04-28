@@ -6,6 +6,7 @@ using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Core;
+using RimMind.Core.Context;
 using RimMind.Core.Prompt;
 using Verse;
 
@@ -36,10 +37,14 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 Log.Warning("[RimMind-Bridge-RimTalk] RimTalk history types not available, skipping provider registration.");
                 return;
             }
-            RimMindAPI.RegisterPawnContextProvider("rimtalk_history", pawn =>
-            {
-                return BuildRimTalkHistoryContext(pawn);
-            }, PromptSection.PriorityMemory, ModId);
+            ContextKeyRegistry.Register("rimtalk_history", ContextLayer.L4_History, 0.5f,
+                pawn =>
+                {
+                    var result = BuildRimTalkHistoryContext(pawn);
+                    return string.IsNullOrEmpty(result)
+                        ? new List<ContextEntry>()
+                        : new List<ContextEntry> { new ContextEntry(result!) };
+                }, ModId);
         }
 
         private static bool ResolveTypes()
@@ -144,7 +149,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
         public static void Unregister()
         {
-            RimMindAPI.UnregisterPawnContextProvider("rimtalk_history");
+            ContextKeyRegistry.Unregister("rimtalk_history");
         }
     }
 }

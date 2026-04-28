@@ -184,6 +184,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
             var sb = new StringBuilder();
             sb.AppendLine("# RimMind Context");
+            bool hasContent = false;
 
             if (settings.pushPersonality)
             {
@@ -191,12 +192,14 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 sb.AppendLine("## {{ p.name }}'s Personality:");
                 sb.AppendLine("{{ p.rimmind_personality }}");
                 sb.AppendLine("{{ end }}");
+                hasContent = true;
             }
 
             if (settings.pushStoryteller)
             {
                 sb.AppendLine("# Storyteller State");
                 sb.AppendLine("{{rimmind_storyteller}}");
+                hasContent = true;
             }
 
             if (settings.pushMemory)
@@ -205,6 +208,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 sb.AppendLine("## {{ p.name }}'s Memory:");
                 sb.AppendLine("{{ p.rimmind_memory }}");
                 sb.AppendLine("{{ end }}");
+                hasContent = true;
             }
 
             if (settings.pushAdvisorLog)
@@ -213,6 +217,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 sb.AppendLine("## {{ p.name }}'s Advisor Log:");
                 sb.AppendLine("{{ p.rimmind_advisor_log }}");
                 sb.AppendLine("{{ end }}");
+                hasContent = true;
             }
 
             if (settings.pushShaping)
@@ -221,14 +226,14 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 sb.AppendLine("## {{ p.name }}'s Shaping History:");
                 sb.AppendLine("{{ p.rimmind_shaping }}");
                 sb.AppendLine("{{ end }}");
+                hasContent = true;
             }
 
-            string content = sb.ToString().TrimEnd();
-            if (content.Length <= "# RimMind Context".Length) return;
+            if (!hasContent) return;
 
             RimTalkApiShim.AddPromptEntry(
                 name: "RimMind Context",
-                content: content,
+                content: sb.ToString().TrimEnd(),
                 roleValue: 0,
                 positionValue: 0,
                 sourceModId: ModId
