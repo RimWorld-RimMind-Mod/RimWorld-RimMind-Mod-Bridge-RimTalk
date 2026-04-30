@@ -8,7 +8,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 {
     public static class PersonaPushBridge
     {
-        private const string ModId = "RimMind.Bridge.RimTalk";
+        private const string ModId = "RimMind.Bridge.RimTalk.Persona";
 
         public static void Register()
         {
@@ -32,7 +32,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 {
                     var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
                     if (profile == null) return "";
-                    return string.IsNullOrEmpty(profile.description) ? "" : profile.description;
+                    return profile.description ?? "";
                 },
                 "RimMind personality description",
                 40
@@ -45,7 +45,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 {
                     var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
                     if (profile == null) return "";
-                    return string.IsNullOrEmpty(profile.workTendencies) ? "" : profile.workTendencies;
+                    return profile.workTendencies ?? "";
                 },
                 "RimMind work tendencies",
                 45
@@ -58,7 +58,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 {
                     var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
                     if (profile == null) return "";
-                    return string.IsNullOrEmpty(profile.socialTendencies) ? "" : profile.socialTendencies;
+                    return profile.socialTendencies ?? "";
                 },
                 "RimMind social tendencies",
                 45
@@ -71,7 +71,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 {
                     var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
                     if (profile == null) return "";
-                    return string.IsNullOrEmpty(profile.aiNarrative) ? "" : profile.aiNarrative;
+                    return profile.aiNarrative ?? "";
                 },
                 "RimMind AI narrative",
                 55

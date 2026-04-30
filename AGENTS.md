@@ -1,348 +1,97 @@
 # AGENTS.md — RimMind-Bridge-RimTalk
 
-本文件供 AI 编码助手阅读，描述 RimMind-Bridge-RimTalk 的架构、代码约定和扩展模式。
+RimMind 与 RimTalk 模组协调层，对话门控 + 上下文双向推送/拉取。
 
 ## 项目定位
 
-RimMind-Bridge-RimTalk 是 RimMind 套件与 RimTalk 模组之间的协调层。当两个模组同时激活时，本模组负责：
+通过 `RimTalkApiShim` 反射封装调用RimTalk API(无编译期依赖):
+- **DialogueGate**: SkipCheck防止与RimTalk重复触发Chitchat/Auto/PlayerInput对话
+- **ContextPushBridge**: 将RimMind人格/记忆/叙事者/顾问/塑造数据推送到RimTalk变量+PromptEntry
+- **PersonaPushBridge**: 细粒度人格推送(4个变量+Traits/Mood Hook)
+- **ContextPullBridge**: 拉取RimTalk对话历史注册为RimMind Provider(rimtalk_history)
+- **RimTalkBridgeCoordinator**: 统一注册/注销入口
 
-1. **对话门控**：避免 RimMind-Dialogue 和 RimTalk 重复触发对话
-2. **上下文推送**：将 RimMind 的人格、记忆、叙述者、顾问日志、塑造历史等数据注入 RimTalk 的 Prompt 系统
-3. **人格推送**：将 RimMind 人格数据作为变量和 Hook 注入 RimTalk 的上下文分类
-4. **上下文拉取**：将 RimTalk 的对话历史注册为 RimMind 的上下文 Provider
+## 构建
 
-本模组通过反射调用 RimTalk API（`RimTalkApiShim`），不依赖 RimTalk 的编译期引用，因此 RimTalk 未安装时不会报错。
+| 项 | 值 |
+|----|-----|
+| Target | net48, C#9.0, Nullable enable |
+| Output | `../1.6/Assemblies/` |
+| Assembly | RimMindBridgeRimTalk |
+| 依赖 | RimMindCore, RimMindAdvisor, RimMindPersonality, RimMindMemory; Krafs.Rimworld.Ref, Lib.Harmony.Ref |
+| 无编译期引用 | RimTalk(纯反射), RimMind-Dialogue(通过Core API间接), RimMind-Storyteller(不使用) |
 
 ## 源码结构
 
 ```
 Source/
-├── RimMindBridgeRimTalkMod.cs   Mod 入口，注册 Harmony、Settings Tab，按条件注册桥接模块
+├── RimMindBridgeRimTalkMod.cs    Mod入口(委托Coordinator)
 ├── Bridge/
-│   ├── DialogueGate.cs          对话门控，注册 SkipCheck 防止重复触发
-│   ├── ContextPushBridge.cs     上下文推送，将 RimMind 数据注册为 RimTalk 变量/PromptEntry
-│   ├── PersonaPushBridge.cs     人格推送，将人格数据注册为 RimTalk 变量和 Hook
-│   └── RimTalkApiShim.cs        反射封装层，无编译期依赖地调用 RimTalk API
-├── Detection/
-│   └── RimTalkDetector.cs       检测 RimTalk 是否激活及其 API 是否可用
-└── Settings/
-    └── BridgeRimTalkSettings.cs 模组设置（对话门控 + 上下文推送 + 上下文拉取）
+│   ├── RimTalkBridgeCoordinator.cs  统一注册/注销入口
+│   ├── DialogueGate.cs           对话门控(ShouldSkipDialogue/ShouldSkipFloatMenuOption)
+│   ├── ContextPushBridge.cs      推送RimMind数据→RimTalk变量(5个)+PromptEntry
+│   ├── PersonaPushBridge.cs      细粒度人格推送(4个变量+Traits/Mood Hook)
+│   ├── ContextPullBridge.cs      拉取RimTalk对话→RimMind Provider(rimtalk_history)
+│   └── RimTalkApiShim.cs         反射封装层
+├── Detection/RimTalkDetector.cs  RimTalk激活检测(6000tick缓存+IsApiAvailable)
+├── Debug/BridgeRimTalkDebugActions.cs  5个DebugAction
+└── Settings/BridgeRimTalkSettings.cs   15项设置
+Tests/
+├── RimTalkStubs.cs               测试桩(Verse/RimTalk类型)
+├── RimTalkBridgeCoordinatorTests.cs  5个xUnit测试
+└── RimMindBridgeRimTalk.Tests.csproj  net10.0测试项目
 ```
 
-## 关键类与 API
-
-### RimTalkDetector
-
-检测 RimTalk 模组状态，带缓存：
+## RimTalkApiShim 反射方法
 
 ```csharp
-static class RimTalkDetector {
-    const string RimTalkPackageId = "cj.rimtalk";
-
-    bool IsRimTalkActive       // RimTalk 模组是否激活（6000 tick 缓存）
-    bool IsRimTalkApiAvailable // RimTalkPromptAPI 类型是否存在（启动时检测一次）
-    void InvalidateCache()     // 手动刷新缓存
-}
+RegisterPawnVariable / RegisterEnvironmentVariable / RegisterPawnHook
+AddPromptEntry / UnregisterAllHooks / RemovePromptEntriesByModId / Cleanup
 ```
 
-### RimTalkApiShim
+反射目标类型: `RimTalk.API.RimTalkPromptAPI`, `ContextHookRegistry`, `ContextCategories.Pawn`, `PromptEntry`, `PromptRole`, `PromptPosition`
 
-反射封装层，所有对 RimTalk API 的调用都通过此类。不引用 RimTalk DLL，通过 `AccessTools.TypeByName` + `MethodInfo.Invoke` 调用：
+## Provider注册
 
-```csharp
-static class RimTalkApiShim {
-    bool IsAvailable { get; }  // 等同 RimTalkDetector.IsRimTalkApiAvailable
+| 模块 | ModId | 注册内容 |
+|------|-------|---------|
+| ContextPushBridge | `Push` | 5个RimTalk变量(rimmind_personality/storyteller/memory/shaping/advisor_log) + PromptEntry |
+| PersonaPushBridge | `Persona` | 4个RimTalk变量(rimmind_persona_desc/work/social/narrative) + Traits/Mood Hook |
+| ContextPullBridge | `BridgeRimTalk` | RimMind Provider: rimtalk_history(L4_History, 0.5f, 6条) |
 
-    // 注册 Pawn 变量（可在 RimTalk 模板中通过 {{ p.variableName }} 引用）
-    bool RegisterPawnVariable(string modId, string variableName,
-        Func<Pawn, string> provider, string? description = null, int priority = 100)
+## 已知限制
 
-    // 注册环境变量（可在 RimTalk 模板中通过 {{variableName}} 引用）
-    bool RegisterEnvironmentVariable(string modId, string variableName,
-        Func<Map, string> provider, string? description = null, int priority = 100)
-
-    // 注册 Pawn Hook（拦截/增强 RimTalk 的上下文分类内容）
-    bool RegisterPawnHook(string modId, string categoryKey,
-        int hookOperation, Func<Pawn, string, string> handler, int priority = 100)
-
-    // 添加 PromptEntry（向 RimTalk 的 Prompt 模板注入段落）
-    bool AddPromptEntry(string name, string content,
-        int roleValue = 0, int positionValue = 0,
-        int inChatDepth = 0, string? sourceModId = null)
-
-    // 清理
-    bool UnregisterAllHooks(string modId)
-    int RemovePromptEntriesByModId(string modId)
-    void Cleanup(string modId)  // UnregisterAllHooks + RemovePromptEntriesByModId
-}
-```
-
-反射的目标类型：
-
-| 常量 | 类型全名 | 用途 |
-|------|---------|------|
-| `ApiTypeName` | `RimTalk.API.RimTalkPromptAPI` | 主 API 入口 |
-| `HookRegistryTypeName` | `RimTalk.API.ContextHookRegistry` | Hook 操作枚举 |
-| `ContextCategoriesTypeName` | `RimTalk.API.ContextCategories` | 上下文分类（含嵌套 Pawn 类） |
-| `PromptEntryTypeName` | `RimTalk.Prompt.PromptEntry` | Prompt 条目 |
-| `PromptRoleTypeName` | `RimTalk.Prompt.PromptRole` | 角色枚举 |
-| `PromptPositionTypeName` | `RimTalk.Prompt.PromptPosition` | 位置枚举 |
-
-### DialogueGate
-
-对话门控，防止 RimMind-Dialogue 和 RimTalk 同时触发对话：
-
-```csharp
-static class DialogueGate {
-    bool ShouldSkipDialogue(Pawn pawn, string triggerType)
-    // triggerType: "Chitchat" | "Auto" | "PlayerInput"
-
-    bool ShouldSkipFloatMenuOption()
-    // 判断是否跳过 RimMind 的"与X对话"浮动菜单
-
-    void RegisterSkipChecks()
-    // 注册到 RimMindAPI.RegisterDialogueSkipCheck / RegisterFloatMenuSkipCheck
-}
-```
-
-门控逻辑：
-
-| triggerType | 跳过条件 |
-|-------------|---------|
-| `"Chitchat"` | `enableDialogueGate && skipChitchat` |
-| `"Auto"` | `enableDialogueGate && skipAutoDialogue` |
-| `"PlayerInput"` | `enableDialogueGate && skipPlayerDialogue` |
-| 浮动菜单 | `enableDialogueGate && skipPlayerDialogue && !forceRimMindPlayerDialogue` |
-
-### ContextPushBridge
-
-将 RimMind 数据推送到 RimTalk Prompt 系统：
-
-```csharp
-static class ContextPushBridge {
-    void Register()    // 根据设置注册各推送模块
-    void Unregister()  // 清理所有注册（RimTalkApiShim.Cleanup）
-}
-```
-
-注册的 RimTalk 变量：
-
-| 变量名 | 类型 | 数据来源 | 优先级 | 设置开关 |
-|--------|------|---------|--------|---------|
-| `rimmind_personality` | Pawn | AIPersonalityWorldComponent | 50 | pushPersonality |
-| `rimmind_storyteller` | Environment | RimMindMemoryWorldComponent.NarratorStore | 80 | pushStoryteller |
-| `rimmind_memory` | Pawn | RimMindMemoryWorldComponent.PawnStore | 60 | pushMemory |
-| `rimmind_shaping` | Pawn | AIPersonalityWorldComponent.playerShapingHistory | 70 | pushShaping |
-| `rimmind_advisor_log` | Pawn | AdvisorHistoryStore | 80 | pushAdvisorLog |
-
-注册的 PromptEntry：`RimMind Context`，包含人格和叙述者模板变量引用。
-
-### PersonaPushBridge
-
-将 RimMind 人格数据以更细粒度推送到 RimTalk：
-
-```csharp
-static class PersonaPushBridge {
-    void Register()    // 注册变量和 Hook
-    void Unregister()  // 清理（RimTalkApiShim.Cleanup）
-}
-```
-
-注册的 RimTalk 变量：
-
-| 变量名 | 类型 | 数据来源 | 优先级 |
-|--------|------|---------|--------|
-| `rimmind_persona_desc` | Pawn | profile.description | 40 |
-| `rimmind_persona_work` | Pawn | profile.workTendencies | 45 |
-| `rimmind_persona_social` | Pawn | profile.socialTendencies | 45 |
-| `rimmind_persona_narrative` | Pawn | profile.aiNarrative | 55 |
-
-注册的 RimTalk Hook：
-
-| 分类 | 操作 | 说明 | 优先级 | 设置开关 |
-|------|------|------|--------|---------|
-| `Traits` | Append(0) | 追加人格描述到特质上下文 | 90 | injectPersonaToTraits |
-| `Mood` | Append(0) | 追加 AI 叙事到情绪上下文 | 90 | injectPersonaToMood |
-
-### ContextPullBridge
-
-从 RimTalk 拉取对话历史，注册为 RimMind Provider：
-
-```csharp
-static class ContextPullBridge {
-    void Register()    // 根据设置注册各 Provider
-    void Unregister()  // 清理所有注册（RimMindAPI.UnregisterPawnContextProvider）
-}
-```
-
-注册的 Provider：
-
-| Provider ID | 类型 | 数据来源 | 优先级 | 设置开关 |
-|-------------|------|---------|--------|---------|
-| `rimtalk_history` | PawnContextProvider | RimTalk.Data.TalkHistory（反射） | PriorityMemory | pullRimTalkHistory |
-
-反射目标类型：
-
-| 类型全名 | 用途 |
-|---------|------|
-| `RimTalk.Data.TalkHistory` | 对话历史数据类 |
-| `TalkHistory.GetMessageHistory(Pawn, bool)` | 获取 Pawn 的消息历史 |
-
-拉取逻辑：
-- 遍历地图上所有自由殖民者的对话历史
-- 筛选与目标 Pawn 相关的消息（Pawn 自身的对话 或 内容中包含 Pawn 名称的对话）
-- 取最近 6 条相关消息
-- 角色标签映射：0 → System, 1 → User, 2 → AI
-
-### BridgeRimTalkSettings
-
-```csharp
-class BridgeRimTalkSettings : ModSettings {
-    // 对话门控
-    bool enableDialogueGate;          // 默认 true
-    bool skipChitchat;                // 默认 true
-    bool skipAutoDialogue;            // 默认 true
-    bool skipPlayerDialogue;          // 默认 true
-    bool forceRimMindPlayerDialogue;  // 默认 false
-
-    // 上下文推送
-    bool enableContextPush;            // 默认 true
-    bool pushPersonality;             // 默认 true
-    bool pushStoryteller;             // 默认 true
-    bool pushMemory;                  // 默认 false
-    bool pushAdvisorLog;              // 默认 true
-    bool pushShaping;                 // 默认 false
-    bool injectPersonaToTraits;       // 默认 false
-    bool injectPersonaToMood;         // 默认 false
-
-    // 上下文拉取
-    bool enableContextPull;           // 默认 true
-    bool pullRimTalkHistory;          // 默认 true
-
-    static BridgeRimTalkSettings Get();
-    static void DrawSettingsContent(Rect inRect);
-}
-```
-
-## 数据流
-
-```
-RimMind 子模组数据                RimTalk Prompt 系统
-┌──────────────────┐             ┌──────────────────┐
-│ Personality      │──PushVar──→ │ {{ p.rimmind_personality }}
-│ Storyteller      │──PushVar──→ │ {{ rimmind_storyteller }}
-│ Memory           │──PushVar──→ │ {{ p.rimmind_memory }}
-│ Shaping          │──PushVar──→ │ {{ p.rimmind_shaping }}
-│ Advisor          │──PushVar──→ │ {{ p.rimmind_advisor_log }}
-│ Persona (细粒度) │──PushVar──→ │ {{ p.rimmind_persona_desc }} 等
-│ Persona          │──Hook─────→ │ Traits / Mood 上下文增强
-└──────────────────┘             └──────────────────┘
-
-RimTalk 对话历史  ──PullProvider──→  RimMind 上下文（rimtalk_history）
-
-RimMind-Dialogue 触发  ──DialogueGate──→  跳过/放行
-```
-
-## 初始化流程
-
-```
-RimMindBridgeRimTalkMod 构造函数
-    │
-    ├── GetSettings<BridgeRimTalkSettings>()
-    ├── Harmony("mcocdaa.RimMindBridgeRimTalk").PatchAll()
-    ├── RimMindAPI.RegisterSettingsTab("bridge_rimtalk", ...)
-    │
-    ├── RimTalkDetector.IsRimTalkActive?
-    │       │
-    │       ├── No  → Log + 跳过所有桥接模块
-    │       │
-    │       └── Yes → DialogueGate.RegisterSkipChecks()
-    │               ContextPullBridge.Register()
-    │               │
-    │               ├── RimTalkDetector.IsRimTalkApiAvailable?
-    │               │       │
-    │               │       ├── No  → Log.Warning + 跳过 Push 模块
-    │               │       │
-    │               │       └── Yes → ContextPushBridge.Register()
-    │               │               │
-    │               │               └── pushPersonality?
-    │               │                       ├── Yes → PersonaPushBridge.Register()
-    │               │                       └── No  → 跳过
-```
+- DialogueGate无Unregister方法(skip check注册后无法清理)
+- Cleanup不清理Variables(RimTalk API不提供Unregister)
+- 设置变更需重启(Push/Pull注册仅在启动时执行)
+- Tuple反射脆弱(ContextPullBridge依赖Item1/Item2字段名,已有WarningOnce)
+- DialogueGate全局门控(pawn参数未使用)
+- RimTalkApiShim部分方法静默失败(RegisterEnvironmentVariable/RegisterPawnHook缺Log.Warning)
 
 ## 代码约定
 
-### 命名空间
+- 所有RimTalk调用通过 `RimTalkApiShim` 封装，反射包裹try-catch
+- 各桥接模块使用独立ModId确保Cleanup互不干扰
+- 注册/注销通过 `RimTalkBridgeCoordinator` 统一调度
+- Harmony ID: `mcocdaa.RimMindBridgeRimTalk`
+- 翻译前缀: `RimMind.Bridge.RimTalk.*`
 
-| 命名空间 | 目录 | 职责 |
-|---------|------|------|
-| `RimMind.Bridge.RimTalk` | Source/ 根目录 | Mod 入口 |
-| `RimMind.Bridge.RimTalk.Bridge` | Bridge/ | 桥接模块 |
-| `RimMind.Bridge.RimTalk.Detection` | Detection/ | RimTalk 检测 |
-| `RimMind.Bridge.RimTalk.Settings` | Settings/ | 设置 |
+## 操作边界
 
-### 反射安全
+### ✅ 必须做
+- 所有RimTalk调用通过RimTalkApiShim封装
+- 反射调用包裹try-catch
+- 新设置项在ExposeData + UI + 翻译XML三处同步
+- 新桥接模块在Coordinator中添加Register/Unregister调用
 
-- 所有对 RimTalk API 的调用通过 `RimTalkApiShim` 封装
-- 反射结果缓存到 `static Type?` 字段，`EnsureResolved()` 延迟解析，仅执行一次
-- 所有反射调用包裹在 try-catch 中，失败时 `Log.Warning` 并返回 false/空值
-- 不引用 RimTalk DLL，通过 `AccessTools.TypeByName` 动态解析类型
-- `RimTalkApiShim.IsAvailable` 检查 `RimTalkDetector.IsRimTalkApiAvailable`，作为前置守卫
+### ⚠️ 先询问
+- 修改DialogueGate门控逻辑
+- 修改推送条目上限(当前5)
+- 修改ContextPullBridge Tuple反射字段名依赖
+- 修改Coordinator注册顺序
 
-### ModId
-
-所有 RimTalk API 注册使用统一 ModId：`"RimMind.Bridge.RimTalk"`
-
-### Harmony
-
-- Harmony ID：`mcocdaa.RimMindBridgeRimTalk`
-- 当前无 Harmony Patch（预留）
-
-### 构建
-
-| 配置项 | 值 |
-|--------|-----|
-| 目标框架 | `net48` |
-| C# 语言版本 | 9.0 |
-| Nullable | enable |
-| RimWorld 版本 | 1.6 |
-| 输出路径 | `../1.6/Assemblies/` |
-| 部署 | 设置 `RIMWORLD_DIR` 环境变量后自动部署 |
-| NuGet 依赖 | `Krafs.Rimworld.Ref 1.6.*-*`, `Lib.Harmony.Ref 2.*`, `Newtonsoft.Json 13.0.*` |
-| 编译期引用 | RimMindCore, RimMindDialogue, RimMindPersonality, RimMindMemory, RimMindStoryteller, RimMindAdvisor（均为 Private=false） |
-| 无编译期引用 | RimTalk（纯反射） |
-
-### 加载顺序
-
-```
-Harmony → cj.rimtalk → RimMind-Core → RimMind 子模组 → RimMind-Bridge-RimTalk
-```
-
-### UI 本地化
-
-所有 UI 文本通过 `Languages/ChineseSimplified/Keyed/RimMind_BridgeRimTalk.xml` 的 Keyed 翻译，禁止硬编码中文。
-
-### 设置 UI
-
-通过 `RimMindAPI.RegisterSettingsTab` 注册到 Core 的多分页设置界面，Tab 标签为 "Bridge (RimTalk)"。使用 `SettingsUIHelper` 辅助工具类绘制。
-
-## 扩展指南
-
-### 新增 RimTalk 变量推送
-
-1. 在 `ContextPushBridge` 或 `PersonaPushBridge` 中添加注册方法
-2. 使用 `RimTalkApiShim.RegisterPawnVariable` / `RegisterEnvironmentVariable`
-3. 在 `BridgeRimTalkSettings` 中添加对应开关
-4. 在语言文件中添加翻译键
-
-### 新增 RimTalk Hook
-
-1. 使用 `RimTalkApiShim.RegisterPawnHook`
-2. `categoryKey` 对应 `RimTalk.API.ContextCategories.Pawn` 的字段名（如 "Traits"、"Mood"）
-3. `hookOperation`：0 = Append
-
-### 新增反向数据流（RimTalk → RimMind）
-
-1. 在 `ContextPushBridge` 中通过反射读取 RimTalk 数据
-2. 使用 `RimMindAPI.RegisterPawnContextProvider` / `RegisterStaticProvider` 注册
-3. 在 `Unregister` 中调用 `RimMindAPI.UnregisterPawnContextProvider` 清理
+### 🚫 绝对禁止
+- 对RimTalk编译期引用
+- Cleanup不调用UnregisterAllHooks+RemovePromptEntriesByModId
+- 反射访问RimTalk内部类型不包裹try-catch
+- 设置变更后未重启就期望Push/Pull生效

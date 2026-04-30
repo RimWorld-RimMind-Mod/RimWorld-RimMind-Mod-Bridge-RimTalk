@@ -6,6 +6,7 @@ using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Core;
+using RimMind.Core.Context;
 using RimMind.Core.Prompt;
 using Verse;
 
@@ -21,6 +22,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
         public static void Register()
         {
+            if (!RimTalkDetector.IsRimTalkActive) return;
             var settings = BridgeRimTalkSettings.Get();
             if (!settings.enableContextPull) return;
 
@@ -30,10 +32,19 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
         private static void RegisterRimTalkHistoryProvider()
         {
-            RimMindAPI.RegisterPawnContextProvider("rimtalk_history", pawn =>
+            if (!ResolveTypes())
             {
-                return BuildRimTalkHistoryContext(pawn);
-            }, PromptSection.PriorityMemory, ModId);
+                Log.Warning("[RimMind-Bridge-RimTalk] RimTalk history types not available, skipping provider registration.");
+                return;
+            }
+            ContextKeyRegistry.Register("rimtalk_history", ContextLayer.L4_History, 0.5f,
+                pawn =>
+                {
+                    var result = BuildRimTalkHistoryContext(pawn);
+                    return string.IsNullOrEmpty(result)
+                        ? new List<ContextEntry>()
+                        : new List<ContextEntry> { new ContextEntry(result!) };
+                }, ModId);
         }
 
         private static bool ResolveTypes()
@@ -84,14 +95,21 @@ namespace RimMind.Bridge.RimTalk.Bridge
                             BindingFlags.Public | BindingFlags.Instance);
                         var messageField = msgType.GetField("Item2",
                             BindingFlags.Public | BindingFlags.Instance);
-                        if (roleField == null || messageField == null) continue;
+                        if (roleField == null || messageField == null)
+                        {
+                            Log.WarningOnce("ContextPullBridge: RimTalk message tuple fields not found, messages may not be pulled correctly", 84233);
+                            continue;
+                        }
 
                         var roleValue = roleField.GetValue(msg);
                         var content = messageField.GetValue(msg)?.ToString() ?? "";
                         if (string.IsNullOrEmpty(content)) continue;
 
                         bool isRelevant = otherPawn == pawn
-                            || content.Contains(pawnName);
+                            || (pawnName.Length >= 3 && content.Contains(pawnName))
+                            || content.Contains($"[{pawnName}]")
+                            || content.Contains($"{pawnName}:")
+                            || content.Contains($"{pawnName},");
 
                         if (!isRelevant) continue;
 
@@ -131,7 +149,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
         public static void Unregister()
         {
-            RimMindAPI.UnregisterPawnContextProvider("rimtalk_history");
+            ContextKeyRegistry.Unregister("rimtalk_history");
         }
     }
 }

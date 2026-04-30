@@ -123,6 +123,9 @@ namespace RimMind.Bridge.RimTalk.Settings
                         ref s.injectPersonaToMood,
                         "RimMind.BridgeRimTalk.Settings.InjectPersonaToMood.Desc".Translate());
                 }
+                GUI.color = Color.yellow;
+                listing.Label("  " + "RimMind.BridgeRimTalk.Settings.RestartHint".Translate());
+                GUI.color = Color.white;
             }
 
             SettingsUIHelper.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPull".Translate());
@@ -134,6 +137,9 @@ namespace RimMind.Bridge.RimTalk.Settings
                 listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PullRimTalkHistory".Translate(),
                     ref s.pullRimTalkHistory,
                     "RimMind.BridgeRimTalk.Settings.PullRimTalkHistory.Desc".Translate());
+                GUI.color = Color.yellow;
+                listing.Label("  " + "RimMind.BridgeRimTalk.Settings.RestartHint".Translate());
+                GUI.color = Color.white;
             }
 
             listing.End();
@@ -173,10 +179,11 @@ namespace RimMind.Bridge.RimTalk.Settings
                 h += 24f * 5;
                 if (s.pushPersonality)
                     h += 24f * 2;
+                h += 24f;
             }
             h += 24f + 24f;
             if (s.enableContextPull)
-                h += 24f;
+                h += 24f + 24f;
             return h + 40f;
         }
     }

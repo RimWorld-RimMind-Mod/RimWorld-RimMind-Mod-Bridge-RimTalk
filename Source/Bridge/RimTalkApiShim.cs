@@ -2,7 +2,6 @@ using System;
 using System.Reflection;
 using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
-using RimMind.Bridge.RimTalk.Settings;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
@@ -160,6 +159,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
                 if (createMethod == null)
                 {
+                    Log.Warning("[RimMind-Bridge-RimTalk] AddPromptEntry: exact method match failed, using fallback. This may match an incorrect overload.");
                     createMethod = _apiType.GetMethod("CreatePromptEntry",
                         BindingFlags.Public | BindingFlags.Static);
                 }
