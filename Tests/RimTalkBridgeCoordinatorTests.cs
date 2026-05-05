@@ -2,10 +2,12 @@ using System;
 using RimMind.Bridge.RimTalk.Bridge;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
+using RimMind.Core;
 using Xunit;
 
 namespace RimMind.Bridge.RimTalk.Tests
 {
+    [Collection("RimTalk")]
     public class RimTalkBridgeCoordinatorTests
     {
         public RimTalkBridgeCoordinatorTests()
@@ -13,7 +15,7 @@ namespace RimMind.Bridge.RimTalk.Tests
             RimTalkDetector.IsRimTalkActive = false;
             RimTalkDetector.IsRimTalkApiAvailable = false;
             BridgeRimTalkSettings.Reset();
-            DialogueGate.RegisterSkipChecksCalled = false;
+            RimMindAPI.ResetCounts();
             ContextPullBridge.RegisterCalled = false;
             ContextPullBridge.UnregisterCalled = false;
             ContextPushBridge.RegisterCalled = false;
@@ -29,7 +31,7 @@ namespace RimMind.Bridge.RimTalk.Tests
 
             RimTalkBridgeCoordinator.Register();
 
-            Assert.False(DialogueGate.RegisterSkipChecksCalled);
+            Assert.Equal(0, RimMindAPI.DialogueSkipCheckCount);
             Assert.False(ContextPullBridge.RegisterCalled);
             Assert.False(ContextPushBridge.RegisterCalled);
             Assert.False(PersonaPushBridge.RegisterCalled);
@@ -43,7 +45,7 @@ namespace RimMind.Bridge.RimTalk.Tests
 
             RimTalkBridgeCoordinator.Register();
 
-            Assert.True(DialogueGate.RegisterSkipChecksCalled);
+            Assert.True(RimMindAPI.DialogueSkipCheckCount > 0);
             Assert.True(ContextPullBridge.RegisterCalled);
             Assert.False(ContextPushBridge.RegisterCalled);
             Assert.False(PersonaPushBridge.RegisterCalled);
@@ -58,7 +60,7 @@ namespace RimMind.Bridge.RimTalk.Tests
 
             RimTalkBridgeCoordinator.Register();
 
-            Assert.True(DialogueGate.RegisterSkipChecksCalled);
+            Assert.True(RimMindAPI.DialogueSkipCheckCount > 0);
             Assert.True(ContextPullBridge.RegisterCalled);
             Assert.True(ContextPushBridge.RegisterCalled);
             Assert.False(PersonaPushBridge.RegisterCalled);
@@ -73,7 +75,7 @@ namespace RimMind.Bridge.RimTalk.Tests
 
             RimTalkBridgeCoordinator.Register();
 
-            Assert.True(DialogueGate.RegisterSkipChecksCalled);
+            Assert.True(RimMindAPI.DialogueSkipCheckCount > 0);
             Assert.True(ContextPullBridge.RegisterCalled);
             Assert.True(ContextPushBridge.RegisterCalled);
             Assert.True(PersonaPushBridge.RegisterCalled);
