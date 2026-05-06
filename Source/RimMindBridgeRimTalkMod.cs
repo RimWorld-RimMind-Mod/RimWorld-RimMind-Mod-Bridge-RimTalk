@@ -1,5 +1,6 @@
 using RimMind.Bridge.RimTalk.Bridge;
-using RimMind.Bridge.RimTalk.Settings;
+using RimMind.Bridge.RimTalk.Detection;
+using RimMind.Contracts.Extension;
 using RimMind.Core;
 using Verse;
 
@@ -11,9 +12,13 @@ namespace RimMind.Bridge.RimTalk
         {
             GetSettings<BridgeRimTalkSettings>();
 
-            RimMindAPI.RegisterSettingsTab("bridge_rimtalk",
-                () => "RimMind.BridgeRimTalk.Settings.TabLabel".Translate(),
-                BridgeRimTalkSettings.DrawSettingsContent);
+            RimMindAPI.Extensions<ISettingsTab>().Register(new RimTalkSettingsTab());
+
+            if (RimTalkDetector.IsRimTalkActive)
+            {
+                RimMindAPI.Extensions<ISkipCheck>().Register(new RimTalkDialogueSkipCheck());
+                RimMindAPI.Extensions<ISkipCheck>().Register(new RimTalkFloatMenuSkipCheck());
+            }
 
             RimTalkBridgeCoordinator.Register();
         }

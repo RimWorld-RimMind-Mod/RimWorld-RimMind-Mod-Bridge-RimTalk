@@ -19,24 +19,6 @@ namespace RimMind.Core
 {
     public static class RimMindAPI
     {
-        public static int DialogueSkipCheckCount { get; set; }
-        public static int FloatMenuSkipCheckCount { get; set; }
-
-        public static void RegisterDialogueSkipCheck(string sourceId, System.Func<Verse.Pawn, string, bool> check)
-        {
-            DialogueSkipCheckCount++;
-        }
-
-        public static void RegisterFloatMenuSkipCheck(string sourceId, System.Func<bool> check)
-        {
-            FloatMenuSkipCheckCount++;
-        }
-
-        public static void ResetCounts()
-        {
-            DialogueSkipCheckCount = 0;
-            FloatMenuSkipCheckCount = 0;
-        }
     }
 }
 

@@ -14,7 +14,6 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 return;
             }
 
-            DialogueGate.RegisterSkipChecks();
             Log.Message("[RimMind-Bridge-RimTalk] DialogueGate registered.");
 
             ContextPullBridge.Register();

@@ -5,7 +5,6 @@ using Xunit;
 
 namespace RimMind.Bridge.RimTalk.Tests
 {
-    [Collection("RimTalk")]
     public class RimTalkDialogueGateTests
     {
         public RimTalkDialogueGateTests()
