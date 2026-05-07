@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -6,8 +6,8 @@ using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Core;
-using RimMind.Core.Context;
-using RimMind.Core.Prompt;
+using RimMind.Kernel.Context;
+using RimMind.Kernel.Prompt;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
