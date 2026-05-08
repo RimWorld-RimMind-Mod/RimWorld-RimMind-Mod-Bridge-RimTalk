@@ -24,8 +24,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="RimMindCore">
-      <HintPath>../../RimMind-Core/$(GameVersion)/Assemblies/RimMindCore.dll</HintPath>
+    <Reference Include="0_RimMindContracts">
+      <HintPath>../../RimMind-Core/$(GameVersion)/Assemblies/0_RimMindContracts.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="1_RimMindKernel">
+      <HintPath>../../RimMind-Core/$(GameVersion)/Assemblies/1_RimMindKernel.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="2_RimMindCore">
+      <HintPath>../../RimMind-Core/$(GameVersion)/Assemblies/2_RimMindCore.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="RimMindAdvisor">
