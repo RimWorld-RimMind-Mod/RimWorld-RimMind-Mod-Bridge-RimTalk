@@ -1,6 +1,7 @@
 using RimMind.Contracts.Extension;
 using RimMind.Bridge.RimTalk.Settings;
 using UnityEngine;
+using Verse;
 
 namespace RimMind.Bridge.RimTalk
 {

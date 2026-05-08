@@ -1,5 +1,6 @@
 using RimMind.Bridge.RimTalk.Bridge;
 using RimMind.Bridge.RimTalk.Detection;
+using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Contracts.Extension;
 using RimMind.Core;
 using Verse;

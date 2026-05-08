@@ -1,10 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
+using RimMind.Contracts.Context;
 using RimMind.Core;
 using RimMind.Kernel.Context;
 using RimMind.Kernel.Prompt;
@@ -38,8 +39,10 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 return;
             }
             ContextKeyRegistry.Register("rimtalk_history", ContextLayer.L4_History, 0.5f,
-                pawn =>
+                pawnObj =>
                 {
+                    var pawn = pawnObj as Verse.Pawn;
+                    if (pawn == null) return new List<ContextEntry>();
                     var result = BuildRimTalkHistoryContext(pawn);
                     return string.IsNullOrEmpty(result)
                         ? new List<ContextEntry>()
