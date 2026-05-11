@@ -4,6 +4,7 @@ using LudeonTK;
 using RimMind.Bridge.RimTalk.Bridge;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
+using RimMind.Contracts.Result;
 using RimMind.Core;
 using Verse;
 
@@ -35,7 +36,7 @@ namespace RimMind.Bridge.RimTalk.Debug
             var pawn = Find.Selector?.SingleSelectedThing as Pawn;
             if (pawn == null)
             {
-                Log.Warning("[RimMind-Bridge-RimTalk] No pawn selected.");
+                RimMindErrors.Warn("[RimMind-Bridge-RimTalk] No pawn selected.");
                 return;
             }
 

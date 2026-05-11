@@ -1,5 +1,6 @@
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
+using RimMind.Contracts.Result;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
@@ -32,7 +33,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             else
             {
-                Log.Warning("[RimMind-Bridge-RimTalk] RimTalk API not available, push modules skipped.");
+                RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RimTalk API not available, push modules skipped.");
             }
 
             Log.Message("[RimMind-Bridge-RimTalk] Initialized.");

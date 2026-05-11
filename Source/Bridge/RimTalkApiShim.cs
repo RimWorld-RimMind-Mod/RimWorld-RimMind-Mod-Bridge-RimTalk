@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
+using RimMind.Contracts.Result;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
@@ -43,7 +44,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] Failed to resolve RimTalk types: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] Failed to resolve RimTalk types: {ex.Message}");
             }
         }
 
@@ -64,7 +65,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
                 if (method == null)
                 {
-                    Log.Warning($"[RimMind-Bridge-RimTalk] RegisterPawnVariable method not found");
+                    RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] RegisterPawnVariable method not found");
                     return false;
                 }
 
@@ -74,7 +75,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] RegisterPawnVariable failed: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] RegisterPawnVariable failed: {ex.Message}");
                 return false;
             }
         }
@@ -102,7 +103,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] RegisterEnvironmentVariable failed: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] RegisterEnvironmentVariable failed: {ex.Message}");
                 return false;
             }
         }
@@ -140,7 +141,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] RegisterPawnHook failed: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] RegisterPawnHook failed: {ex.Message}");
                 return false;
             }
         }
@@ -163,7 +164,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
                 if (createMethod == null)
                 {
-                    Log.Warning("[RimMind-Bridge-RimTalk] AddPromptEntry: exact method match failed, using fallback. This may match an incorrect overload.");
+                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] AddPromptEntry: exact method match failed, using fallback. This may match an incorrect overload.");
                     createMethod = _apiType.GetMethod("CreatePromptEntry",
                         BindingFlags.Public | BindingFlags.Static);
                 }
@@ -185,7 +186,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] AddPromptEntry failed: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] AddPromptEntry failed: {ex.Message}");
                 return false;
             }
         }
@@ -207,7 +208,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] UnregisterAllHooks failed: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] UnregisterAllHooks failed: {ex.Message}");
                 return false;
             }
         }
@@ -229,7 +230,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] RemovePromptEntriesByModId failed: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] RemovePromptEntriesByModId failed: {ex.Message}");
                 return 0;
             }
         }

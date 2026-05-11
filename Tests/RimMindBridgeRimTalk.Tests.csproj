@@ -20,4 +20,8 @@
     <Compile Include="../Source/Bridge/DialogueGate.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="../../RimMind-Core/Source/Contracts/RimMindCore.Contracts.csproj" />
+  </ItemGroup>
+
 </Project>

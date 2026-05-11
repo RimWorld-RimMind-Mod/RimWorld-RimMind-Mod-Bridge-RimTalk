@@ -6,6 +6,7 @@ using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Contracts.Context;
+using RimMind.Contracts.Result;
 using RimMind.Core;
 using RimMind.Kernel.Context;
 using RimMind.Kernel.Prompt;
@@ -35,7 +36,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
         {
             if (!ResolveTypes())
             {
-                Log.Warning("[RimMind-Bridge-RimTalk] RimTalk history types not available, skipping provider registration.");
+                RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RimTalk history types not available, skipping provider registration.");
                 return;
             }
             ContextKeyRegistry.Register("rimtalk_history", ContextLayer.L4_History, 0.5f,
@@ -58,7 +59,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             _talkHistoryType = AccessTools.TypeByName("RimTalk.Data.TalkHistory");
             if (_talkHistoryType == null)
             {
-                Log.WarningOnce("[RimMind-Bridge-RimTalk] RimTalk.Data.TalkHistory type not found.", 84231);
+                RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RimTalk.Data.TalkHistory type not found.");
                 return false;
             }
 
@@ -66,7 +67,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 BindingFlags.Public | BindingFlags.Static);
             if (_getMessageHistoryMethod == null)
             {
-                Log.WarningOnce("[RimMind-Bridge-RimTalk] TalkHistory.GetMessageHistory method not found.", 84232);
+                RimMindErrors.Warn("[RimMind-Bridge-RimTalk] TalkHistory.GetMessageHistory method not found.");
                 return false;
             }
 
@@ -100,7 +101,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                             BindingFlags.Public | BindingFlags.Instance);
                         if (roleField == null || messageField == null)
                         {
-                            Log.WarningOnce("ContextPullBridge: RimTalk message tuple fields not found, messages may not be pulled correctly", 84233);
+                            RimMindErrors.Warn("ContextPullBridge: RimTalk message tuple fields not found, messages may not be pulled correctly");
                             continue;
                         }
 
@@ -145,7 +146,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (System.Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] BuildRimTalkHistoryContext failed for {pawn.Name.ToStringShort}: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] BuildRimTalkHistoryContext failed for {pawn.Name.ToStringShort}: {ex.Message}");
                 return null;
             }
         }
