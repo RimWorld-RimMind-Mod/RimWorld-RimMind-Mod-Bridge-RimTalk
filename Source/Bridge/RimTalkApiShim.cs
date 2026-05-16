@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
-using RimMind.Contracts.Result;
+using RimMind.Domain.ValueObjects;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge

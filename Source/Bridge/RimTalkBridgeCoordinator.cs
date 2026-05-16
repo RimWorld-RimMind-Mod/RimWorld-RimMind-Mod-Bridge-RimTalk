@@ -1,6 +1,6 @@
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
-using RimMind.Contracts.Result;
+using RimMind.Domain.ValueObjects;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge

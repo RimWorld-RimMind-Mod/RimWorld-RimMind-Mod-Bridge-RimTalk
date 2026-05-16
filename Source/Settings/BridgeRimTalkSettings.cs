@@ -1,6 +1,6 @@
 using UnityEngine;
 using Verse;
-using RimMind.Adapters.UI;
+using RimMind.Infrastructure.UI;
 
 namespace RimMind.Bridge.RimTalk.Settings
 {

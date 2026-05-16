@@ -24,12 +24,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="0_RimMindContracts">
-      <HintPath>../../RimMind-Core/$(GameVersion)/Assemblies/0_RimMindContracts.dll</HintPath>
+    <Reference Include="0_RimMindDomain">
+      <HintPath>../../RimMind-Core/$(GameVersion)/Assemblies/0_RimMindDomain.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="1_RimMindKernel">
-      <HintPath>../../RimMind-Core/$(GameVersion)/Assemblies/1_RimMindKernel.dll</HintPath>
+    <Reference Include="1_RimMindApplication">
+      <HintPath>../../RimMind-Core/$(GameVersion)/Assemblies/1_RimMindApplication.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="2_RimMindCore">

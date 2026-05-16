@@ -4,8 +4,8 @@ using LudeonTK;
 using RimMind.Bridge.RimTalk.Bridge;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
-using RimMind.Contracts.Result;
-using RimMind.Core;
+using RimMind.Domain.ValueObjects;
+using RimMind.Presentation;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Debug
