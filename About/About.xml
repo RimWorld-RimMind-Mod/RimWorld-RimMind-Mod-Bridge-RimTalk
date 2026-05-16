@@ -19,6 +19,18 @@
       <displayName>RimMind - Core</displayName>
       <downloadUrl>https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Core</downloadUrl>
     </li>
+    <li>
+      <packageId>mcocdaa.RimMindAdvisor</packageId>
+      <displayName>RimMind - Advisor</displayName>
+    </li>
+    <li>
+      <packageId>mcocdaa.RimMindPersonality</packageId>
+      <displayName>RimMind - Personality</displayName>
+    </li>
+    <li>
+      <packageId>mcocdaa.RimMindMemory</packageId>
+      <displayName>RimMind - Memory</displayName>
+    </li>
   </modDependencies>
   <loadAfter>
     <li>brrainz.harmony</li>
