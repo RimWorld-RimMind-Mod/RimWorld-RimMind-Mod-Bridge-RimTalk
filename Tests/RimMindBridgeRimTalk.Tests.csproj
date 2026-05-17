@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../RimMind-Core/Source/Contracts/RimMindCore.Contracts.csproj" />
+    <ProjectReference Include="../../RimMind-Core/Source/Domain/RimMindCore.Domain.csproj" />
   </ItemGroup>
 
 </Project>
