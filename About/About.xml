@@ -31,6 +31,14 @@
       <packageId>mcocdaa.RimMindMemory</packageId>
       <displayName>RimMind - Memory</displayName>
     </li>
+    <li>
+      <packageId>mcocdaa.RimMindDialogue</packageId>
+      <displayName>RimMind - Dialogue</displayName>
+    </li>
+    <li>
+      <packageId>cj.rimtalk</packageId>
+      <displayName>RimTalk</displayName>
+    </li>
   </modDependencies>
   <loadAfter>
     <li>brrainz.harmony</li>
