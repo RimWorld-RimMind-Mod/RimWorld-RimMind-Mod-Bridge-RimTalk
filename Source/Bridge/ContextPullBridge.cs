@@ -8,9 +8,6 @@ using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Application.Common.Interfaces.Context;
 using RimMind.Domain.ValueObjects;
 using RimMind.Presentation;
-using RimMind.Presentation.Context;
-using RimMind.Application.Features.Context;
-using RimMind.Application.Features.Prompt;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
@@ -40,7 +37,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RimTalk history types not available, skipping provider registration.");
                 return;
             }
-            ContextKeyRegistry.Register("rimtalk_history", ContextLayer.L4_History, 0.5f,
+            RimMindAPI.Context.RegisterContextKey("rimtalk_history", ContextLayer.L4_History, 0.5f,
                 pawnObj =>
                 {
                     var pawn = pawnObj as Verse.Pawn;
@@ -154,7 +151,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
         public static void Unregister()
         {
-            ContextKeyRegistry.Unregister("rimtalk_history");
+            RimMindAPI.Context.UnregisterContextKey("rimtalk_history");
         }
     }
 }
