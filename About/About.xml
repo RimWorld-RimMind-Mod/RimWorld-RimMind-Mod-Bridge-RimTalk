@@ -32,10 +32,6 @@
       <displayName>RimMind - Memory</displayName>
     </li>
     <li>
-      <packageId>mcocdaa.RimMindDialogue</packageId>
-      <displayName>RimMind - Dialogue</displayName>
-    </li>
-    <li>
       <packageId>cj.rimtalk</packageId>
       <displayName>RimTalk</displayName>
     </li>
@@ -46,7 +42,7 @@
     <li>mcocdaa.RimMindCore</li>
     <li>mcocdaa.RimMindMemory</li>
     <li>mcocdaa.RimMindPersonality</li>
-    <li>mcocdaa.RimMindDialogue</li>
     <li>mcocdaa.RimMindAdvisor</li>
+    <li>mcocdaa.RimMindStoryteller</li>
   </loadAfter>
 </ModMetaData>
