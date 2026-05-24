@@ -60,8 +60,8 @@ namespace RimMind.Bridge.RimTalk.Settings
         {
             var s = Get();
 
-            Rect contentArea = SettingsUIHelper.SplitContentArea(inRect);
-            Rect bottomBar = SettingsUIHelper.SplitBottomBar(inRect);
+            Rect contentArea = SettingsUIDrawer.SplitContentArea(inRect);
+            Rect bottomBar = SettingsUIDrawer.SplitBottomBar(inRect);
 
             float contentH = EstimateHeight(s);
             Rect viewRect = new Rect(0f, 0f, contentArea.width - 16f, contentH);
@@ -70,7 +70,7 @@ namespace RimMind.Bridge.RimTalk.Settings
             var listing = new Listing_Standard();
             listing.Begin(viewRect);
 
-            SettingsUIHelper.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.DialogueGate".Translate());
+            SettingsUIDrawer.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.DialogueGate".Translate());
             listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnableDialogueGate".Translate(),
                 ref s.enableDialogueGate,
                 "RimMind.BridgeRimTalk.Settings.EnableDialogueGate.Desc".Translate());
@@ -93,7 +93,7 @@ namespace RimMind.Bridge.RimTalk.Settings
                 }
             }
 
-            SettingsUIHelper.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPush".Translate());
+            SettingsUIDrawer.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPush".Translate());
             listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnableContextPush".Translate(),
                 ref s.enableContextPush,
                 "RimMind.BridgeRimTalk.Settings.EnableContextPush.Desc".Translate());
@@ -128,7 +128,7 @@ namespace RimMind.Bridge.RimTalk.Settings
                 GUI.color = Color.white;
             }
 
-            SettingsUIHelper.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPull".Translate());
+            SettingsUIDrawer.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPull".Translate());
             listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnableContextPull".Translate(),
                 ref s.enableContextPull,
                 "RimMind.BridgeRimTalk.Settings.EnableContextPull.Desc".Translate());
@@ -145,7 +145,7 @@ namespace RimMind.Bridge.RimTalk.Settings
             listing.End();
             Widgets.EndScrollView();
 
-            SettingsUIHelper.DrawBottomBar(bottomBar, () =>
+            SettingsUIDrawer.DrawBottomBar(bottomBar, () =>
             {
                 s.enableDialogueGate = true;
                 s.skipChitchat = true;
