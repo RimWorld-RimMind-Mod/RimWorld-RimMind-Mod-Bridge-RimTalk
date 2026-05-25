@@ -1,7 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
@@ -37,16 +40,16 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RimTalk history types not available, skipping provider registration.");
                 return;
             }
-            RimMindAPI.Context.RegisterContextKey("rimtalk_history", ContextLayer.L4_History, 0.5f,
-                pawnObj =>
+            RimMindAPI.Context.ContextKeys.Register(new ContextProviderDef(
+                "rimtalk_history", ContextLayer.L4_History, 0.5f,
+                async (ctx, ct) =>
                 {
-                    var pawn = pawnObj as Verse.Pawn;
-                    if (pawn == null) return new List<ContextEntry>();
-                    var result = BuildRimTalkHistoryContext(pawn);
-                    return string.IsNullOrEmpty(result)
-                        ? new List<ContextEntry>()
-                        : new List<ContextEntry> { new ContextEntry(result!) };
-                }, ModId);
+                    if (ctx.PawnId <= 0) return null;
+                    var pawn = Find.WorldPawns.AllPawnsAlive.FirstOrDefault(p => p.thingIDNumber == ctx.PawnId)
+                        ?? Find.CurrentMap?.mapPawns?.FreeColonists.FirstOrDefault(p => p.thingIDNumber == ctx.PawnId);
+                    if (pawn == null) return null;
+                    return BuildRimTalkHistoryContext(pawn);
+                }, ModId, stalenessTicks: 3000, invalidationTriggers: new[] { "RimTalkEvent" }));
         }
 
         private static bool ResolveTypes()
@@ -151,7 +154,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
         public static void Unregister()
         {
-            RimMindAPI.Context.UnregisterContextKey("rimtalk_history");
+            RimMindAPI.Context.ContextKeys.Unregister("rimtalk_history");
         }
     }
 }
