@@ -1,4 +1,3 @@
-using System;
 using RimMind.Bridge.RimTalk.Bridge;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
@@ -7,9 +6,9 @@ using Xunit;
 namespace RimMind.Bridge.RimTalk.Tests
 {
     [Collection("RimTalk")]
-    public class RimTalkBridgeCoordinatorTests
+    public class RimTalkBridgeCoordinatorExtendedTests
     {
-        public RimTalkBridgeCoordinatorTests()
+        public RimTalkBridgeCoordinatorExtendedTests()
         {
             RimTalkDetector.IsRimTalkActive = false;
             RimTalkDetector.IsRimTalkApiAvailable = false;
@@ -23,19 +22,20 @@ namespace RimMind.Bridge.RimTalk.Tests
         }
 
         [Fact]
-        public void Register_RimTalkNotActive_SkipsAll()
+        public void Register_ApiAvailableButPushPersonalityFalse_SkipsPersona()
         {
-            RimTalkDetector.IsRimTalkActive = false;
+            RimTalkDetector.IsRimTalkActive = true;
+            RimTalkDetector.IsRimTalkApiAvailable = true;
+            BridgeRimTalkSettings.Get().pushPersonality = false;
 
             RimTalkBridgeCoordinator.Register();
 
-            Assert.False(ContextPullBridge.RegisterCalled);
-            Assert.False(ContextPushBridge.RegisterCalled);
+            Assert.True(ContextPushBridge.RegisterCalled);
             Assert.False(PersonaPushBridge.RegisterCalled);
         }
 
         [Fact]
-        public void Register_RimTalkActive_RegistersDialogueGateAndContextPull()
+        public void Register_RimTalkActiveButApiUnavailable_SkipsPushBridges()
         {
             RimTalkDetector.IsRimTalkActive = true;
             RimTalkDetector.IsRimTalkApiAvailable = false;
@@ -48,41 +48,34 @@ namespace RimMind.Bridge.RimTalk.Tests
         }
 
         [Fact]
-        public void Register_ApiAvailable_RegistersPushBridges()
+        public void Unregister_AlwaysCallsAllUnregisters()
         {
-            RimTalkDetector.IsRimTalkActive = true;
-            RimTalkDetector.IsRimTalkApiAvailable = true;
-            BridgeRimTalkSettings.Get().pushPersonality = false;
+            // 即使没有 Register 过，Unregister 也应调用所有桥接模块
+            RimTalkBridgeCoordinator.Unregister();
 
-            RimTalkBridgeCoordinator.Register();
-
-            Assert.True(ContextPullBridge.RegisterCalled);
-            Assert.True(ContextPushBridge.RegisterCalled);
-            Assert.False(PersonaPushBridge.RegisterCalled);
+            Assert.True(ContextPullBridge.UnregisterCalled);
+            Assert.True(ContextPushBridge.UnregisterCalled);
+            Assert.True(PersonaPushBridge.UnregisterCalled);
         }
 
         [Fact]
-        public void Register_ApiAvailableAndPushPersonality_RegistersAll()
+        public void Register_CalledTwice_RegistersTwice()
         {
             RimTalkDetector.IsRimTalkActive = true;
             RimTalkDetector.IsRimTalkApiAvailable = true;
             BridgeRimTalkSettings.Get().pushPersonality = true;
 
             RimTalkBridgeCoordinator.Register();
+            // 重置标志
+            ContextPullBridge.RegisterCalled = false;
+            ContextPushBridge.RegisterCalled = false;
+            PersonaPushBridge.RegisterCalled = false;
+
+            RimTalkBridgeCoordinator.Register();
 
             Assert.True(ContextPullBridge.RegisterCalled);
             Assert.True(ContextPushBridge.RegisterCalled);
             Assert.True(PersonaPushBridge.RegisterCalled);
-        }
-
-        [Fact]
-        public void Unregister_CallsUnregisterOnAllBridges()
-        {
-            RimTalkBridgeCoordinator.Unregister();
-
-            Assert.True(ContextPullBridge.UnregisterCalled);
-            Assert.True(ContextPushBridge.UnregisterCalled);
-            Assert.True(PersonaPushBridge.UnregisterCalled);
         }
     }
 }
