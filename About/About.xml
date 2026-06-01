@@ -22,18 +22,22 @@
     <li>
       <packageId>mcocdaa.RimMindAdvisor</packageId>
       <displayName>RimMind - Advisor</displayName>
+      <downloadUrl>https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Advisor</downloadUrl>
     </li>
     <li>
       <packageId>mcocdaa.RimMindPersonality</packageId>
       <displayName>RimMind - Personality</displayName>
+      <downloadUrl>https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Personality</downloadUrl>
     </li>
     <li>
       <packageId>mcocdaa.RimMindMemory</packageId>
       <displayName>RimMind - Memory</displayName>
+      <downloadUrl>https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Memory</downloadUrl>
     </li>
     <li>
       <packageId>cj.rimtalk</packageId>
       <displayName>RimTalk</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/3551203752</steamWorkshopUrl>
     </li>
   </modDependencies>
   <loadAfter>
