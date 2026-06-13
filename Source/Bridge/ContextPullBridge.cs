@@ -10,7 +10,7 @@ using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Application.Common.Interfaces.Context;
 using RimMind.Domain.ValueObjects;
-using RimMind.Application.Api;
+using RimMind.Presentation.Api;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge

@@ -15,7 +15,7 @@ namespace Verse
     public class Pawn { }
 }
 
-namespace RimMind.Application.Api
+namespace RimMind.Presentation.Api
 {
     public static class RimMindAPI
     {
