@@ -115,6 +115,23 @@ namespace RimMind.Bridge.RimTalk.Settings
     }
 }
 
+namespace RimMind.Personality.Data
+{
+    public class PersonalityProfile
+    {
+        public string description = string.Empty;
+        public string workTendencies = string.Empty;
+        public string socialTendencies = string.Empty;
+        public string aiNarrative = string.Empty;
+
+        public bool IsEmpty =>
+            string.IsNullOrEmpty(description) &&
+            string.IsNullOrEmpty(workTendencies) &&
+            string.IsNullOrEmpty(socialTendencies) &&
+            string.IsNullOrEmpty(aiNarrative);
+    }
+}
+
 namespace HarmonyLib
 {
     public static class AccessTools

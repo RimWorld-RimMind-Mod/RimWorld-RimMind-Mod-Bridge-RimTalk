@@ -57,12 +57,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                     if (profile == null || profile.IsEmpty) return "";
 
                     var sb = new StringBuilder();
-                    if (!string.IsNullOrEmpty(profile.description))
-                        sb.AppendLine(profile.description);
-                    if (!string.IsNullOrEmpty(profile.workTendencies))
-                        sb.AppendLine($"[Work] {profile.workTendencies}");
-                    if (!string.IsNullOrEmpty(profile.socialTendencies))
-                        sb.AppendLine($"[Social] {profile.socialTendencies}");
+                    sb.AppendLine(PersonaFormatter.BuildFullProfile(profile));
                     if (!string.IsNullOrEmpty(profile.aiNarrative))
                         sb.AppendLine($"[AI] {profile.aiNarrative}");
                     return sb.ToString().TrimEnd();

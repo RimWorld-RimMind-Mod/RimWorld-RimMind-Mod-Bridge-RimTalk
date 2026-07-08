@@ -1,4 +1,3 @@
-using System.Text;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Personality.Data;
@@ -101,16 +100,9 @@ namespace RimMind.Bridge.RimTalk.Bridge
                         var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
                         if (profile == null || profile.IsEmpty) return existing;
 
-                        var sb = new StringBuilder();
-                        if (!string.IsNullOrEmpty(profile.description))
-                            sb.AppendLine(profile.description);
-                        if (!string.IsNullOrEmpty(profile.workTendencies))
-                            sb.AppendLine($"[Work] {profile.workTendencies}");
-                        if (!string.IsNullOrEmpty(profile.socialTendencies))
-                            sb.AppendLine($"[Social] {profile.socialTendencies}");
-
-                        if (sb.Length == 0) return existing;
-                        return existing + "\n" + sb.ToString().TrimEnd();
+                        var formatted = PersonaFormatter.BuildFullProfile(profile);
+                        if (string.IsNullOrEmpty(formatted)) return existing;
+                        return existing + "\n" + formatted;
                     },
                     90
                 );
