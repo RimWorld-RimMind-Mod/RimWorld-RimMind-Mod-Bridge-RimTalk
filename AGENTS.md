@@ -77,7 +77,7 @@ AddPromptEntry / UnregisterAllHooks / RemovePromptEntriesByModId / Cleanup
 ## 已知限制
 
 - DialogueGate无Unregister方法(skip check注册后无法清理)
-- Cleanup不清理Variables(RimTalk API不提供Unregister;_registeredVariableIds死代码已移除,原仅写入从不读取)
+- Cleanup不清理Variables(RimTalk API不提供Unregister;_registeredVariableIds死代码已归档至Refs/backup/RimMind-Bridge-RimTalk/,原仅写入从不读取)
 - 设置变更需重启(Push/Pull注册仅在启动时执行)
 - Tuple反射脆弱(ContextPullBridge依赖Item1/Item2字段名,已有WarningOnce)
 - DialogueGate全局门控(pawn参数已保留用于未来按pawn门控扩展,当前为全局门控)
