@@ -104,6 +104,8 @@ namespace RimMind.Bridge.RimTalk.Settings
         public bool pushMemory = false;
         public bool pushAdvisorLog = true;
         public bool pushShaping = false;
+        public bool injectPersonaToTraits = false;
+        public bool injectPersonaToMood = false;
 
         public bool enableContextPull = true;
         public bool pullRimTalkHistory = true;
@@ -114,6 +116,30 @@ namespace RimMind.Bridge.RimTalk.Settings
         public BridgeRimTalkSettings() { _instance = this; }
 
         public static void Reset() { _instance = null; }
+
+        // Dirty-flag support (mirrors real BridgeRimTalkSettings for unit testing)
+        private static bool _dirty;
+
+        public static (bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool) CaptureSnapshot()
+        {
+            var s = Get();
+            return (
+                s.enableDialogueGate, s.skipChitchat, s.skipAutoDialogue, s.skipPlayerDialogue, s.forceRimMindPlayerDialogue,
+                s.enableContextPush, s.pushPersonality, s.pushStoryteller, s.pushMemory, s.pushAdvisorLog, s.pushShaping,
+                s.injectPersonaToTraits, s.injectPersonaToMood,
+                s.enableContextPull, s.pullRimTalkHistory
+            );
+        }
+
+        public static void MarkDirtyIfChanged(
+            (bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool) before)
+        {
+            var after = CaptureSnapshot();
+            if (before != after) _dirty = true;
+        }
+
+        public static bool IsDirtyForTesting => _dirty;
+        public static void ResetDirtyForTesting() => _dirty = false;
     }
 }
 

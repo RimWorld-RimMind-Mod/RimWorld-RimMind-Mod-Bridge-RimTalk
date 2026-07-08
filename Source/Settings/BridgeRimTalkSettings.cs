@@ -55,10 +55,40 @@ namespace RimMind.Bridge.RimTalk.Settings
         }
 
         private static Vector2 _scrollPos = Vector2.zero;
+        private static bool _dirty;
+
+        /// <summary>
+        /// Captures a snapshot of all bool settings for change detection.
+        /// Used by <see cref="DrawSettingsContent"/> to avoid per-frame disk writes.
+        /// </summary>
+        internal static (bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool) CaptureSnapshot()
+        {
+            var s = Get();
+            return (
+                s.enableDialogueGate, s.skipChitchat, s.skipAutoDialogue, s.skipPlayerDialogue, s.forceRimMindPlayerDialogue,
+                s.enableContextPush, s.pushPersonality, s.pushStoryteller, s.pushMemory, s.pushAdvisorLog, s.pushShaping,
+                s.injectPersonaToTraits, s.injectPersonaToMood,
+                s.enableContextPull, s.pullRimTalkHistory
+            );
+        }
+
+        /// <summary>
+        /// Compares current settings against a prior snapshot; marks _dirty if any field differs.
+        /// </summary>
+        internal static void MarkDirtyIfChanged(
+            (bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool) before)
+        {
+            var after = CaptureSnapshot();
+            if (before != after) _dirty = true;
+        }
+
+        internal static bool IsDirtyForTesting => _dirty;
+        internal static void ResetDirtyForTesting() => _dirty = false;
 
         public static void DrawSettingsContent(Rect inRect)
         {
             var s = Get();
+            var snapshot = CaptureSnapshot();
 
             Rect contentArea = SettingsUIDrawer.SplitContentArea(inRect);
             Rect bottomBar = SettingsUIDrawer.SplitBottomBar(inRect);
@@ -164,7 +194,12 @@ namespace RimMind.Bridge.RimTalk.Settings
                 s.pullRimTalkHistory = true;
             });
 
-            Get().Write();
+            MarkDirtyIfChanged(snapshot);
+            if (_dirty)
+            {
+                Get().Write();
+                _dirty = false;
+            }
         }
 
         private static float EstimateHeight(BridgeRimTalkSettings s)
