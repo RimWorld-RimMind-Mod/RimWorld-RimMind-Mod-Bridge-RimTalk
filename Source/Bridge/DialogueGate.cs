@@ -8,6 +8,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
     {
         public static bool ShouldSkipDialogue(Pawn pawn, string triggerType)
         {
+            // pawn reserved for future per-pawn gating; currently global gate.
             if (!RimTalkDetector.IsRimTalkActive) return false;
 
             var settings = BridgeRimTalkSettings.Get();

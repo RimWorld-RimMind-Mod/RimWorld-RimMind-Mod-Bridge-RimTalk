@@ -65,7 +65,7 @@ AddPromptEntry / UnregisterAllHooks / RemovePromptEntriesByModId / Cleanup
 - Cleanup不清理Variables(RimTalk API不提供Unregister)
 - 设置变更需重启(Push/Pull注册仅在启动时执行)
 - Tuple反射脆弱(ContextPullBridge依赖Item1/Item2字段名,已有WarningOnce)
-- DialogueGate全局门控(pawn参数未使用)
+- DialogueGate全局门控(pawn参数已保留用于未来按pawn门控扩展,当前为全局门控)
 - RimTalkApiShim部分方法静默失败(RegisterEnvironmentVariable/RegisterPawnHook缺Log.Warning)
 
 ## 代码约定
