@@ -18,6 +18,7 @@
   <ItemGroup>
     <Compile Include="../Source/Bridge/RimTalkBridgeCoordinator.cs" />
     <Compile Include="../Source/Bridge/DialogueGate.cs" />
+    <Compile Include="../Source/Detection/RimTalkDetector.cs" />
   </ItemGroup>
 
   <ItemGroup>

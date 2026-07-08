@@ -13,21 +13,22 @@ namespace Verse
     }
 
     public class Pawn { }
+
+    public class TickManager
+    {
+        public int TicksGame;
+    }
+
+    public static class Find
+    {
+        public static TickManager? TickManager;
+    }
 }
 
 namespace RimMind.Presentation.Api
 {
     public static class RimMindAPI
     {
-    }
-}
-
-namespace RimMind.Bridge.RimTalk.Detection
-{
-    public static class RimTalkDetector
-    {
-        public static bool IsRimTalkActive { get; set; }
-        public static bool IsRimTalkApiAvailable { get; set; }
     }
 }
 
@@ -84,5 +85,13 @@ namespace RimMind.Bridge.RimTalk.Settings
         public BridgeRimTalkSettings() { _instance = this; }
 
         public static void Reset() { _instance = null; }
+    }
+}
+
+namespace HarmonyLib
+{
+    public static class AccessTools
+    {
+        public static System.Type? TypeByName(string name) => null;
     }
 }

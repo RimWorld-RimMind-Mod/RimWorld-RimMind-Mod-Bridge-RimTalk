@@ -44,12 +44,18 @@ namespace RimMind.Bridge.RimTalk.Detection
                 }
                 return _cachedResult.Value;
             }
+            internal set
+            {
+                _cachedResult = value;
+            }
         }
 
         public static void InvalidateCache()
         {
             _cachedResult = null;
             _cacheTick = -1;
+            _apiAvailable = null;
+            _apiChecked = false;
         }
 
         private static bool? _apiAvailable;
@@ -65,6 +71,11 @@ namespace RimMind.Bridge.RimTalk.Detection
                     _apiChecked = true;
                 }
                 return _apiAvailable ?? false;
+            }
+            internal set
+            {
+                _apiAvailable = value;
+                _apiChecked = true;
             }
         }
     }
