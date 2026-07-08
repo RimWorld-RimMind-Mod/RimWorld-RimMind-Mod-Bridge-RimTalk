@@ -15,7 +15,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             if (!RimTalkDetector.IsRimTalkApiAvailable) return;
 
             var settings = BridgeRimTalkSettings.Get();
-            if (!settings.pushPersonality) return;
+            if (!settings.enableContextPush || !settings.pushPersonality) return;
 
             RegisterPersonaVariables();
 

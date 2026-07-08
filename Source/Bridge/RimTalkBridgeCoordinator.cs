@@ -25,7 +25,8 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 ContextPushBridge.Register();
                 Log.Message("[RimMind-Bridge-RimTalk] ContextPush registered.");
 
-                if (BridgeRimTalkSettings.Get().pushPersonality)
+                var settings = BridgeRimTalkSettings.Get();
+                if (settings.enableContextPush && settings.pushPersonality)
                 {
                     PersonaPushBridge.Register();
                     Log.Message("[RimMind-Bridge-RimTalk] PersonaPush registered.");

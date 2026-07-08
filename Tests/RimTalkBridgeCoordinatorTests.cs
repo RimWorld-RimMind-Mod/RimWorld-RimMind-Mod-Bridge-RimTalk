@@ -76,6 +76,22 @@ namespace RimMind.Bridge.RimTalk.Tests
         }
 
         [Fact]
+        public void Register_ContextPushDisabled_SkipsPersonaPushEvenIfPushPersonalityTrue()
+        {
+            RimTalkDetector.IsRimTalkActive = true;
+            RimTalkDetector.IsRimTalkApiAvailable = true;
+            var settings = BridgeRimTalkSettings.Get();
+            settings.enableContextPush = false;
+            settings.pushPersonality = true;
+
+            RimTalkBridgeCoordinator.Register();
+
+            Assert.True(ContextPullBridge.RegisterCalled);
+            Assert.True(ContextPushBridge.RegisterCalled);
+            Assert.False(PersonaPushBridge.RegisterCalled);
+        }
+
+        [Fact]
         public void Unregister_CallsUnregisterOnAllBridges()
         {
             RimTalkBridgeCoordinator.Unregister();
