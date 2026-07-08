@@ -19,6 +19,7 @@
     <Compile Include="../Source/Bridge/RimTalkBridgeCoordinator.cs" />
     <Compile Include="../Source/Bridge/DialogueGate.cs" />
     <Compile Include="../Source/Bridge/PersonaFormatter.cs" />
+    <Compile Include="../Source/Bridge/RimTalkApiShim.cs" />
     <Compile Include="../Source/Detection/RimTalkDetector.cs" />
   </ItemGroup>
 

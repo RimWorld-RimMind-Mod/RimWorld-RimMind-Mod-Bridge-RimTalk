@@ -93,7 +93,11 @@ namespace RimMind.Bridge.RimTalk.Bridge
                     new[] { typeof(string), typeof(string), typeof(Func<Map, string>), typeof(string), typeof(int) },
                     null);
 
-                if (method == null) return false;
+                if (method == null)
+                {
+                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RegisterEnvironmentVariable method not found");
+                    return false;
+                }
 
                 method.Invoke(null, new object?[] { modId, variableName, provider, description, priority });
                 return true;
@@ -115,11 +119,19 @@ namespace RimMind.Bridge.RimTalk.Bridge
             try
             {
                 var nestedPawnType = _contextCategoriesType.GetNestedType("Pawn");
-                if (nestedPawnType == null) return false;
+                if (nestedPawnType == null)
+                {
+                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] ContextCategories.Pawn nested type not found");
+                    return false;
+                }
 
                 var categoryField = nestedPawnType.GetField(categoryKey,
                     BindingFlags.Public | BindingFlags.Static);
-                if (categoryField == null) return false;
+                if (categoryField == null)
+                {
+                    RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] ContextCategories.Pawn.{categoryKey} field not found");
+                    return false;
+                }
 
                 object? categoryValue = categoryField.GetValue(null);
                 if (categoryValue == null) return false;
@@ -131,7 +143,11 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
                 var method = _apiType.GetMethod("RegisterPawnHook",
                     BindingFlags.Public | BindingFlags.Static);
-                if (method == null) return false;
+                if (method == null)
+                {
+                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RegisterPawnHook method not found");
+                    return false;
+                }
 
                 method.Invoke(null, new object?[] { modId, categoryValue, opValue, handler, priority });
                 return true;
@@ -161,12 +177,9 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
                 if (createMethod == null)
                 {
-                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] AddPromptEntry: exact method match failed, using fallback. This may match an incorrect overload.");
-                    createMethod = _apiType.GetMethod("CreatePromptEntry",
-                        BindingFlags.Public | BindingFlags.Static);
+                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] AddPromptEntry: CreatePromptEntry method with expected signature not found.");
+                    return false;
                 }
-
-                if (createMethod == null) return false;
 
                 object? roleObj = _promptRoleType != null ? Enum.ToObject(_promptRoleType, roleValue) : roleValue;
                 object? posObj = _promptPositionType != null ? Enum.ToObject(_promptPositionType, positionValue) : positionValue;

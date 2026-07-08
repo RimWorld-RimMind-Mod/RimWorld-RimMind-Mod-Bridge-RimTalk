@@ -16,6 +16,8 @@ namespace Verse
 
     public class Pawn { }
 
+    public class Map { }
+
     public class TickManager
     {
         public int TicksGame;
