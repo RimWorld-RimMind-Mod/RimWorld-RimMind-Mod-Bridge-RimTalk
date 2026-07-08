@@ -138,15 +138,13 @@ namespace RimMind.Bridge.RimTalk.Bridge
                     if (history == null || history.Count == 0) return "";
 
                     var sb = new StringBuilder("[RimMind Shaping]");
-                    int count = 0;
                     int start = System.Math.Max(0, history.Count - 5);
                     for (int i = start; i < history.Count; i++)
                     {
                         var r = history[i];
                         sb.AppendLine($"- [{r.action}] {r.label}");
-                        count++;
                     }
-                    return count > 0 ? sb.ToString().TrimEnd() : "";
+                    return sb.ToString().TrimEnd();
                 },
                 "RimMind shaping history",
                 70
