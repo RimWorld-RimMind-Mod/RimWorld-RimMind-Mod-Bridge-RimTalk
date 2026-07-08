@@ -24,7 +24,6 @@ namespace RimMind.Bridge.RimTalk.Bridge
         private static Type? _promptRoleType;
         private static Type? _promptPositionType;
         private static bool _resolved;
-        private static readonly HashSet<string> _registeredVariableIds = new HashSet<string>();
 
         public static bool IsAvailable => RimTalkDetector.IsRimTalkApiAvailable;
 
@@ -70,7 +69,6 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 }
 
                 method.Invoke(null, new object?[] { modId, variableName, provider, description, priority });
-                _registeredVariableIds.Add($"{modId}:{variableName}");
                 return true;
             }
             catch (Exception ex)
@@ -98,7 +96,6 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 if (method == null) return false;
 
                 method.Invoke(null, new object?[] { modId, variableName, provider, description, priority });
-                _registeredVariableIds.Add($"{modId}:{variableName}");
                 return true;
             }
             catch (Exception ex)
@@ -239,10 +236,6 @@ namespace RimMind.Bridge.RimTalk.Bridge
         {
             UnregisterAllHooks(modId);
             RemovePromptEntriesByModId(modId);
-            // RimTalk API does not provide an Unregister method for Variables.
-            // Registered variable IDs are tracked in _registeredVariableIds for
-            // future cleanup when the API supports it.
-            _registeredVariableIds.RemoveWhere(id => id.StartsWith($"{modId}:"));
         }
     }
 }
