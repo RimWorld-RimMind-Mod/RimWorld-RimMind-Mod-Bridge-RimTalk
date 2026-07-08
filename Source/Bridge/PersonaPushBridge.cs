@@ -2,16 +2,22 @@ using System.Text;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Personality.Data;
+using RimMind.Application.Common.Interfaces.Extension;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
 {
-    public static class PersonaPushBridge
+    public sealed class PersonaPushBridge : IBridgeModule
     {
         private const string ModId = "RimMind.Bridge.RimTalk.Persona";
 
-        public static void Register()
+        public string Id => "persona_push";
+        public string OwnerModId => "RimMindBridgeRimTalk";
+        public bool IsRegistered { get; private set; }
+
+        public void Register()
         {
+            if (IsRegistered) return;
             if (!RimTalkDetector.IsRimTalkApiAvailable) return;
 
             var settings = BridgeRimTalkSettings.Get();
@@ -21,9 +27,11 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
             if (settings.injectPersonaToTraits || settings.injectPersonaToMood)
                 RegisterPersonaHooks();
+
+            IsRegistered = true;
         }
 
-        private static void RegisterPersonaVariables()
+        private void RegisterPersonaVariables()
         {
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
@@ -78,7 +86,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             );
         }
 
-        private static void RegisterPersonaHooks()
+        private void RegisterPersonaHooks()
         {
             var settings = BridgeRimTalkSettings.Get();
 
@@ -127,9 +135,11 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
         }
 
-        public static void Unregister()
+        public void Unregister()
         {
+            if (!IsRegistered) return;
             RimTalkApiShim.Cleanup(ModId);
+            IsRegistered = false;
         }
     }
 }

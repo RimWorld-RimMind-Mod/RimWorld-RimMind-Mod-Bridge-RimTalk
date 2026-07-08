@@ -4,15 +4,21 @@ using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Advisor.Data;
 using RimMind.Memory.Data;
 using RimMind.Personality.Data;
+using RimMind.Application.Common.Interfaces.Extension;
 
 namespace RimMind.Bridge.RimTalk.Bridge
 {
-    public static class ContextPushBridge
+    public sealed class ContextPushBridge : IBridgeModule
     {
         private const string ModId = "RimMind.Bridge.RimTalk.Push";
 
-        public static void Register()
+        public string Id => "context_push";
+        public string OwnerModId => "RimMindBridgeRimTalk";
+        public bool IsRegistered { get; private set; }
+
+        public void Register()
         {
+            if (IsRegistered) return;
             if (!RimTalkDetector.IsRimTalkApiAvailable) return;
 
             var settings = BridgeRimTalkSettings.Get();
@@ -36,9 +42,11 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
                 RegisterPromptEntry();
             }
+
+            IsRegistered = true;
         }
 
-        private static void RegisterPersonalityVariable()
+        private void RegisterPersonalityVariable()
         {
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
@@ -64,7 +72,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             );
         }
 
-        private static void RegisterStorytellerVariable()
+        private void RegisterStorytellerVariable()
         {
             RimTalkApiShim.RegisterEnvironmentVariable(
                 ModId,
@@ -89,7 +97,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             );
         }
 
-        private static void RegisterMemoryVariable()
+        private void RegisterMemoryVariable()
         {
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
@@ -125,7 +133,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             );
         }
 
-        private static void RegisterShapingVariable()
+        private void RegisterShapingVariable()
         {
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
@@ -151,7 +159,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             );
         }
 
-        private static void RegisterAdvisorLogVariable()
+        private void RegisterAdvisorLogVariable()
         {
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
@@ -176,7 +184,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             );
         }
 
-        private static void RegisterPromptEntry()
+        private void RegisterPromptEntry()
         {
             var settings = BridgeRimTalkSettings.Get();
 
@@ -238,9 +246,11 @@ namespace RimMind.Bridge.RimTalk.Bridge
             );
         }
 
-        public static void Unregister()
+        public void Unregister()
         {
+            if (!IsRegistered) return;
             RimTalkApiShim.Cleanup(ModId);
+            IsRegistered = false;
         }
     }
 }

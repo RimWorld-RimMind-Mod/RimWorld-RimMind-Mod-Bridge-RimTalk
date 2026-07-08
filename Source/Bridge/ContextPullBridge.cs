@@ -9,31 +9,40 @@ using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Application.Common.Interfaces.Context;
+using RimMind.Application.Common.Interfaces.Extension;
 using RimMind.Domain.ValueObjects;
 using RimMind.Presentation.Api;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
 {
-    public static class ContextPullBridge
+    public sealed class ContextPullBridge : IBridgeModule
     {
         private const string ModId = "RimMind.BridgeRimTalk";
 
+        // Type-resolution cache is write-once and shared across instances (safe).
         private static System.Type? _talkHistoryType;
         private static MethodInfo? _getMessageHistoryMethod;
         private static bool _typeResolved;
 
-        public static void Register()
+        public string Id => "context_pull";
+        public string OwnerModId => "RimMindBridgeRimTalk";
+        public bool IsRegistered { get; private set; }
+
+        public void Register()
         {
+            if (IsRegistered) return;
             if (!RimTalkDetector.IsRimTalkActive) return;
             var settings = BridgeRimTalkSettings.Get();
             if (!settings.enableContextPull) return;
 
             if (settings.pullRimTalkHistory)
                 RegisterRimTalkHistoryProvider();
+
+            IsRegistered = true;
         }
 
-        private static void RegisterRimTalkHistoryProvider()
+        private void RegisterRimTalkHistoryProvider()
         {
             if (!ResolveTypes())
             {
@@ -52,7 +61,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 }, ModId, stalenessTicks: 3000, invalidationTriggers: new[] { "RimTalkEvent" }));
         }
 
-        private static bool ResolveTypes()
+        private bool ResolveTypes()
         {
             if (_typeResolved) return _talkHistoryType != null;
             _typeResolved = true;
@@ -75,7 +84,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             return true;
         }
 
-        private static string? BuildRimTalkHistoryContext(Pawn pawn)
+        private string? BuildRimTalkHistoryContext(Pawn pawn)
         {
             try
             {
@@ -152,9 +161,11 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
         }
 
-        public static void Unregister()
+        public void Unregister()
         {
+            if (!IsRegistered) return;
             RimMindAPI.Context.ContextKeys.Unregister("rimtalk_history");
+            IsRegistered = false;
         }
     }
 }

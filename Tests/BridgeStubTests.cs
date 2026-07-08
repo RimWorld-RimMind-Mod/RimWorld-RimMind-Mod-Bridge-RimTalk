@@ -1,3 +1,4 @@
+using RimMind.Application.Common.Interfaces.Extension;
 using RimMind.Bridge.RimTalk.Bridge;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
@@ -13,54 +14,115 @@ namespace RimMind.Bridge.RimTalk.Tests
             RimTalkDetector.IsRimTalkActive = false;
             RimTalkDetector.IsRimTalkApiAvailable = false;
             BridgeRimTalkSettings.Reset();
-            ContextPullBridge.RegisterCalled = false;
-            ContextPullBridge.UnregisterCalled = false;
-            ContextPushBridge.RegisterCalled = false;
-            ContextPushBridge.UnregisterCalled = false;
-            PersonaPushBridge.RegisterCalled = false;
-            PersonaPushBridge.UnregisterCalled = false;
         }
 
         [Fact]
-        public void ContextPullBridge_Register_SetsFlag()
+        public void ContextPullBridge_Register_SetsFlagAndIsRegistered()
         {
-            ContextPullBridge.Register();
-            Assert.True(ContextPullBridge.RegisterCalled);
+            var bridge = new ContextPullBridge();
+            bridge.Register();
+            Assert.True(bridge.RegisterCalled);
+            Assert.True(bridge.IsRegistered);
         }
 
         [Fact]
-        public void ContextPullBridge_Unregister_SetsFlag()
+        public void ContextPullBridge_Unregister_WhenRegistered_ClearsIsRegistered()
         {
-            ContextPullBridge.Unregister();
-            Assert.True(ContextPullBridge.UnregisterCalled);
+            var bridge = new ContextPullBridge();
+            bridge.Register();
+            bridge.Unregister();
+            Assert.True(bridge.UnregisterCalled);
+            Assert.False(bridge.IsRegistered);
         }
 
         [Fact]
-        public void ContextPushBridge_Register_SetsFlag()
+        public void ContextPullBridge_Unregister_WhenNotRegistered_IsNoOp()
         {
-            ContextPushBridge.Register();
-            Assert.True(ContextPushBridge.RegisterCalled);
+            var bridge = new ContextPullBridge();
+            bridge.Unregister();
+            Assert.False(bridge.UnregisterCalled);
+            Assert.False(bridge.IsRegistered);
         }
 
         [Fact]
-        public void ContextPushBridge_Unregister_SetsFlag()
+        public void ContextPullBridge_Register_Twice_IsIdempotent()
         {
-            ContextPushBridge.Unregister();
-            Assert.True(ContextPushBridge.UnregisterCalled);
+            var bridge = new ContextPullBridge();
+            bridge.Register();
+            bridge.RegisterCalled = false;
+            bridge.Register();
+            Assert.False(bridge.RegisterCalled);
+            Assert.True(bridge.IsRegistered);
         }
 
         [Fact]
-        public void PersonaPushBridge_Register_SetsFlag()
+        public void ContextPushBridge_Register_SetsFlagAndIsRegistered()
         {
-            PersonaPushBridge.Register();
-            Assert.True(PersonaPushBridge.RegisterCalled);
+            var bridge = new ContextPushBridge();
+            bridge.Register();
+            Assert.True(bridge.RegisterCalled);
+            Assert.True(bridge.IsRegistered);
         }
 
         [Fact]
-        public void PersonaPushBridge_Unregister_SetsFlag()
+        public void ContextPushBridge_Unregister_WhenRegistered_ClearsIsRegistered()
         {
-            PersonaPushBridge.Unregister();
-            Assert.True(PersonaPushBridge.UnregisterCalled);
+            var bridge = new ContextPushBridge();
+            bridge.Register();
+            bridge.Unregister();
+            Assert.True(bridge.UnregisterCalled);
+            Assert.False(bridge.IsRegistered);
+        }
+
+        [Fact]
+        public void ContextPushBridge_Unregister_WhenNotRegistered_IsNoOp()
+        {
+            var bridge = new ContextPushBridge();
+            bridge.Unregister();
+            Assert.False(bridge.UnregisterCalled);
+            Assert.False(bridge.IsRegistered);
+        }
+
+        [Fact]
+        public void PersonaPushBridge_Register_SetsFlagAndIsRegistered()
+        {
+            var bridge = new PersonaPushBridge();
+            bridge.Register();
+            Assert.True(bridge.RegisterCalled);
+            Assert.True(bridge.IsRegistered);
+        }
+
+        [Fact]
+        public void PersonaPushBridge_Unregister_WhenRegistered_ClearsIsRegistered()
+        {
+            var bridge = new PersonaPushBridge();
+            bridge.Register();
+            bridge.Unregister();
+            Assert.True(bridge.UnregisterCalled);
+            Assert.False(bridge.IsRegistered);
+        }
+
+        [Fact]
+        public void PersonaPushBridge_Unregister_WhenNotRegistered_IsNoOp()
+        {
+            var bridge = new PersonaPushBridge();
+            bridge.Unregister();
+            Assert.False(bridge.UnregisterCalled);
+            Assert.False(bridge.IsRegistered);
+        }
+
+        [Fact]
+        public void AllBridges_ImplementIBridgeModule_WithCorrectIds()
+        {
+            IBridgeModule pull = new ContextPullBridge();
+            IBridgeModule push = new ContextPushBridge();
+            IBridgeModule persona = new PersonaPushBridge();
+
+            Assert.Equal("context_pull", pull.Id);
+            Assert.Equal("context_push", push.Id);
+            Assert.Equal("persona_push", persona.Id);
+            Assert.All(new[] { pull, push, persona }, m => Assert.Equal("RimMindBridgeRimTalk", m.OwnerModId));
+            Assert.All(new[] { pull, push, persona }, m => Assert.False(m.IsRegistered));
         }
 
         [Fact]

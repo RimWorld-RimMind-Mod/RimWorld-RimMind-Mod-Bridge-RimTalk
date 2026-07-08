@@ -1,3 +1,5 @@
+using RimMind.Application.Common.Interfaces.Extension;
+
 namespace Verse
 {
     public static class Log
@@ -32,30 +34,55 @@ namespace RimMind.Presentation.Api
     }
 }
 
+namespace RimMind.Application.Common.Interfaces.Extension
+{
+    public interface IExtension
+    {
+        string Id { get; }
+        string OwnerModId { get; }
+    }
+
+    public interface IBridgeModule : IExtension
+    {
+        bool IsRegistered { get; }
+        void Register();
+        void Unregister();
+    }
+}
+
 namespace RimMind.Bridge.RimTalk.Bridge
 {
-    public static class ContextPullBridge
+    public sealed class ContextPullBridge : IBridgeModule
     {
-        public static bool RegisterCalled { get; set; }
-        public static bool UnregisterCalled { get; set; }
-        public static void Register() { RegisterCalled = true; }
-        public static void Unregister() { UnregisterCalled = true; }
+        public string Id => "context_pull";
+        public string OwnerModId => "RimMindBridgeRimTalk";
+        public bool IsRegistered { get; set; }
+        public bool RegisterCalled { get; set; }
+        public bool UnregisterCalled { get; set; }
+        public void Register() { if (IsRegistered) return; RegisterCalled = true; IsRegistered = true; }
+        public void Unregister() { if (!IsRegistered) return; UnregisterCalled = true; IsRegistered = false; }
     }
 
-    public static class ContextPushBridge
+    public sealed class ContextPushBridge : IBridgeModule
     {
-        public static bool RegisterCalled { get; set; }
-        public static bool UnregisterCalled { get; set; }
-        public static void Register() { RegisterCalled = true; }
-        public static void Unregister() { UnregisterCalled = true; }
+        public string Id => "context_push";
+        public string OwnerModId => "RimMindBridgeRimTalk";
+        public bool IsRegistered { get; set; }
+        public bool RegisterCalled { get; set; }
+        public bool UnregisterCalled { get; set; }
+        public void Register() { if (IsRegistered) return; RegisterCalled = true; IsRegistered = true; }
+        public void Unregister() { if (!IsRegistered) return; UnregisterCalled = true; IsRegistered = false; }
     }
 
-    public static class PersonaPushBridge
+    public sealed class PersonaPushBridge : IBridgeModule
     {
-        public static bool RegisterCalled { get; set; }
-        public static bool UnregisterCalled { get; set; }
-        public static void Register() { RegisterCalled = true; }
-        public static void Unregister() { UnregisterCalled = true; }
+        public string Id => "persona_push";
+        public string OwnerModId => "RimMindBridgeRimTalk";
+        public bool IsRegistered { get; set; }
+        public bool RegisterCalled { get; set; }
+        public bool UnregisterCalled { get; set; }
+        public void Register() { if (IsRegistered) return; RegisterCalled = true; IsRegistered = true; }
+        public void Unregister() { if (!IsRegistered) return; UnregisterCalled = true; IsRegistered = false; }
     }
 }
 
