@@ -102,5 +102,12 @@ namespace RimMind.Bridge.RimTalk.Debug
 
             Log.Message(sb.ToString());
         }
+
+        [DebugAction("RimMind Bridge-RimTalk", "Force Unregister Bridges", actionType = DebugActionType.Action)]
+        private static void ForceUnregisterBridges()
+        {
+            RimTalkBridgeCoordinator.Unregister();
+            Log.Message("[RimMind-Bridge-RimTalk] All bridges unregistered.");
+        }
     }
 }

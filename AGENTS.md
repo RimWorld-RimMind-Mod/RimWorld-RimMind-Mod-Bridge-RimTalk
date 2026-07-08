@@ -34,7 +34,7 @@ Source/
 │   ├── ContextPullBridge.cs      拉取RimTalk对话→RimMind Provider(rimtalk_history)
 │   └── RimTalkApiShim.cs         反射封装层
 ├── Detection/RimTalkDetector.cs  RimTalk激活检测(6000tick缓存+IsApiAvailable)
-├── Debug/BridgeRimTalkDebugActions.cs  5个DebugAction
+├── Debug/BridgeRimTalkDebugActions.cs  6个DebugAction
 └── Settings/BridgeRimTalkSettings.cs   15项设置
 Tests/
 ├── RimTalkStubs.cs               测试桩(Verse/RimTalk类型)
@@ -67,6 +67,7 @@ AddPromptEntry / UnregisterAllHooks / RemovePromptEntriesByModId / Cleanup
 - Tuple反射脆弱(ContextPullBridge依赖Item1/Item2字段名,已有WarningOnce)
 - DialogueGate全局门控(pawn参数已保留用于未来按pawn门控扩展,当前为全局门控)
 - RimTalkApiShim部分方法静默失败(RegisterEnvironmentVariable/RegisterPawnHook缺Log.Warning)
+- Unregister无自动调用点(RimWorld Mod生命周期无Dispose,需通过DebugAction"Force Unregister Bridges"手动清理)
 
 ## 代码约定
 
