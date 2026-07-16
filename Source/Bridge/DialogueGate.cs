@@ -6,7 +6,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 {
     public static class DialogueGate
     {
-        public static bool ShouldSkipDialogue(Pawn pawn, string triggerType)
+        public static bool ShouldSkipDialogue(Pawn? pawn, string? triggerType)
         {
             // pawn reserved for future per-pawn gating; currently global gate.
             if (!RimTalkDetector.IsRimTalkActive) return false;

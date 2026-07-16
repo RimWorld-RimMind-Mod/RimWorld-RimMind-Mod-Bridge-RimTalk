@@ -7,6 +7,6 @@ namespace RimMind.Bridge.RimTalk
         public string Id => "rimtalk_bridge_dialogue";
         public string OwnerModId => "RimMindBridgeRimTalk";
         public SkipCheckKind Kind => SkipCheckKind.Dialogue;
-        public bool ShouldSkip(in SkipCheckArgs args) => Bridge.DialogueGate.ShouldSkipDialogue((Verse.Pawn)args.Pawn, args.Trigger);
+        public bool ShouldSkip(in SkipCheckArgs args) => Bridge.DialogueGate.ShouldSkipDialogue(args.Pawn as Verse.Pawn, args.Trigger);
     }
 }
