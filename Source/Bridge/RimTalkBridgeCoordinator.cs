@@ -19,7 +19,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
         public static IReadOnlyList<IBridgeModule> Modules => GetModules();
 
         private static List<IBridgeModule> GetModules() =>
-            _modules ?? new List<IBridgeModule>
+            _modules ??= new List<IBridgeModule>
             {
                 new ContextPullBridge(),
                 new ContextPushBridge(),

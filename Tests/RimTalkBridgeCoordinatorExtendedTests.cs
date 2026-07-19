@@ -118,5 +118,19 @@ namespace RimMind.Bridge.RimTalk.Tests
             Assert.IsType<System.Collections.Generic.List<IBridgeModule>>(modules);
             Assert.Equal(3, modules.Count);
         }
+
+        [Fact]
+        public void Modules_DefaultList_IsStableAcrossReads()
+        {
+            RimTalkBridgeCoordinator.SetModulesForTesting(null);
+
+            var first = RimTalkBridgeCoordinator.Modules;
+            var second = RimTalkBridgeCoordinator.Modules;
+
+            Assert.Same(first, second);
+            Assert.Same(first[0], second[0]);
+            Assert.Same(first[1], second[1]);
+            Assert.Same(first[2], second[2]);
+        }
     }
 }
