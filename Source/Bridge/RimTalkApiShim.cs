@@ -25,6 +25,23 @@ namespace RimMind.Bridge.RimTalk.Bridge
         private static Type? _promptPositionType;
         private static bool _resolved;
 
+        internal static void ConfigureTypesForTesting(
+            Type? apiType,
+            Type? hookRegistryType = null,
+            Type? contextCategoriesType = null,
+            Type? promptEntryType = null,
+            Type? promptRoleType = null,
+            Type? promptPositionType = null)
+        {
+            _apiType = apiType;
+            _hookRegistryType = hookRegistryType;
+            _contextCategoriesType = contextCategoriesType;
+            _promptEntryType = promptEntryType;
+            _promptRoleType = promptRoleType;
+            _promptPositionType = promptPositionType;
+            _resolved = true;
+        }
+
         public static bool IsAvailable => RimTalkDetector.IsRimTalkApiAvailable;
 
         private static void EnsureResolved()

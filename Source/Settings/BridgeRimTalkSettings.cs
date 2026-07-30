@@ -4,34 +4,8 @@ using RimMind.Presentation.UI;
 
 namespace RimMind.Bridge.RimTalk.Settings
 {
-    public class BridgeRimTalkSettings : ModSettings
+    public partial class BridgeRimTalkSettings : ModSettings
     {
-        public bool enableDialogueGate = true;
-        public bool skipChitchat = true;
-        public bool skipAutoDialogue = true;
-        public bool skipPlayerDialogue = true;
-        public bool forceRimMindPlayerDialogue = false;
-
-        public bool enableContextPush = true;
-        public bool pushPersonality = true;
-        public bool pushStoryteller = true;
-        public bool pushMemory = false;
-        public bool pushAdvisorLog = true;
-        public bool pushShaping = false;
-        public bool injectPersonaToTraits = false;
-        public bool injectPersonaToMood = false;
-
-        public bool enableContextPull = true;
-        public bool pullRimTalkHistory = true;
-
-        private static BridgeRimTalkSettings? _instance;
-        public static BridgeRimTalkSettings Get() => _instance ?? new BridgeRimTalkSettings();
-
-        public BridgeRimTalkSettings()
-        {
-            _instance = this;
-        }
-
         public override void ExposeData()
         {
             base.ExposeData();
@@ -55,36 +29,6 @@ namespace RimMind.Bridge.RimTalk.Settings
         }
 
         private static Vector2 _scrollPos = Vector2.zero;
-        private static bool _dirty;
-
-        /// <summary>
-        /// Captures a snapshot of all bool settings for change detection.
-        /// Used by <see cref="DrawSettingsContent"/> to avoid per-frame disk writes.
-        /// </summary>
-        internal static (bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool) CaptureSnapshot()
-        {
-            var s = Get();
-            return (
-                s.enableDialogueGate, s.skipChitchat, s.skipAutoDialogue, s.skipPlayerDialogue, s.forceRimMindPlayerDialogue,
-                s.enableContextPush, s.pushPersonality, s.pushStoryteller, s.pushMemory, s.pushAdvisorLog, s.pushShaping,
-                s.injectPersonaToTraits, s.injectPersonaToMood,
-                s.enableContextPull, s.pullRimTalkHistory
-            );
-        }
-
-        /// <summary>
-        /// Compares current settings against a prior snapshot; marks _dirty if any field differs.
-        /// </summary>
-        internal static void MarkDirtyIfChanged(
-            (bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool) before)
-        {
-            var after = CaptureSnapshot();
-            if (before != after) _dirty = true;
-        }
-
-        internal static bool IsDirtyForTesting => _dirty;
-        internal static void ResetDirtyForTesting() => _dirty = false;
-
         public static void DrawSettingsContent(Rect inRect)
         {
             var s = Get();

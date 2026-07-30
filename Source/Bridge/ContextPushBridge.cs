@@ -22,25 +22,26 @@ namespace RimMind.Bridge.RimTalk.Bridge
             if (!RimTalkDetector.IsRimTalkApiAvailable) return;
 
             var settings = BridgeRimTalkSettings.Get();
+            RimTalkContextPushPlan plan = RimTalkContextPushPlan.Build(settings);
 
             if (settings.enableContextPush)
             {
-                if (settings.pushPersonality)
+                if (plan.RegisterPersonality)
                     RegisterPersonalityVariable();
 
-                if (settings.pushStoryteller)
+                if (plan.RegisterStoryteller)
                     RegisterStorytellerVariable();
 
-                if (settings.pushMemory)
+                if (plan.RegisterMemory)
                     RegisterMemoryVariable();
 
-                if (settings.pushShaping)
+                if (plan.RegisterShaping)
                     RegisterShapingVariable();
 
-                if (settings.pushAdvisorLog)
+                if (plan.RegisterAdvisorLog)
                     RegisterAdvisorLogVariable();
 
-                RegisterPromptEntry();
+                RegisterPromptEntry(plan);
             }
 
             IsRegistered = true;
@@ -179,62 +180,13 @@ namespace RimMind.Bridge.RimTalk.Bridge
             );
         }
 
-        private void RegisterPromptEntry()
+        private static void RegisterPromptEntry(RimTalkContextPushPlan plan)
         {
-            var settings = BridgeRimTalkSettings.Get();
-
-            var sb = new StringBuilder();
-            sb.AppendLine("# RimMind Context");
-            bool hasContent = false;
-
-            if (settings.pushPersonality)
-            {
-                sb.AppendLine("{{ for p in pawns }}");
-                sb.AppendLine("## {{ p.name }}'s Personality:");
-                sb.AppendLine("{{ p.rimmind_personality }}");
-                sb.AppendLine("{{ end }}");
-                hasContent = true;
-            }
-
-            if (settings.pushStoryteller)
-            {
-                sb.AppendLine("# Storyteller State");
-                sb.AppendLine("{{rimmind_storyteller}}");
-                hasContent = true;
-            }
-
-            if (settings.pushMemory)
-            {
-                sb.AppendLine("{{ for p in pawns }}");
-                sb.AppendLine("## {{ p.name }}'s Memory:");
-                sb.AppendLine("{{ p.rimmind_memory }}");
-                sb.AppendLine("{{ end }}");
-                hasContent = true;
-            }
-
-            if (settings.pushAdvisorLog)
-            {
-                sb.AppendLine("{{ for p in pawns }}");
-                sb.AppendLine("## {{ p.name }}'s Advisor Log:");
-                sb.AppendLine("{{ p.rimmind_advisor_log }}");
-                sb.AppendLine("{{ end }}");
-                hasContent = true;
-            }
-
-            if (settings.pushShaping)
-            {
-                sb.AppendLine("{{ for p in pawns }}");
-                sb.AppendLine("## {{ p.name }}'s Shaping History:");
-                sb.AppendLine("{{ p.rimmind_shaping }}");
-                sb.AppendLine("{{ end }}");
-                hasContent = true;
-            }
-
-            if (!hasContent) return;
+            if (string.IsNullOrEmpty(plan.PromptContent)) return;
 
             RimTalkApiShim.AddPromptEntry(
                 name: "RimMind Context",
-                content: sb.ToString().TrimEnd(),
+                content: plan.PromptContent,
                 roleValue: 0,
                 positionValue: 0,
                 sourceModId: ModId

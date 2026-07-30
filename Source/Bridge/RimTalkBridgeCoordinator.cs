@@ -26,32 +26,19 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 new PersonaPushBridge()
             };
 
-        /// <summary>Replaces the module list for testing. Pass null to reset to default list.</summary>
-        public static void SetModulesForTesting(List<IBridgeModule>? modules) => _modules = modules;
+        private static BridgeModuleCoordinator CreateCoordinator() =>
+            new BridgeModuleCoordinator(
+                GetModules(),
+                () => RimTalkDetector.IsRimTalkActive,
+                message => Log.Message($"[RimMind-Bridge-RimTalk] {message}"),
+                message => Log.Warning($"[RimMind-Bridge-RimTalk] {message}"));
 
         public static void Register()
         {
-            if (!RimTalkDetector.IsRimTalkActive)
-            {
-                Log.Message("[RimMind-Bridge-RimTalk] RimTalk not active, bridge modules skipped.");
-                return;
-            }
-
-            foreach (var module in GetModules())
-            {
-                module.Register();
-                Log.Message($"[RimMind-Bridge-RimTalk] {module.Id} registered={module.IsRegistered}.");
-            }
-
+            CreateCoordinator().RegisterAll();
             Log.Message("[RimMind-Bridge-RimTalk] Initialized.");
         }
 
-        public static void Unregister()
-        {
-            foreach (var module in GetModules())
-            {
-                module.Unregister();
-            }
-        }
+        public static void Unregister() => CreateCoordinator().UnregisterAll();
     }
 }

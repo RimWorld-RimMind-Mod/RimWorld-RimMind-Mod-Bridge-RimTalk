@@ -7,6 +7,7 @@
     <AssemblyName>RimMindBridgeRimTalk.Tests</AssemblyName>
     <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,15 +17,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="../Source/Bridge/RimTalkBridgeCoordinator.cs" />
+    <Compile Include="RimTalkStubs.cs" />
+    <Compile Include="Contracts\**\*.cs" />
+    <Compile Include="..\..\RimMind-Core\TestSupport\ContractCaseRunner.cs"
+             Link="Support\ContractCaseRunner.cs" />
+    <Compile Include="../Source/Bridge/BridgeModuleCoordinator.cs" />
+    <Compile Include="../Source/Bridge/RimTalkContextPushPlan.cs" />
     <Compile Include="../Source/Bridge/DialogueGate.cs" />
     <Compile Include="../Source/Bridge/PersonaFormatter.cs" />
     <Compile Include="../Source/Bridge/RimTalkApiShim.cs" />
     <Compile Include="../Source/Detection/RimTalkDetector.cs" />
+    <Compile Include="../Source/Settings/BridgeRimTalkSettings.State.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../RimMind-Core/Source/Domain/RimMindCore.Domain.csproj" />
+    <ProjectReference Include="../../RimMind-Core/Source/Application/RimMindCore.Application.csproj" />
   </ItemGroup>
 
 </Project>
