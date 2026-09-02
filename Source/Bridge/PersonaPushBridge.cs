@@ -1,8 +1,6 @@
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
-using RimMind.Personality.Data;
 using RimMind.Application.Common.Interfaces.Extension;
-using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
 {
@@ -35,12 +33,9 @@ namespace RimMind.Bridge.RimTalk.Bridge
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
                 "rimmind_persona_desc",
-                pawn =>
-                {
-                    var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
-                    if (profile == null) return "";
-                    return profile.description ?? "";
-                },
+                pawn => RimMindProviderReader.GetPawn(
+                    RimMindProviderReader.PersonalityDescription,
+                    pawn),
                 "RimMind personality description",
                 40
             );
@@ -48,12 +43,9 @@ namespace RimMind.Bridge.RimTalk.Bridge
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
                 "rimmind_persona_work",
-                pawn =>
-                {
-                    var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
-                    if (profile == null) return "";
-                    return profile.workTendencies ?? "";
-                },
+                pawn => RimMindProviderReader.GetPawn(
+                    RimMindProviderReader.PersonalityWorkTendencies,
+                    pawn),
                 "RimMind work tendencies",
                 45
             );
@@ -61,12 +53,9 @@ namespace RimMind.Bridge.RimTalk.Bridge
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
                 "rimmind_persona_social",
-                pawn =>
-                {
-                    var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
-                    if (profile == null) return "";
-                    return profile.socialTendencies ?? "";
-                },
+                pawn => RimMindProviderReader.GetPawn(
+                    RimMindProviderReader.PersonalitySocialTendencies,
+                    pawn),
                 "RimMind social tendencies",
                 45
             );
@@ -74,12 +63,9 @@ namespace RimMind.Bridge.RimTalk.Bridge
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
                 "rimmind_persona_narrative",
-                pawn =>
-                {
-                    var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
-                    if (profile == null) return "";
-                    return profile.aiNarrative ?? "";
-                },
+                pawn => RimMindProviderReader.GetPawn(
+                    RimMindProviderReader.PersonalityNarrative,
+                    pawn),
                 "RimMind AI narrative",
                 55
             );
@@ -97,10 +83,16 @@ namespace RimMind.Bridge.RimTalk.Bridge
                     0,
                     (pawn, existing) =>
                     {
-                        var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
-                        if (profile == null || profile.IsEmpty) return existing;
-
-                        var formatted = PersonaFormatter.BuildFullProfile(profile);
+                        var formatted = PersonaFormatter.BuildFullProfile(
+                            RimMindProviderReader.GetPawn(
+                                RimMindProviderReader.PersonalityDescription,
+                                pawn),
+                            RimMindProviderReader.GetPawn(
+                                RimMindProviderReader.PersonalityWorkTendencies,
+                                pawn),
+                            RimMindProviderReader.GetPawn(
+                                RimMindProviderReader.PersonalitySocialTendencies,
+                                pawn));
                         if (string.IsNullOrEmpty(formatted)) return existing;
                         return existing + "\n" + formatted;
                     },
@@ -116,11 +108,13 @@ namespace RimMind.Bridge.RimTalk.Bridge
                     0,
                     (pawn, existing) =>
                     {
-                        var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
-                        if (profile == null || string.IsNullOrEmpty(profile.aiNarrative))
+                        var narrative = RimMindProviderReader.GetPawn(
+                            RimMindProviderReader.PersonalityNarrative,
+                            pawn);
+                        if (string.IsNullOrEmpty(narrative))
                             return existing;
 
-                        return existing + "\n[AI Narrative] " + profile.aiNarrative;
+                        return existing + "\n[AI Narrative] " + narrative;
                     },
                     90
                 );

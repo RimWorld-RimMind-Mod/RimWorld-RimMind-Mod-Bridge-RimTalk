@@ -1,10 +1,15 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using RimMind.Application.Common.Interfaces.Extension;
 using RimMind.Bridge.RimTalk.Bridge;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
-using RimMind.Personality.Data;
+using RimMind.Domain.ValueObjects;
+using RimMind.Presentation.Api;
 using RimMind.Testing;
+using Verse;
 using Xunit;
 
 namespace RimMind.Bridge.RimTalk.Tests.Contracts
@@ -114,46 +119,104 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
             ContractCaseRunner.Run(
                 ("null and empty profiles expose no context", () =>
                 {
-                    Assert.Equal(string.Empty, PersonaFormatter.BuildFullProfile(null!));
-                    Assert.Equal(string.Empty, PersonaFormatter.BuildFullProfile(
-                        new PersonalityProfile()));
+                    Assert.Equal(string.Empty, PersonaFormatter.BuildFullProfile(null, null, null));
+                    Assert.Equal(string.Empty, PersonaFormatter.BuildFullProfile("", "", ""));
                 }),
                 ("description work and social sections retain their labels", () =>
                 {
-                    var profile = new PersonalityProfile
-                    {
-                        description = "Brave",
-                        workTendencies = "Diligent",
-                        socialTendencies = "Friendly"
-                    };
-
                     Assert.Equal(
-                        "Brave\r\n[Work] Diligent\r\n[Social] Friendly"
-                            .Replace("\r\n", System.Environment.NewLine),
-                        PersonaFormatter.BuildFullProfile(profile));
-                }),
-                ("AI narrative remains caller-owned", () =>
-                {
-                    var profile = new PersonalityProfile
-                    {
-                        description = "Brave",
-                        aiNarrative = "private narrative"
-                    };
-
-                    var result = PersonaFormatter.BuildFullProfile(profile);
-
-                    Assert.Equal("Brave", result);
-                    Assert.DoesNotContain("private narrative", result);
+                        $"Brave{Environment.NewLine}[Work] Diligent{Environment.NewLine}[Social] Friendly",
+                        PersonaFormatter.BuildFullProfile("Brave", "Diligent", "Friendly"));
                 }),
                 ("formatted context has no trailing newline", () =>
                 {
-                    var result = PersonaFormatter.BuildFullProfile(new PersonalityProfile
-                    {
-                        workTendencies = "Careful"
-                    });
+                    Assert.Equal(
+                        "[Work] Careful",
+                        PersonaFormatter.BuildFullProfile(null, "Careful", null));
+                }),
+                ("provider seam returns pawn and static values", () =>
+                {
+                    ResetProviders();
+                    RimMindAPI.Providers.PawnResult =
+                        Result<string?, RimMindError>.Ok("value");
+                    RimMindAPI.Providers.StaticResult =
+                        Result<string?, RimMindError>.Ok("world");
 
-                    Assert.Equal("[Work] Careful", result);
+                    Assert.Equal("value", RimMindProviderReader.GetPawn("test.pawn", new Pawn()));
+                    Assert.Equal("world", RimMindProviderReader.GetStatic("test.static"));
+                }),
+                ("missing optional providers are silent", () =>
+                {
+                    ResetProviders();
+
+                    Assert.Equal(string.Empty,
+                        RimMindProviderReader.GetPawn("missing.category", new Pawn()));
+                    Assert.Empty(Log.Warnings);
+                }),
+                ("registered provider failures warn once per category", () =>
+                {
+                    ResetProviders();
+                    RimMindAPI.Providers.Categories.Add("failing.category");
+                    RimMindAPI.Providers.PawnResult =
+                        Result<string?, RimMindError>.Err(RimMindErrors.Internal("provider failed"));
+
+                    Assert.Equal(string.Empty,
+                        RimMindProviderReader.GetPawn("failing.category", new Pawn()));
+                    Assert.Equal(string.Empty,
+                        RimMindProviderReader.GetPawn("failing.category", new Pawn()));
+
+                    Assert.Single(Log.Warnings);
+                    Assert.Contains("Provider 'failing.category' failed", Log.Warnings[0]);
+                }),
+                ("production source has no child-mod compile dependency", () =>
+                {
+                    var root = RepositoryRoot();
+                    var source = string.Join(
+                        Environment.NewLine,
+                        Directory.EnumerateFiles(
+                                Path.Combine(root, "Source"),
+                                "*.cs",
+                                SearchOption.AllDirectories)
+                            .Select(File.ReadAllText));
+                    var project = File.ReadAllText(
+                        Path.Combine(root, "Source", "RimMindBridgeRimTalk.csproj"));
+
+                    Assert.DoesNotContain("RimMind.Advisor", source);
+                    Assert.DoesNotContain("RimMind.Memory", source);
+                    Assert.DoesNotContain("RimMind.Personality", source);
+                    Assert.DoesNotContain("RimMindAdvisor", project);
+                    Assert.DoesNotContain("RimMindMemory", project);
+                    Assert.DoesNotContain("RimMindPersonality", project);
+                    Assert.Contains("NarratorMemoryBrief", source);
+                    Assert.Contains("PawnMemoryBrief", source);
+                    Assert.Contains("PersonalityShaping", source);
+                    Assert.Contains("AdvisorHistoryBrief", source);
                 }));
+        }
+
+        private static void ResetProviders()
+        {
+            RimMindAPI.Providers.Reset();
+            Log.Reset();
+        }
+
+        private static string RepositoryRoot()
+        {
+            DirectoryInfo? directory = new DirectoryInfo(AppContext.BaseDirectory);
+            while (directory != null)
+            {
+                if (File.Exists(Path.Combine(
+                    directory.FullName,
+                    "Source",
+                    "RimMindBridgeRimTalk.csproj")))
+                {
+                    return directory.FullName;
+                }
+
+                directory = directory.Parent;
+            }
+
+            throw new DirectoryNotFoundException("RimMind-Bridge-RimTalk repository root not found.");
         }
 
         private static BridgeRimTalkSettings Reset(bool active)

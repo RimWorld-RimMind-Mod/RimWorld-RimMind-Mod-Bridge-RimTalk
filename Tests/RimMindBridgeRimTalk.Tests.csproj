@@ -25,6 +25,7 @@
     <Compile Include="../Source/Bridge/RimTalkContextPushPlan.cs" />
     <Compile Include="../Source/Bridge/DialogueGate.cs" />
     <Compile Include="../Source/Bridge/PersonaFormatter.cs" />
+    <Compile Include="../Source/Bridge/RimMindProviderReader.cs" />
     <Compile Include="../Source/Bridge/RimTalkApiShim.cs" />
     <Compile Include="../Source/Detection/RimTalkDetector.cs" />
     <Compile Include="../Source/Settings/BridgeRimTalkSettings.State.cs" />

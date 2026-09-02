@@ -36,18 +36,6 @@
       <HintPath>../../RimMind-Core/$(GameVersion)/Assemblies/2_RimMindCore.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="RimMindAdvisor">
-      <HintPath>../../RimMind-Advisor/$(GameVersion)/Assemblies/RimMindAdvisor.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="RimMindPersonality">
-      <HintPath>../../RimMind-Personality/$(GameVersion)/Assemblies/RimMindPersonality.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="RimMindMemory">
-      <HintPath>../../RimMind-Memory/$(GameVersion)/Assemblies/RimMindMemory.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
   </ItemGroup>
 
   <Target Name="DeployToModsFolder" AfterTargets="Build"

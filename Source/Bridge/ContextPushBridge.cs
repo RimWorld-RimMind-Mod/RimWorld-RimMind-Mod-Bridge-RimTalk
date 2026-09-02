@@ -1,9 +1,6 @@
 using System.Text;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
-using RimMind.Advisor.Data;
-using RimMind.Memory.Data;
-using RimMind.Personality.Data;
 using RimMind.Application.Common.Interfaces.Extension;
 
 namespace RimMind.Bridge.RimTalk.Bridge
@@ -54,13 +51,26 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 "rimmind_personality",
                 pawn =>
                 {
-                    var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
-                    if (profile == null || profile.IsEmpty) return "";
+                    var description = RimMindProviderReader.GetPawn(
+                        RimMindProviderReader.PersonalityDescription,
+                        pawn);
+                    var workTendencies = RimMindProviderReader.GetPawn(
+                        RimMindProviderReader.PersonalityWorkTendencies,
+                        pawn);
+                    var socialTendencies = RimMindProviderReader.GetPawn(
+                        RimMindProviderReader.PersonalitySocialTendencies,
+                        pawn);
+                    var narrative = RimMindProviderReader.GetPawn(
+                        RimMindProviderReader.PersonalityNarrative,
+                        pawn);
 
                     var sb = new StringBuilder();
-                    sb.AppendLine(PersonaFormatter.BuildFullProfile(profile));
-                    if (!string.IsNullOrEmpty(profile.aiNarrative))
-                        sb.AppendLine($"[AI] {profile.aiNarrative}");
+                    sb.AppendLine(PersonaFormatter.BuildFullProfile(
+                        description,
+                        workTendencies,
+                        socialTendencies));
+                    if (!string.IsNullOrEmpty(narrative))
+                        sb.AppendLine($"[AI] {narrative}");
                     return sb.ToString().TrimEnd();
                 },
                 "RimMind personality profile",
@@ -73,21 +83,8 @@ namespace RimMind.Bridge.RimTalk.Bridge
             RimTalkApiShim.RegisterEnvironmentVariable(
                 ModId,
                 "rimmind_storyteller",
-                map =>
-                {
-                    var store = RimMindMemoryWorldComponent.Instance?.NarratorStore;
-                    if (store == null || store.IsEmpty) return "";
-
-                    var sb = new StringBuilder("[RimMind Storyteller]");
-                    int count = 0;
-                    foreach (var m in store.active)
-                    {
-                        if (count >= 5) break;
-                        sb.AppendLine($"- {m.content}");
-                        count++;
-                    }
-                    return sb.ToString().TrimEnd();
-                },
+                map => RimMindProviderReader.GetStatic(
+                    RimMindProviderReader.NarratorMemoryBrief),
                 "RimMind storyteller state",
                 80
             );
@@ -98,32 +95,9 @@ namespace RimMind.Bridge.RimTalk.Bridge
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
                 "rimmind_memory",
-                pawn =>
-                {
-                    var store = RimMindMemoryWorldComponent.Instance?.GetOrCreatePawnStore(pawn);
-                    if (store == null || store.IsEmpty) return "";
-
-                    var sb = new StringBuilder("[RimMind Memory]");
-                    int count = 0;
-                    foreach (var m in store.active)
-                    {
-                        if (count >= 5) break;
-                        sb.AppendLine($"- {m.content}");
-                        count++;
-                    }
-                    if (store.dark.Count > 0)
-                    {
-                        sb.AppendLine("[Long-term]");
-                        int darkCount = 0;
-                        foreach (var m in store.dark)
-                        {
-                            if (darkCount >= 5) break;
-                            sb.AppendLine($"- {m.content}");
-                            darkCount++;
-                        }
-                    }
-                    return sb.ToString().TrimEnd();
-                },
+                pawn => RimMindProviderReader.GetPawn(
+                    RimMindProviderReader.PawnMemoryBrief,
+                    pawn),
                 "RimMind memory data",
                 60
             );
@@ -134,22 +108,9 @@ namespace RimMind.Bridge.RimTalk.Bridge
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
                 "rimmind_shaping",
-                pawn =>
-                {
-                    var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
-                    if (profile == null) return "";
-                    var history = profile.playerShapingHistory;
-                    if (history == null || history.Count == 0) return "";
-
-                    var sb = new StringBuilder("[RimMind Shaping]");
-                    int start = System.Math.Max(0, history.Count - 5);
-                    for (int i = start; i < history.Count; i++)
-                    {
-                        var r = history[i];
-                        sb.AppendLine($"- [{r.action}] {r.label}");
-                    }
-                    return sb.ToString().TrimEnd();
-                },
+                pawn => RimMindProviderReader.GetPawn(
+                    RimMindProviderReader.PersonalityShaping,
+                    pawn),
                 "RimMind shaping history",
                 70
             );
@@ -160,21 +121,9 @@ namespace RimMind.Bridge.RimTalk.Bridge
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
                 "rimmind_advisor_log",
-                pawn =>
-                {
-                    var history = AdvisorHistoryStore.Instance?.GetRecords(pawn);
-                    if (history == null || history.Count == 0) return "";
-
-                    var sb = new StringBuilder("[RimMind Advisor]");
-                    int count = 0;
-                    foreach (var r in history)
-                    {
-                        if (count >= 5) break;
-                        sb.AppendLine($"- {r.action}: {r.reason} ({r.result})");
-                        count++;
-                    }
-                    return sb.ToString().TrimEnd();
-                },
+                pawn => RimMindProviderReader.GetPawn(
+                    RimMindProviderReader.AdvisorHistoryBrief,
+                    pawn),
                 "RimMind advisor history",
                 80
             );

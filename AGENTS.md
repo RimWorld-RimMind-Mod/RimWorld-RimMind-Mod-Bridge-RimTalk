@@ -4,9 +4,9 @@ RimMind 与 RimTalk 模组协调层，对话门控 + 上下文双向推送/拉�
 
 ## 项目定位
 
-通过 `RimTalkApiShim` 反射封装调用RimTalk API(无编译期依赖):
+依赖 RimMind Core 公共 API，并通过 `RimTalkApiShim` 反射封装调用 RimTalk API：
 - **DialogueGate**: SkipCheck防止与RimTalk重复触发Chitchat/Auto/PlayerInput对话
-- **ContextPushBridge**: 将RimMind人格/记忆/叙事者/顾问/塑造数据推送到RimTalk变量+PromptEntry
+- **ContextPushBridge**: 将 Core Provider 提供的人格/记忆/叙事者/顾问/塑造文本推送到 RimTalk 变量+PromptEntry
 - **PersonaPushBridge**: 细粒度人格推送(4个变量+Traits/Mood Hook)
 - **ContextPullBridge**: 拉取RimTalk对话历史注册为RimMind Provider(rimtalk_history)
 - **RimTalkBridgeCoordinator**: 统一注册/注销入口
@@ -18,8 +18,7 @@ RimMind 与 RimTalk 模组协调层，对话门控 + 上下文双向推送/拉�
 | Target | net48, C#9.0, Nullable enable |
 | Output | `../1.6/Assemblies/` |
 | Assembly | RimMindBridgeRimTalk |
-| 依赖 | RimMindCore, RimMindAdvisor, RimMindPersonality, RimMindMemory; Krafs.Rimworld.Ref, Lib.Harmony.Ref |
-| 无编译期引用 | RimTalk(纯反射), RimMind-Dialogue(通过Core API间接), RimMind-Storyteller(不使用) |
+| 依赖 | RimMind Core + 运行时反射的 RimTalk |
 
 ## 源码结构
 
@@ -29,6 +28,7 @@ Source/
 ├── Bridge/
 │   ├── RimTalkBridgeCoordinator.cs  统一注册/注销入口(List<IBridgeModule>驱动,foreach对称Register/Unregister)
 │   ├── DialogueGate.cs           对话门控(ShouldSkipDialogue/ShouldSkipFloatMenuOption)
+│   ├── RimMindProviderReader.cs  Core Provider 字符串读取与可选 Provider 失败告警边界
 │   ├── PersonaFormatter.cs       共享人格字符串构建器(BuildFullProfile,供Push/PersonaPush复用)
 │   ├── ContextPushBridge.cs      [IBridgeModule] 推送RimMind数据→RimTalk变量(5个)+PromptEntry
 │   ├── PersonaPushBridge.cs      [IBridgeModule] 细粒度人格推送(4个变量+Traits/Mood Hook)
@@ -42,20 +42,15 @@ Source/
 ├── Debug/BridgeRimTalkDebugActions.cs  6个DebugAction(含Force Unregister Bridges)
 └── Settings/BridgeRimTalkSettings.cs   15项设置(dirty-flag写盘,变更才标记WriteSettings)
 Tests/
-├── RimTalkStubs.cs               测试桩(Verse/RimTalk类型+IBridgeModule+三个bridge stub+Settings stub)
-├── RimTalkBridgeCoordinatorTests.cs       6个xUnit测试(对称Register/Unregister)
-├── RimTalkBridgeCoordinatorExtendedTests.cs  Coordinator扩展测试
-├── RimTalkApiShimTests.cs        ApiShim反射测试
-├── RimTalkDetectorCacheTests.cs  Detector缓存+InvalidateCache测试
-├── PersonaFormatterTests.cs      PersonaFormatter BuildFullProfile测试
-├── DialogueGateTests.cs          DialogueGate门控测试
-├── DialogueGateExtendedTests.cs  DialogueGate扩展测试
-├── BridgeStubTests.cs            Bridge stub契约测试
-├── BridgeRimTalkSettingsTests.cs          Settings测试
-├── BridgeRimTalkSettingsDirtyTests.cs     Settings dirty-flag测试
-├── BridgeRimTalkArchTests.cs     架构守卫测试(死代码移除+IBridgeModule契约)
-└── RimMindBridgeRimTalk.Tests.csproj  net10.0测试项目(编译源码:Coordinator/DialogueGate/PersonaFormatter/ApiShim/Detector)
+├── RimTalkStubs.cs
+└── Contracts/
+    ├── RimTalkGateContextContracts.cs
+    └── RimTalkSettingsCompatibilityContracts.cs
 ```
+
+## 数据流
+
+Personality、Memory 和 Advisor 等子模组将字符串发布到 Core `RimMindAPI.Providers`；Bridge 只同步读取 Core Provider 结果，再通过 `RimTalkApiShim` 注册到 RimTalk。Bridge 不编译引用任何子模组的 DTO、WorldComponent 或存储单例。
 
 ## RimTalkApiShim 反射方法
 
@@ -89,6 +84,7 @@ AddPromptEntry / UnregisterAllHooks / RemovePromptEntriesByModId / Cleanup
 - 各桥接模块使用独立ModId确保Cleanup互不干扰
 - 新桥接模块实现 `IBridgeModule` 接口并加入 `RimTalkBridgeCoordinator._modules` 列表(由Coordinator统一foreach调度Register/Unregister)
 - 人格字符串构建统一通过 `PersonaFormatter.BuildFullProfile`(供ContextPushBridge/PersonaPushBridge复用,避免重复StringBuilder)
+- 子模组数据只通过 `RimMindProviderReader` 消费 Core Provider 字符串
 - 注册/注销通过 `RimTalkBridgeCoordinator` 统一调度
 - Harmony ID: `mcocdaa.RimMindBridgeRimTalk`
 - 翻译前缀: `RimMind.Bridge.RimTalk.*`

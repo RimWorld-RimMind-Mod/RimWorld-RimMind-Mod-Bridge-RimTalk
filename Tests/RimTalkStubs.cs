@@ -1,12 +1,29 @@
+using System.Collections.Generic;
 using RimMind.Application.Common.Interfaces.Extension;
+using RimMind.Domain.ValueObjects;
 
 namespace Verse
 {
     public static class Log
     {
-        public static void Warning(string msg) { }
+        public static HashSet<int> WarningKeys { get; } = new HashSet<int>();
+        public static List<string> Warnings { get; } = new List<string>();
+
+        public static void Warning(string msg) => Warnings.Add(msg);
+        public static void WarningOnce(string msg, int key)
+        {
+            if (WarningKeys.Add(key))
+                Warnings.Add(msg);
+        }
+
         public static void Message(string msg) { }
         public static void Error(string msg) { }
+
+        public static void Reset()
+        {
+            WarningKeys.Clear();
+            Warnings.Clear();
+        }
     }
 
     public static class ModsConfig
@@ -33,23 +50,31 @@ namespace RimMind.Presentation.Api
 {
     public static class RimMindAPI
     {
-    }
-}
+        public static class Providers
+        {
+            public static Result<string?, RimMindError> PawnResult { get; set; } = Missing();
+            public static Result<string?, RimMindError> StaticResult { get; set; } = Missing();
+            public static List<string> Categories { get; } = new List<string>();
 
-namespace RimMind.Personality.Data
-{
-    public class PersonalityProfile
-    {
-        public string description = string.Empty;
-        public string workTendencies = string.Empty;
-        public string socialTendencies = string.Empty;
-        public string aiNarrative = string.Empty;
+            public static Result<string?, RimMindError> GetProviderData(
+                string category,
+                Verse.Pawn pawn) => PawnResult;
 
-        public bool IsEmpty =>
-            string.IsNullOrEmpty(description) &&
-            string.IsNullOrEmpty(workTendencies) &&
-            string.IsNullOrEmpty(socialTendencies) &&
-            string.IsNullOrEmpty(aiNarrative);
+            public static Result<string?, RimMindError> GetStaticProviderData(
+                string category) => StaticResult;
+
+            public static List<string> GetRegisteredCategories() => Categories;
+
+            public static void Reset()
+            {
+                PawnResult = Missing();
+                StaticResult = Missing();
+                Categories.Clear();
+            }
+
+            private static Result<string?, RimMindError> Missing() =>
+                Result<string?, RimMindError>.Err(RimMindErrors.Internal("missing"));
+        }
     }
 }
 
