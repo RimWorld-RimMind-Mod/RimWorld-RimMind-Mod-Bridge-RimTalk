@@ -6,7 +6,7 @@ namespace Verse
 {
     public static class Log
     {
-        public static HashSet<int> WarningKeys { get; } = new HashSet<int>();
+        private static readonly HashSet<int> WarningKeys = new HashSet<int>();
         public static List<string> Warnings { get; } = new List<string>();
 
         public static void Warning(string msg) => Warnings.Add(msg);
@@ -63,7 +63,8 @@ namespace RimMind.Presentation.Api
             public static Result<string?, RimMindError> GetStaticProviderData(
                 string category) => StaticResult;
 
-            public static List<string> GetRegisteredCategories() => Categories;
+            public static List<string> GetRegisteredCategories() =>
+                new List<string>(Categories);
 
             public static void Reset()
             {

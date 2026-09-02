@@ -171,6 +171,16 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                 ("production source has no child-mod compile dependency", () =>
                 {
                     var root = RepositoryRoot();
+                    var contextPush = NormalizeSource(File.ReadAllText(Path.Combine(
+                        root,
+                        "Source",
+                        "Bridge",
+                        "ContextPushBridge.cs")));
+                    var personaPush = NormalizeSource(File.ReadAllText(Path.Combine(
+                        root,
+                        "Source",
+                        "Bridge",
+                        "PersonaPushBridge.cs")));
                     var source = string.Join(
                         Environment.NewLine,
                         Directory.EnumerateFiles(
@@ -187,12 +197,234 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                     Assert.DoesNotContain("RimMindAdvisor", project);
                     Assert.DoesNotContain("RimMindMemory", project);
                     Assert.DoesNotContain("RimMindPersonality", project);
-                    Assert.Contains("NarratorMemoryBrief", source);
-                    Assert.Contains("PawnMemoryBrief", source);
-                    Assert.Contains("PersonalityShaping", source);
-                    Assert.Contains("AdvisorHistoryBrief", source);
+
+                    AssertContextPushWiring(contextPush);
+                    AssertPersonaPushWiring(personaPush);
                 }));
         }
+
+        private static void AssertContextPushWiring(string source)
+        {
+            var personality = RegistrationBlock(
+                SourceSection(
+                    source,
+                    "private void RegisterPersonalityVariable()",
+                    "private void RegisterStorytellerVariable()"),
+                "RegisterPawnVariable",
+                "rimmind_personality");
+            AssertContainsInOrder(
+                personality,
+                "\"rimmind_personality\"",
+                "var description = RimMindProviderReader.GetPawn(",
+                "RimMindProviderReader.PersonalityDescription",
+                "pawn);",
+                "var workTendencies = RimMindProviderReader.GetPawn(",
+                "RimMindProviderReader.PersonalityWorkTendencies",
+                "pawn);",
+                "var socialTendencies = RimMindProviderReader.GetPawn(",
+                "RimMindProviderReader.PersonalitySocialTendencies",
+                "pawn);",
+                "var narrative = RimMindProviderReader.GetPawn(",
+                "RimMindProviderReader.PersonalityNarrative",
+                "pawn);",
+                "PersonaFormatter.BuildFullProfile(",
+                "description,",
+                "workTendencies,",
+                "socialTendencies));",
+                "sb.AppendLine($\"[AI] {narrative}\");",
+                "\"RimMind personality profile\"",
+                "\n                50\n");
+
+            var storyteller = RegistrationBlock(
+                SourceSection(
+                    source,
+                    "private void RegisterStorytellerVariable()",
+                    "private void RegisterMemoryVariable()"),
+                "RegisterEnvironmentVariable",
+                "rimmind_storyteller");
+            AssertContainsInOrder(
+                storyteller,
+                "\"rimmind_storyteller\"",
+                "map => RimMindProviderReader.GetStatic(",
+                "RimMindProviderReader.NarratorMemoryBrief",
+                "\"RimMind storyteller state\"",
+                "\n                80\n");
+
+            AssertDirectPawnVariable(
+                SourceSection(
+                    source,
+                    "private void RegisterMemoryVariable()",
+                    "private void RegisterShapingVariable()"),
+                "rimmind_memory",
+                "PawnMemoryBrief",
+                "RimMind memory data",
+                60);
+            AssertDirectPawnVariable(
+                SourceSection(
+                    source,
+                    "private void RegisterShapingVariable()",
+                    "private void RegisterAdvisorLogVariable()"),
+                "rimmind_shaping",
+                "PersonalityShaping",
+                "RimMind shaping history",
+                70);
+            AssertDirectPawnVariable(
+                SourceSection(
+                    source,
+                    "private void RegisterAdvisorLogVariable()",
+                    "private static void RegisterPromptEntry"),
+                "rimmind_advisor_log",
+                "AdvisorHistoryBrief",
+                "RimMind advisor history",
+                80);
+        }
+
+        private static void AssertPersonaPushWiring(string source)
+        {
+            var variables = SourceSection(
+                source,
+                "private void RegisterPersonaVariables()",
+                "private void RegisterPersonaHooks()");
+            AssertDirectPawnVariable(
+                variables,
+                "rimmind_persona_desc",
+                "PersonalityDescription",
+                "RimMind personality description",
+                40);
+            AssertDirectPawnVariable(
+                variables,
+                "rimmind_persona_work",
+                "PersonalityWorkTendencies",
+                "RimMind work tendencies",
+                45);
+            AssertDirectPawnVariable(
+                variables,
+                "rimmind_persona_social",
+                "PersonalitySocialTendencies",
+                "RimMind social tendencies",
+                45);
+            AssertDirectPawnVariable(
+                variables,
+                "rimmind_persona_narrative",
+                "PersonalityNarrative",
+                "RimMind AI narrative",
+                55);
+
+            var hooks = SourceSection(
+                source,
+                "private void RegisterPersonaHooks()",
+                "public void Unregister()");
+            var traits = SourceSection(
+                hooks,
+                "if (settings.injectPersonaToTraits)",
+                "if (settings.injectPersonaToMood)");
+            AssertContainsInOrder(
+                traits,
+                "if (settings.injectPersonaToTraits)",
+                "RimTalkApiShim.RegisterPawnHook(",
+                "\"Traits\"",
+                "\n                    0,\n",
+                "PersonaFormatter.BuildFullProfile(",
+                "RimMindProviderReader.PersonalityDescription",
+                "RimMindProviderReader.PersonalityWorkTendencies",
+                "RimMindProviderReader.PersonalitySocialTendencies",
+                "return existing + \"\\n\" + formatted;",
+                "\n                    90\n");
+
+            var mood = SourceSection(
+                hooks,
+                "if (settings.injectPersonaToMood)",
+                null);
+            AssertContainsInOrder(
+                mood,
+                "if (settings.injectPersonaToMood)",
+                "RimTalkApiShim.RegisterPawnHook(",
+                "\"Mood\"",
+                "\n                    0,\n",
+                "RimMindProviderReader.GetPawn(",
+                "RimMindProviderReader.PersonalityNarrative",
+                "return existing + \"\\n[AI Narrative] \" + narrative;",
+                "\n                    90\n");
+        }
+
+        private static void AssertDirectPawnVariable(
+            string source,
+            string variableName,
+            string categoryConstant,
+            string description,
+            int priority)
+        {
+            var registration = RegistrationBlock(
+                source,
+                "RegisterPawnVariable",
+                variableName);
+            AssertContainsInOrder(
+                registration,
+                $"\"{variableName}\"",
+                "pawn => RimMindProviderReader.GetPawn(",
+                $"RimMindProviderReader.{categoryConstant}",
+                "pawn),",
+                $"\"{description}\"",
+                $"\n                {priority}\n");
+        }
+
+        private static string RegistrationBlock(
+            string source,
+            string registrationMethod,
+            string variableName)
+        {
+            var methodMarker = $"RimTalkApiShim.{registrationMethod}(";
+            var nameMarker = $"\"{variableName}\"";
+            var nameIndex = source.IndexOf(nameMarker, StringComparison.Ordinal);
+            Assert.True(nameIndex >= 0, $"Missing variable registration: {variableName}");
+
+            var startIndex = source.LastIndexOf(
+                methodMarker,
+                nameIndex,
+                StringComparison.Ordinal);
+            Assert.True(startIndex >= 0, $"Missing {registrationMethod} call: {variableName}");
+
+            var nextIndex = source.IndexOf(
+                methodMarker,
+                nameIndex + nameMarker.Length,
+                StringComparison.Ordinal);
+            return nextIndex >= 0
+                ? source.Substring(startIndex, nextIndex - startIndex)
+                : source.Substring(startIndex);
+        }
+
+        private static string SourceSection(
+            string source,
+            string startMarker,
+            string? endMarker)
+        {
+            var startIndex = source.IndexOf(startMarker, StringComparison.Ordinal);
+            Assert.True(startIndex >= 0, $"Missing source marker: {startMarker}");
+
+            if (endMarker == null)
+                return source.Substring(startIndex);
+
+            var endIndex = source.IndexOf(
+                endMarker,
+                startIndex + startMarker.Length,
+                StringComparison.Ordinal);
+            Assert.True(endIndex >= 0, $"Missing source marker: {endMarker}");
+            return source.Substring(startIndex, endIndex - startIndex);
+        }
+
+        private static void AssertContainsInOrder(string source, params string[] fragments)
+        {
+            var offset = 0;
+            foreach (var fragment in fragments)
+            {
+                var index = source.IndexOf(fragment, offset, StringComparison.Ordinal);
+                Assert.True(index >= 0, $"Missing ordered source fragment: {fragment}");
+                offset = index + fragment.Length;
+            }
+        }
+
+        private static string NormalizeSource(string source)
+            => source.Replace("\r\n", "\n");
 
         private static void ResetProviders()
         {
