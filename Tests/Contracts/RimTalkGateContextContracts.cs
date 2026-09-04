@@ -181,6 +181,11 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                         "Source",
                         "Bridge",
                         "PersonaPushBridge.cs")));
+                    var providerReader = NormalizeSource(File.ReadAllText(Path.Combine(
+                        root,
+                        "Source",
+                        "Bridge",
+                        "RimMindProviderReader.cs")));
                     var source = string.Join(
                         Environment.NewLine,
                         Directory.EnumerateFiles(
@@ -198,13 +203,50 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                     Assert.DoesNotContain("RimMindMemory", project);
                     Assert.DoesNotContain("RimMindPersonality", project);
 
+                    AssertProviderCategoryContracts(providerReader);
                     AssertContextPushWiring(contextPush);
                     AssertPersonaPushWiring(personaPush);
                 }));
         }
 
+        private static void AssertProviderCategoryContracts(string source)
+        {
+            var constants = SourceSection(
+                source,
+                "internal static class RimMindProviderReader",
+                "internal static string GetPawn(");
+            AssertContainsInOrder(
+                constants,
+                "internal const string PersonalityDescription = \"personality.description\";",
+                "internal const string PersonalityWorkTendencies = \"personality.work_tendencies\";",
+                "internal const string PersonalitySocialTendencies = \"personality.social_tendencies\";",
+                "internal const string PersonalityNarrative = \"personality.ai_narrative\";",
+                "internal const string PersonalityShaping = \"personality.shaping_history\";",
+                "internal const string PawnMemoryBrief = \"memory.pawn_brief\";",
+                "internal const string NarratorMemoryBrief = \"memory.narrator_brief\";",
+                "internal const string AdvisorHistoryBrief = \"advisor.history_brief\";");
+        }
+
         private static void AssertContextPushWiring(string source)
         {
+            var register = SourceSection(
+                source,
+                "public void Register()",
+                "private void RegisterPersonalityVariable()");
+            AssertContainsInOrder(
+                register,
+                "if (settings.enableContextPush)",
+                "if (plan.RegisterPersonality)",
+                "RegisterPersonalityVariable();",
+                "if (plan.RegisterStoryteller)",
+                "RegisterStorytellerVariable();",
+                "if (plan.RegisterMemory)",
+                "RegisterMemoryVariable();",
+                "if (plan.RegisterShaping)",
+                "RegisterShapingVariable();",
+                "if (plan.RegisterAdvisorLog)",
+                "RegisterAdvisorLogVariable();");
+
             var personality = RegistrationBlock(
                 SourceSection(
                     source,
@@ -281,6 +323,17 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
 
         private static void AssertPersonaPushWiring(string source)
         {
+            var register = SourceSection(
+                source,
+                "public void Register()",
+                "private void RegisterPersonaVariables()");
+            AssertContainsInOrder(
+                register,
+                "if (!settings.enableContextPush || !settings.pushPersonality) return;",
+                "RegisterPersonaVariables();",
+                "if (settings.injectPersonaToTraits || settings.injectPersonaToMood)",
+                "RegisterPersonaHooks();");
+
             var variables = SourceSection(
                 source,
                 "private void RegisterPersonaVariables()",
