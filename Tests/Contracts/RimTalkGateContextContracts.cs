@@ -9,6 +9,8 @@ using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Domain.ValueObjects;
 using RimMind.Presentation.Api;
 using RimMind.Testing;
+using RimTalk.API;
+using RimTalk.Prompt;
 using Verse;
 using Xunit;
 
@@ -114,7 +116,7 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
         }
 
         [Fact]
-        public void Persona_context_preserves_public_sections()
+        public void Context_providers_and_bridge_wiring_preserve_contracts()
         {
             ContractCaseRunner.Run(
                 ("null and empty profiles expose no context", () =>
@@ -137,13 +139,22 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                 ("provider seam returns pawn and static values", () =>
                 {
                     ResetProviders();
-                    RimMindAPI.Providers.PawnResult =
-                        Result<string?, RimMindError>.Ok("value");
-                    RimMindAPI.Providers.StaticResult =
-                        Result<string?, RimMindError>.Ok("world");
+                    RimMindAPI.Providers.SetPawn("test.pawn", "value");
+                    RimMindAPI.Providers.SetStatic("test.static", "world");
 
-                    Assert.Equal("value", RimMindProviderReader.GetPawn("test.pawn", new Pawn()));
+                    var pawn = new Pawn();
+                    Assert.Equal("value", RimMindProviderReader.GetPawn("test.pawn", pawn));
                     Assert.Equal("world", RimMindProviderReader.GetStatic("test.static"));
+                    Assert.Collection(
+                        RimMindAPI.Providers.PawnCalls,
+                        call =>
+                        {
+                            Assert.Equal("test.pawn", call.Category);
+                            Assert.Same(pawn, call.Pawn);
+                        });
+                    Assert.Equal(
+                        new[] { "test.static" },
+                        RimMindAPI.Providers.StaticCalls);
                 }),
                 ("missing optional providers are silent", () =>
                 {
@@ -157,8 +168,9 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                 {
                     ResetProviders();
                     RimMindAPI.Providers.Categories.Add("failing.category");
-                    RimMindAPI.Providers.PawnResult =
-                        Result<string?, RimMindError>.Err(RimMindErrors.Internal("provider failed"));
+                    RimMindAPI.Providers.SetPawnError(
+                        "failing.category",
+                        RimMindErrors.Internal("provider failed"));
 
                     Assert.Equal(string.Empty,
                         RimMindProviderReader.GetPawn("failing.category", new Pawn()));
@@ -168,24 +180,242 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                     Assert.Single(Log.Warnings);
                     Assert.Contains("Provider 'failing.category' failed", Log.Warnings[0]);
                 }),
+                ("real context bridge registers five mapped variables", () =>
+                {
+                    BridgeRimTalkSettings settings = PrepareBridgeHarness();
+                    settings.pushMemory = true;
+                    settings.pushShaping = true;
+                    SeedProviderValues();
+
+                    var bridge = new ContextPushBridge();
+                    bridge.Register();
+
+                    Assert.True(bridge.IsRegistered);
+                    Assert.Equal(4, FakeRimTalkPromptAPI.PawnVariables.Count);
+                    Assert.Single(FakeRimTalkPromptAPI.EnvironmentVariables);
+
+                    var pawn = new Pawn();
+                    AssertPawnVariable(
+                        "rimmind_personality",
+                        "RimMind.Bridge.RimTalk.Push",
+                        "RimMind personality profile",
+                        50,
+                        $"Brave{Environment.NewLine}[Work] Diligent{Environment.NewLine}[Social] Friendly{Environment.NewLine}[AI] Reflective",
+                        pawn);
+                    AssertPawnVariable(
+                        "rimmind_memory",
+                        "RimMind.Bridge.RimTalk.Push",
+                        "RimMind memory data",
+                        60,
+                        "Remembered a rescue",
+                        pawn);
+                    AssertPawnVariable(
+                        "rimmind_shaping",
+                        "RimMind.Bridge.RimTalk.Push",
+                        "RimMind shaping history",
+                        70,
+                        "Became more patient",
+                        pawn);
+                    AssertPawnVariable(
+                        "rimmind_advisor_log",
+                        "RimMind.Bridge.RimTalk.Push",
+                        "RimMind advisor history",
+                        80,
+                        "Accepted shelter advice",
+                        pawn);
+
+                    FakeRimTalkPromptAPI.EnvironmentVariableRegistration storyteller =
+                        EnvironmentVariable("rimmind_storyteller");
+                    Assert.Equal("RimMind.Bridge.RimTalk.Push", storyteller.ModId);
+                    Assert.Equal("RimMind storyteller state", storyteller.Description);
+                    Assert.Equal(80, storyteller.Priority);
+                    Assert.Equal("A cold snap approaches", storyteller.Provider(new Map()));
+
+                    Assert.Equal(
+                        new[]
+                        {
+                            "personality.description",
+                            "personality.work_tendencies",
+                            "personality.social_tendencies",
+                            "personality.ai_narrative",
+                            "memory.pawn_brief",
+                            "personality.shaping_history",
+                            "advisor.history_brief"
+                        },
+                        RimMindAPI.Providers.PawnCalls.Select(call => call.Category));
+                    Assert.All(
+                        RimMindAPI.Providers.PawnCalls,
+                        call => Assert.Same(pawn, call.Pawn));
+                    Assert.Equal(
+                        new[] { "memory.narrator_brief" },
+                        RimMindAPI.Providers.StaticCalls);
+
+                    FakePromptEntry prompt = Assert.Single(FakeRimTalkPromptAPI.PromptEntries);
+                    Assert.Equal("RimMind Context", prompt.Name);
+                    Assert.Equal(FakePromptRole.System, prompt.Role);
+                    Assert.Equal(FakePromptPosition.BeforeHistory, prompt.Position);
+                    Assert.Equal(0, prompt.InChatDepth);
+                    Assert.Equal("RimMind.Bridge.RimTalk.Push", prompt.SourceModId);
+                    Assert.Contains("rimmind_personality", prompt.Content);
+                    Assert.Contains("rimmind_storyteller", prompt.Content);
+                    Assert.Contains("rimmind_memory", prompt.Content);
+                    Assert.Contains("rimmind_shaping", prompt.Content);
+                    Assert.Contains("rimmind_advisor_log", prompt.Content);
+                }),
+                ("context bridge honors global and per-provider push gates", () =>
+                {
+                    BridgeRimTalkSettings settings = PrepareBridgeHarness();
+                    settings.enableContextPush = false;
+
+                    var disabledBridge = new ContextPushBridge();
+                    disabledBridge.Register();
+
+                    Assert.True(disabledBridge.IsRegistered);
+                    Assert.Empty(FakeRimTalkPromptAPI.PawnVariables);
+                    Assert.Empty(FakeRimTalkPromptAPI.EnvironmentVariables);
+                    Assert.Empty(FakeRimTalkPromptAPI.PromptEntries);
+
+                    settings = PrepareBridgeHarness();
+                    settings.pushPersonality = false;
+                    settings.pushStoryteller = false;
+                    settings.pushMemory = true;
+                    settings.pushAdvisorLog = false;
+                    settings.pushShaping = false;
+
+                    var selectiveBridge = new ContextPushBridge();
+                    selectiveBridge.Register();
+
+                    Assert.True(selectiveBridge.IsRegistered);
+                    Assert.Equal(
+                        new[] { "rimmind_memory" },
+                        FakeRimTalkPromptAPI.PawnVariables.Select(variable => variable.Name));
+                    Assert.Empty(FakeRimTalkPromptAPI.EnvironmentVariables);
+                    FakePromptEntry prompt = Assert.Single(FakeRimTalkPromptAPI.PromptEntries);
+                    Assert.Contains("rimmind_memory", prompt.Content);
+                    Assert.DoesNotContain("rimmind_personality", prompt.Content);
+                }),
+                ("real persona bridge registers four mapped variables and both hooks", () =>
+                {
+                    BridgeRimTalkSettings settings = PrepareBridgeHarness();
+                    settings.injectPersonaToTraits = true;
+                    settings.injectPersonaToMood = true;
+                    SeedProviderValues();
+
+                    var bridge = new PersonaPushBridge();
+                    bridge.Register();
+
+                    Assert.True(bridge.IsRegistered);
+                    Assert.Equal(4, FakeRimTalkPromptAPI.PawnVariables.Count);
+                    Assert.Equal(2, FakeRimTalkPromptAPI.PawnHooks.Count);
+
+                    var pawn = new Pawn();
+                    AssertPawnVariable(
+                        "rimmind_persona_desc",
+                        "RimMind.Bridge.RimTalk.Persona",
+                        "RimMind personality description",
+                        40,
+                        "Brave",
+                        pawn);
+                    AssertPawnVariable(
+                        "rimmind_persona_work",
+                        "RimMind.Bridge.RimTalk.Persona",
+                        "RimMind work tendencies",
+                        45,
+                        "Diligent",
+                        pawn);
+                    AssertPawnVariable(
+                        "rimmind_persona_social",
+                        "RimMind.Bridge.RimTalk.Persona",
+                        "RimMind social tendencies",
+                        45,
+                        "Friendly",
+                        pawn);
+                    AssertPawnVariable(
+                        "rimmind_persona_narrative",
+                        "RimMind.Bridge.RimTalk.Persona",
+                        "RimMind AI narrative",
+                        55,
+                        "Reflective",
+                        pawn);
+                    Assert.Equal(
+                        new[]
+                        {
+                            "personality.description",
+                            "personality.work_tendencies",
+                            "personality.social_tendencies",
+                            "personality.ai_narrative"
+                        },
+                        RimMindAPI.Providers.PawnCalls.Select(call => call.Category));
+
+                    RimMindAPI.Providers.ClearCalls();
+                    FakeRimTalkPromptAPI.PawnHookRegistration traits = PawnHook("Traits");
+                    FakeRimTalkPromptAPI.PawnHookRegistration mood = PawnHook("Mood");
+                    AssertHookMetadata(traits);
+                    AssertHookMetadata(mood);
+                    Assert.Equal(
+                        $"Existing traits\nBrave{Environment.NewLine}[Work] Diligent{Environment.NewLine}[Social] Friendly",
+                        traits.Handler(pawn, "Existing traits"));
+                    Assert.Equal(
+                        "Existing mood\n[AI Narrative] Reflective",
+                        mood.Handler(pawn, "Existing mood"));
+                    Assert.Equal(
+                        new[]
+                        {
+                            "personality.description",
+                            "personality.work_tendencies",
+                            "personality.social_tendencies",
+                            "personality.ai_narrative"
+                        },
+                        RimMindAPI.Providers.PawnCalls.Select(call => call.Category));
+
+                    RimMindAPI.Providers.Reset();
+                    RimMindAPI.Providers.SetPawn("personality.description", string.Empty);
+                    RimMindAPI.Providers.SetPawn("personality.work_tendencies", string.Empty);
+                    RimMindAPI.Providers.SetPawn("personality.social_tendencies", string.Empty);
+                    RimMindAPI.Providers.SetPawn("personality.ai_narrative", string.Empty);
+                    Assert.Equal("Existing traits", traits.Handler(pawn, "Existing traits"));
+                    Assert.Equal("Existing mood", mood.Handler(pawn, "Existing mood"));
+                }),
+                ("persona bridge honors enable push and hook gates", () =>
+                {
+                    BridgeRimTalkSettings settings = PrepareBridgeHarness();
+                    settings.enableContextPush = false;
+                    var disabledBridge = new PersonaPushBridge();
+                    disabledBridge.Register();
+                    Assert.False(disabledBridge.IsRegistered);
+                    Assert.Empty(FakeRimTalkPromptAPI.PawnVariables);
+
+                    settings = PrepareBridgeHarness();
+                    settings.pushPersonality = false;
+                    var excludedBridge = new PersonaPushBridge();
+                    excludedBridge.Register();
+                    Assert.False(excludedBridge.IsRegistered);
+                    Assert.Empty(FakeRimTalkPromptAPI.PawnVariables);
+
+                    settings = PrepareBridgeHarness();
+                    var variablesOnlyBridge = new PersonaPushBridge();
+                    variablesOnlyBridge.Register();
+                    Assert.True(variablesOnlyBridge.IsRegistered);
+                    Assert.Equal(4, FakeRimTalkPromptAPI.PawnVariables.Count);
+                    Assert.Empty(FakeRimTalkPromptAPI.PawnHooks);
+
+                    settings = PrepareBridgeHarness();
+                    settings.injectPersonaToTraits = true;
+                    new PersonaPushBridge().Register();
+                    Assert.Equal(
+                        new[] { "Traits" },
+                        FakeRimTalkPromptAPI.PawnHooks.Select(hook => hook.Category));
+
+                    settings = PrepareBridgeHarness();
+                    settings.injectPersonaToMood = true;
+                    new PersonaPushBridge().Register();
+                    Assert.Equal(
+                        new[] { "Mood" },
+                        FakeRimTalkPromptAPI.PawnHooks.Select(hook => hook.Category));
+                }),
                 ("production source has no child-mod compile dependency", () =>
                 {
                     var root = RepositoryRoot();
-                    var contextPush = NormalizeSource(File.ReadAllText(Path.Combine(
-                        root,
-                        "Source",
-                        "Bridge",
-                        "ContextPushBridge.cs")));
-                    var personaPush = NormalizeSource(File.ReadAllText(Path.Combine(
-                        root,
-                        "Source",
-                        "Bridge",
-                        "PersonaPushBridge.cs")));
-                    var providerReader = NormalizeSource(File.ReadAllText(Path.Combine(
-                        root,
-                        "Source",
-                        "Bridge",
-                        "RimMindProviderReader.cs")));
                     var source = string.Join(
                         Environment.NewLine,
                         Directory.EnumerateFiles(
@@ -202,282 +432,75 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                     Assert.DoesNotContain("RimMindAdvisor", project);
                     Assert.DoesNotContain("RimMindMemory", project);
                     Assert.DoesNotContain("RimMindPersonality", project);
-
-                    AssertProviderCategoryContracts(providerReader);
-                    AssertContextPushWiring(contextPush);
-                    AssertPersonaPushWiring(personaPush);
                 }));
         }
 
-        private static void AssertProviderCategoryContracts(string source)
+        private static BridgeRimTalkSettings PrepareBridgeHarness()
         {
-            var constants = SourceSection(
-                source,
-                "internal static class RimMindProviderReader",
-                "internal static string GetPawn(");
-            AssertContainsInOrder(
-                constants,
-                "internal const string PersonalityDescription = \"personality.description\";",
-                "internal const string PersonalityWorkTendencies = \"personality.work_tendencies\";",
-                "internal const string PersonalitySocialTendencies = \"personality.social_tendencies\";",
-                "internal const string PersonalityNarrative = \"personality.ai_narrative\";",
-                "internal const string PersonalityShaping = \"personality.shaping_history\";",
-                "internal const string PawnMemoryBrief = \"memory.pawn_brief\";",
-                "internal const string NarratorMemoryBrief = \"memory.narrator_brief\";",
-                "internal const string AdvisorHistoryBrief = \"advisor.history_brief\";");
+            RimTalkDetector.IsRimTalkActive = true;
+            RimTalkDetector.IsRimTalkApiAvailable = true;
+            BridgeRimTalkSettings.ResetForTesting();
+            RimMindAPI.Providers.Reset();
+            Log.Reset();
+            FakeRimTalkPromptAPI.Reset();
+            RimTalkApiShim.ConfigureTypesForTesting(
+                typeof(FakeRimTalkPromptAPI),
+                typeof(FakeContextHookRegistry),
+                typeof(FakeContextCategories),
+                typeof(FakePromptEntry),
+                typeof(FakePromptRole),
+                typeof(FakePromptPosition));
+            return BridgeRimTalkSettings.Get();
         }
 
-        private static void AssertContextPushWiring(string source)
+        private static void SeedProviderValues()
         {
-            var register = SourceSection(
-                source,
-                "public void Register()",
-                "private void RegisterPersonalityVariable()");
-            AssertContainsInOrder(
-                register,
-                "if (settings.enableContextPush)",
-                "if (plan.RegisterPersonality)",
-                "RegisterPersonalityVariable();",
-                "if (plan.RegisterStoryteller)",
-                "RegisterStorytellerVariable();",
-                "if (plan.RegisterMemory)",
-                "RegisterMemoryVariable();",
-                "if (plan.RegisterShaping)",
-                "RegisterShapingVariable();",
-                "if (plan.RegisterAdvisorLog)",
-                "RegisterAdvisorLogVariable();");
-
-            var personality = RegistrationBlock(
-                SourceSection(
-                    source,
-                    "private void RegisterPersonalityVariable()",
-                    "private void RegisterStorytellerVariable()"),
-                "RegisterPawnVariable",
-                "rimmind_personality");
-            AssertContainsInOrder(
-                personality,
-                "\"rimmind_personality\"",
-                "var description = RimMindProviderReader.GetPawn(",
-                "RimMindProviderReader.PersonalityDescription",
-                "pawn);",
-                "var workTendencies = RimMindProviderReader.GetPawn(",
-                "RimMindProviderReader.PersonalityWorkTendencies",
-                "pawn);",
-                "var socialTendencies = RimMindProviderReader.GetPawn(",
-                "RimMindProviderReader.PersonalitySocialTendencies",
-                "pawn);",
-                "var narrative = RimMindProviderReader.GetPawn(",
-                "RimMindProviderReader.PersonalityNarrative",
-                "pawn);",
-                "PersonaFormatter.BuildFullProfile(",
-                "description,",
-                "workTendencies,",
-                "socialTendencies));",
-                "sb.AppendLine($\"[AI] {narrative}\");",
-                "\"RimMind personality profile\"",
-                "\n                50\n");
-
-            var storyteller = RegistrationBlock(
-                SourceSection(
-                    source,
-                    "private void RegisterStorytellerVariable()",
-                    "private void RegisterMemoryVariable()"),
-                "RegisterEnvironmentVariable",
-                "rimmind_storyteller");
-            AssertContainsInOrder(
-                storyteller,
-                "\"rimmind_storyteller\"",
-                "map => RimMindProviderReader.GetStatic(",
-                "RimMindProviderReader.NarratorMemoryBrief",
-                "\"RimMind storyteller state\"",
-                "\n                80\n");
-
-            AssertDirectPawnVariable(
-                SourceSection(
-                    source,
-                    "private void RegisterMemoryVariable()",
-                    "private void RegisterShapingVariable()"),
-                "rimmind_memory",
-                "PawnMemoryBrief",
-                "RimMind memory data",
-                60);
-            AssertDirectPawnVariable(
-                SourceSection(
-                    source,
-                    "private void RegisterShapingVariable()",
-                    "private void RegisterAdvisorLogVariable()"),
-                "rimmind_shaping",
-                "PersonalityShaping",
-                "RimMind shaping history",
-                70);
-            AssertDirectPawnVariable(
-                SourceSection(
-                    source,
-                    "private void RegisterAdvisorLogVariable()",
-                    "private static void RegisterPromptEntry"),
-                "rimmind_advisor_log",
-                "AdvisorHistoryBrief",
-                "RimMind advisor history",
-                80);
+            RimMindAPI.Providers.SetPawn("personality.description", "Brave");
+            RimMindAPI.Providers.SetPawn("personality.work_tendencies", "Diligent");
+            RimMindAPI.Providers.SetPawn("personality.social_tendencies", "Friendly");
+            RimMindAPI.Providers.SetPawn("personality.ai_narrative", "Reflective");
+            RimMindAPI.Providers.SetPawn("personality.shaping_history", "Became more patient");
+            RimMindAPI.Providers.SetPawn("memory.pawn_brief", "Remembered a rescue");
+            RimMindAPI.Providers.SetStatic("memory.narrator_brief", "A cold snap approaches");
+            RimMindAPI.Providers.SetPawn("advisor.history_brief", "Accepted shelter advice");
         }
 
-        private static void AssertPersonaPushWiring(string source)
-        {
-            var register = SourceSection(
-                source,
-                "public void Register()",
-                "private void RegisterPersonaVariables()");
-            AssertContainsInOrder(
-                register,
-                "if (!settings.enableContextPush || !settings.pushPersonality) return;",
-                "RegisterPersonaVariables();",
-                "if (settings.injectPersonaToTraits || settings.injectPersonaToMood)",
-                "RegisterPersonaHooks();");
-
-            var variables = SourceSection(
-                source,
-                "private void RegisterPersonaVariables()",
-                "private void RegisterPersonaHooks()");
-            AssertDirectPawnVariable(
-                variables,
-                "rimmind_persona_desc",
-                "PersonalityDescription",
-                "RimMind personality description",
-                40);
-            AssertDirectPawnVariable(
-                variables,
-                "rimmind_persona_work",
-                "PersonalityWorkTendencies",
-                "RimMind work tendencies",
-                45);
-            AssertDirectPawnVariable(
-                variables,
-                "rimmind_persona_social",
-                "PersonalitySocialTendencies",
-                "RimMind social tendencies",
-                45);
-            AssertDirectPawnVariable(
-                variables,
-                "rimmind_persona_narrative",
-                "PersonalityNarrative",
-                "RimMind AI narrative",
-                55);
-
-            var hooks = SourceSection(
-                source,
-                "private void RegisterPersonaHooks()",
-                "public void Unregister()");
-            var traits = SourceSection(
-                hooks,
-                "if (settings.injectPersonaToTraits)",
-                "if (settings.injectPersonaToMood)");
-            AssertContainsInOrder(
-                traits,
-                "if (settings.injectPersonaToTraits)",
-                "RimTalkApiShim.RegisterPawnHook(",
-                "\"Traits\"",
-                "\n                    0,\n",
-                "PersonaFormatter.BuildFullProfile(",
-                "RimMindProviderReader.PersonalityDescription",
-                "RimMindProviderReader.PersonalityWorkTendencies",
-                "RimMindProviderReader.PersonalitySocialTendencies",
-                "return existing + \"\\n\" + formatted;",
-                "\n                    90\n");
-
-            var mood = SourceSection(
-                hooks,
-                "if (settings.injectPersonaToMood)",
-                null);
-            AssertContainsInOrder(
-                mood,
-                "if (settings.injectPersonaToMood)",
-                "RimTalkApiShim.RegisterPawnHook(",
-                "\"Mood\"",
-                "\n                    0,\n",
-                "RimMindProviderReader.GetPawn(",
-                "RimMindProviderReader.PersonalityNarrative",
-                "return existing + \"\\n[AI Narrative] \" + narrative;",
-                "\n                    90\n");
-        }
-
-        private static void AssertDirectPawnVariable(
-            string source,
-            string variableName,
-            string categoryConstant,
+        private static void AssertPawnVariable(
+            string name,
+            string modId,
             string description,
-            int priority)
+            int priority,
+            string expectedOutput,
+            Pawn pawn)
         {
-            var registration = RegistrationBlock(
-                source,
-                "RegisterPawnVariable",
-                variableName);
-            AssertContainsInOrder(
-                registration,
-                $"\"{variableName}\"",
-                "pawn => RimMindProviderReader.GetPawn(",
-                $"RimMindProviderReader.{categoryConstant}",
-                "pawn),",
-                $"\"{description}\"",
-                $"\n                {priority}\n");
+            FakeRimTalkPromptAPI.PawnVariableRegistration variable =
+                FakeRimTalkPromptAPI.PawnVariables.Single(item => item.Name == name);
+            Assert.Equal(modId, variable.ModId);
+            Assert.Equal(description, variable.Description);
+            Assert.Equal(priority, variable.Priority);
+            Assert.Equal(expectedOutput, variable.Provider(pawn));
         }
 
-        private static string RegistrationBlock(
-            string source,
-            string registrationMethod,
-            string variableName)
+        private static FakeRimTalkPromptAPI.EnvironmentVariableRegistration EnvironmentVariable(
+            string name)
         {
-            var methodMarker = $"RimTalkApiShim.{registrationMethod}(";
-            var nameMarker = $"\"{variableName}\"";
-            var nameIndex = source.IndexOf(nameMarker, StringComparison.Ordinal);
-            Assert.True(nameIndex >= 0, $"Missing variable registration: {variableName}");
-
-            var startIndex = source.LastIndexOf(
-                methodMarker,
-                nameIndex,
-                StringComparison.Ordinal);
-            Assert.True(startIndex >= 0, $"Missing {registrationMethod} call: {variableName}");
-
-            var nextIndex = source.IndexOf(
-                methodMarker,
-                nameIndex + nameMarker.Length,
-                StringComparison.Ordinal);
-            return nextIndex >= 0
-                ? source.Substring(startIndex, nextIndex - startIndex)
-                : source.Substring(startIndex);
+            return FakeRimTalkPromptAPI.EnvironmentVariables.Single(
+                item => item.Name == name);
         }
 
-        private static string SourceSection(
-            string source,
-            string startMarker,
-            string? endMarker)
+        private static FakeRimTalkPromptAPI.PawnHookRegistration PawnHook(string category)
         {
-            var startIndex = source.IndexOf(startMarker, StringComparison.Ordinal);
-            Assert.True(startIndex >= 0, $"Missing source marker: {startMarker}");
-
-            if (endMarker == null)
-                return source.Substring(startIndex);
-
-            var endIndex = source.IndexOf(
-                endMarker,
-                startIndex + startMarker.Length,
-                StringComparison.Ordinal);
-            Assert.True(endIndex >= 0, $"Missing source marker: {endMarker}");
-            return source.Substring(startIndex, endIndex - startIndex);
+            return FakeRimTalkPromptAPI.PawnHooks.Single(
+                item => item.Category == category);
         }
 
-        private static void AssertContainsInOrder(string source, params string[] fragments)
+        private static void AssertHookMetadata(
+            FakeRimTalkPromptAPI.PawnHookRegistration hook)
         {
-            var offset = 0;
-            foreach (var fragment in fragments)
-            {
-                var index = source.IndexOf(fragment, offset, StringComparison.Ordinal);
-                Assert.True(index >= 0, $"Missing ordered source fragment: {fragment}");
-                offset = index + fragment.Length;
-            }
+            Assert.Equal("RimMind.Bridge.RimTalk.Persona", hook.ModId);
+            Assert.Equal(FakeContextHookRegistry.HookOperation.InsertBefore, hook.Operation);
+            Assert.Equal(90, hook.Priority);
         }
-
-        private static string NormalizeSource(string source)
-            => source.Replace("\r\n", "\n");
 
         private static void ResetProviders()
         {

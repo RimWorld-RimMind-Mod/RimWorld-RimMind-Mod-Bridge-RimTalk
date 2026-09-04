@@ -22,6 +22,8 @@
     <Compile Include="..\..\RimMind-Core\TestSupport\ContractCaseRunner.cs"
              Link="Support\ContractCaseRunner.cs" />
     <Compile Include="../Source/Bridge/BridgeModuleCoordinator.cs" />
+    <Compile Include="../Source/Bridge/ContextPushBridge.cs" />
+    <Compile Include="../Source/Bridge/PersonaPushBridge.cs" />
     <Compile Include="../Source/Bridge/RimTalkContextPushPlan.cs" />
     <Compile Include="../Source/Bridge/DialogueGate.cs" />
     <Compile Include="../Source/Bridge/PersonaFormatter.cs" />
