@@ -1,37 +1,11 @@
 using UnityEngine;
 using Verse;
-using RimMind.Core.UI;
+using RimMind.Presentation.UI;
 
 namespace RimMind.Bridge.RimTalk.Settings
 {
-    public class BridgeRimTalkSettings : ModSettings
+    public partial class BridgeRimTalkSettings : ModSettings
     {
-        public bool enableDialogueGate = true;
-        public bool skipChitchat = true;
-        public bool skipAutoDialogue = true;
-        public bool skipPlayerDialogue = true;
-        public bool forceRimMindPlayerDialogue = false;
-
-        public bool enableContextPush = true;
-        public bool pushPersonality = true;
-        public bool pushStoryteller = true;
-        public bool pushMemory = false;
-        public bool pushAdvisorLog = true;
-        public bool pushShaping = false;
-        public bool injectPersonaToTraits = false;
-        public bool injectPersonaToMood = false;
-
-        public bool enableContextPull = true;
-        public bool pullRimTalkHistory = true;
-
-        private static BridgeRimTalkSettings? _instance;
-        public static BridgeRimTalkSettings Get() => _instance ?? new BridgeRimTalkSettings();
-
-        public BridgeRimTalkSettings()
-        {
-            _instance = this;
-        }
-
         public override void ExposeData()
         {
             base.ExposeData();
@@ -55,13 +29,13 @@ namespace RimMind.Bridge.RimTalk.Settings
         }
 
         private static Vector2 _scrollPos = Vector2.zero;
-
         public static void DrawSettingsContent(Rect inRect)
         {
             var s = Get();
+            var snapshot = CaptureSnapshot();
 
-            Rect contentArea = SettingsUIHelper.SplitContentArea(inRect);
-            Rect bottomBar = SettingsUIHelper.SplitBottomBar(inRect);
+            Rect contentArea = SettingsUIDrawer.SplitContentArea(inRect);
+            Rect bottomBar = SettingsUIDrawer.SplitBottomBar(inRect);
 
             float contentH = EstimateHeight(s);
             Rect viewRect = new Rect(0f, 0f, contentArea.width - 16f, contentH);
@@ -70,7 +44,7 @@ namespace RimMind.Bridge.RimTalk.Settings
             var listing = new Listing_Standard();
             listing.Begin(viewRect);
 
-            SettingsUIHelper.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.DialogueGate".Translate());
+            SettingsUIDrawer.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.DialogueGate".Translate());
             listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnableDialogueGate".Translate(),
                 ref s.enableDialogueGate,
                 "RimMind.BridgeRimTalk.Settings.EnableDialogueGate.Desc".Translate());
@@ -93,7 +67,7 @@ namespace RimMind.Bridge.RimTalk.Settings
                 }
             }
 
-            SettingsUIHelper.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPush".Translate());
+            SettingsUIDrawer.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPush".Translate());
             listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnableContextPush".Translate(),
                 ref s.enableContextPush,
                 "RimMind.BridgeRimTalk.Settings.EnableContextPush.Desc".Translate());
@@ -123,9 +97,12 @@ namespace RimMind.Bridge.RimTalk.Settings
                         ref s.injectPersonaToMood,
                         "RimMind.BridgeRimTalk.Settings.InjectPersonaToMood.Desc".Translate());
                 }
+                GUI.color = Color.yellow;
+                listing.Label("  " + "RimMind.BridgeRimTalk.Settings.RestartHint".Translate());
+                GUI.color = Color.white;
             }
 
-            SettingsUIHelper.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPull".Translate());
+            SettingsUIDrawer.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPull".Translate());
             listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnableContextPull".Translate(),
                 ref s.enableContextPull,
                 "RimMind.BridgeRimTalk.Settings.EnableContextPull.Desc".Translate());
@@ -134,12 +111,15 @@ namespace RimMind.Bridge.RimTalk.Settings
                 listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PullRimTalkHistory".Translate(),
                     ref s.pullRimTalkHistory,
                     "RimMind.BridgeRimTalk.Settings.PullRimTalkHistory.Desc".Translate());
+                GUI.color = Color.yellow;
+                listing.Label("  " + "RimMind.BridgeRimTalk.Settings.RestartHint".Translate());
+                GUI.color = Color.white;
             }
 
             listing.End();
             Widgets.EndScrollView();
 
-            SettingsUIHelper.DrawBottomBar(bottomBar, () =>
+            SettingsUIDrawer.DrawBottomBar(bottomBar, () =>
             {
                 s.enableDialogueGate = true;
                 s.skipChitchat = true;
@@ -158,7 +138,12 @@ namespace RimMind.Bridge.RimTalk.Settings
                 s.pullRimTalkHistory = true;
             });
 
-            Get().Write();
+            MarkDirtyIfChanged(snapshot);
+            if (_dirty)
+            {
+                Get().Write();
+                _dirty = false;
+            }
         }
 
         private static float EstimateHeight(BridgeRimTalkSettings s)
@@ -173,10 +158,11 @@ namespace RimMind.Bridge.RimTalk.Settings
                 h += 24f * 5;
                 if (s.pushPersonality)
                     h += 24f * 2;
+                h += 24f;
             }
             h += 24f + 24f;
             if (s.enableContextPull)
-                h += 24f;
+                h += 24f + 24f;
             return h + 40f;
         }
     }

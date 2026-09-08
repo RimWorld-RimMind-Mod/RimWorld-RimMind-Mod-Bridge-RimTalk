@@ -1,14 +1,14 @@
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
-using RimMind.Core;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
 {
     public static class DialogueGate
     {
-        public static bool ShouldSkipDialogue(Pawn pawn, string triggerType)
+        public static bool ShouldSkipDialogue(Pawn? pawn, string? triggerType)
         {
+            // pawn reserved for future per-pawn gating; currently global gate.
             if (!RimTalkDetector.IsRimTalkActive) return false;
 
             var settings = BridgeRimTalkSettings.Get();
@@ -31,12 +31,6 @@ namespace RimMind.Bridge.RimTalk.Bridge
             if (!settings.enableDialogueGate) return false;
 
             return settings.skipPlayerDialogue && !settings.forceRimMindPlayerDialogue;
-        }
-
-        internal static void RegisterSkipChecks()
-        {
-            RimMindAPI.RegisterDialogueSkipCheck("rimtalk_bridge", ShouldSkipDialogue);
-            RimMindAPI.RegisterFloatMenuSkipCheck("rimtalk_bridge", ShouldSkipFloatMenuOption);
         }
     }
 }

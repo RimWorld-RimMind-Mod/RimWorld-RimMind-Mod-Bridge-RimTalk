@@ -1,42 +1,67 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
-using RimMind.Core;
-using RimMind.Core.Prompt;
+using RimMind.Application.Common.Interfaces.Context;
+using RimMind.Application.Common.Interfaces.Extension;
+using RimMind.Domain.ValueObjects;
+using RimMind.Presentation.Api;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
 {
-    public static class ContextPullBridge
+    public sealed class ContextPullBridge : IBridgeModule
     {
         private const string ModId = "RimMind.BridgeRimTalk";
 
+        // Type-resolution cache is write-once and shared across instances (safe).
         private static System.Type? _talkHistoryType;
         private static MethodInfo? _getMessageHistoryMethod;
         private static bool _typeResolved;
 
-        public static void Register()
+        public string Id => "context_pull";
+        public string OwnerModId => "RimMindBridgeRimTalk";
+        public bool IsRegistered { get; private set; }
+
+        public void Register()
         {
+            if (IsRegistered) return;
+            if (!RimTalkDetector.IsRimTalkActive) return;
             var settings = BridgeRimTalkSettings.Get();
             if (!settings.enableContextPull) return;
 
             if (settings.pullRimTalkHistory)
                 RegisterRimTalkHistoryProvider();
+
+            IsRegistered = true;
         }
 
-        private static void RegisterRimTalkHistoryProvider()
+        private void RegisterRimTalkHistoryProvider()
         {
-            RimMindAPI.RegisterPawnContextProvider("rimtalk_history", pawn =>
+            if (!ResolveTypes())
             {
-                return BuildRimTalkHistoryContext(pawn);
-            }, PromptSection.PriorityMemory, ModId);
+                RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RimTalk history types not available, skipping provider registration.");
+                return;
+            }
+            RimMindAPI.Context.ContextKeys.Register(new ContextProviderDef(
+                "rimtalk_history", ContextLayer.L4_History, 0.5f,
+                async (ctx, ct) =>
+                {
+                    if (ctx.PawnId <= 0) return null;
+                    var pawn = Find.WorldPawns.AllPawnsAlive.FirstOrDefault(p => p.thingIDNumber == ctx.PawnId)
+                        ?? Find.CurrentMap?.mapPawns?.FreeColonists.FirstOrDefault(p => p.thingIDNumber == ctx.PawnId);
+                    if (pawn == null) return null;
+                    return BuildRimTalkHistoryContext(pawn);
+                }, ModId, stalenessTicks: 3000, invalidationTriggers: new[] { "RimTalkEvent" }));
         }
 
-        private static bool ResolveTypes()
+        private bool ResolveTypes()
         {
             if (_typeResolved) return _talkHistoryType != null;
             _typeResolved = true;
@@ -44,7 +69,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             _talkHistoryType = AccessTools.TypeByName("RimTalk.Data.TalkHistory");
             if (_talkHistoryType == null)
             {
-                Log.WarningOnce("[RimMind-Bridge-RimTalk] RimTalk.Data.TalkHistory type not found.", 84231);
+                RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RimTalk.Data.TalkHistory type not found.");
                 return false;
             }
 
@@ -52,14 +77,14 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 BindingFlags.Public | BindingFlags.Static);
             if (_getMessageHistoryMethod == null)
             {
-                Log.WarningOnce("[RimMind-Bridge-RimTalk] TalkHistory.GetMessageHistory method not found.", 84232);
+                RimMindErrors.Warn("[RimMind-Bridge-RimTalk] TalkHistory.GetMessageHistory method not found.");
                 return false;
             }
 
             return true;
         }
 
-        private static string? BuildRimTalkHistoryContext(Pawn pawn)
+        private string? BuildRimTalkHistoryContext(Pawn pawn)
         {
             try
             {
@@ -84,14 +109,21 @@ namespace RimMind.Bridge.RimTalk.Bridge
                             BindingFlags.Public | BindingFlags.Instance);
                         var messageField = msgType.GetField("Item2",
                             BindingFlags.Public | BindingFlags.Instance);
-                        if (roleField == null || messageField == null) continue;
+                        if (roleField == null || messageField == null)
+                        {
+                            RimMindErrors.Warn("ContextPullBridge: RimTalk message tuple fields not found, messages may not be pulled correctly");
+                            continue;
+                        }
 
                         var roleValue = roleField.GetValue(msg);
                         var content = messageField.GetValue(msg)?.ToString() ?? "";
                         if (string.IsNullOrEmpty(content)) continue;
 
                         bool isRelevant = otherPawn == pawn
-                            || content.Contains(pawnName);
+                            || (pawnName.Length >= 3 && content.Contains(pawnName))
+                            || content.Contains($"[{pawnName}]")
+                            || content.Contains($"{pawnName}:")
+                            || content.Contains($"{pawnName},");
 
                         if (!isRelevant) continue;
 
@@ -124,14 +156,16 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (System.Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] BuildRimTalkHistoryContext failed for {pawn.Name.ToStringShort}: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] BuildRimTalkHistoryContext failed for {pawn.Name.ToStringShort}: {ex.Message}");
                 return null;
             }
         }
 
-        public static void Unregister()
+        public void Unregister()
         {
-            RimMindAPI.UnregisterPawnContextProvider("rimtalk_history");
+            if (!IsRegistered) return;
+            RimMindAPI.Context.ContextKeys.Unregister("rimtalk_history");
+            IsRegistered = false;
         }
     }
 }

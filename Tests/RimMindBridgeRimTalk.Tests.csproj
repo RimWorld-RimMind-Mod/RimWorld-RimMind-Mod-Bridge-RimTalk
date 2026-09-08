@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>RimMind.Bridge.RimTalk.Tests</RootNamespace>
+    <AssemblyName>RimMindBridgeRimTalk.Tests</AssemblyName>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.9.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="RimTalkStubs.cs" />
+    <Compile Include="Contracts\**\*.cs" />
+    <Compile Include="..\..\RimMind-Core\TestSupport\ContractCaseRunner.cs"
+             Link="Support\ContractCaseRunner.cs" />
+    <Compile Include="../Source/Bridge/BridgeModuleCoordinator.cs" />
+    <Compile Include="../Source/Bridge/ContextPushBridge.cs" />
+    <Compile Include="../Source/Bridge/PersonaPushBridge.cs" />
+    <Compile Include="../Source/Bridge/RimTalkContextPushPlan.cs" />
+    <Compile Include="../Source/Bridge/DialogueGate.cs" />
+    <Compile Include="../Source/Bridge/PersonaFormatter.cs" />
+    <Compile Include="../Source/Bridge/RimMindProviderReader.cs" />
+    <Compile Include="../Source/Bridge/RimTalkApiShim.cs" />
+    <Compile Include="../Source/Detection/RimTalkDetector.cs" />
+    <Compile Include="../Source/Settings/BridgeRimTalkSettings.State.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../RimMind-Core/Source/Domain/RimMindCore.Domain.csproj" />
+    <ProjectReference Include="../../RimMind-Core/Source/Application/RimMindCore.Application.csproj" />
+  </ItemGroup>
+
+</Project>
