@@ -1,8 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using RimMind.Bridge.RimTalk.Detection;
-using RimMind.Bridge.RimTalk.Settings;
+using RimMind.Domain.ValueObjects;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
@@ -24,6 +25,23 @@ namespace RimMind.Bridge.RimTalk.Bridge
         private static Type? _promptPositionType;
         private static bool _resolved;
 
+        internal static void ConfigureTypesForTesting(
+            Type? apiType,
+            Type? hookRegistryType = null,
+            Type? contextCategoriesType = null,
+            Type? promptEntryType = null,
+            Type? promptRoleType = null,
+            Type? promptPositionType = null)
+        {
+            _apiType = apiType;
+            _hookRegistryType = hookRegistryType;
+            _contextCategoriesType = contextCategoriesType;
+            _promptEntryType = promptEntryType;
+            _promptRoleType = promptRoleType;
+            _promptPositionType = promptPositionType;
+            _resolved = true;
+        }
+
         public static bool IsAvailable => RimTalkDetector.IsRimTalkApiAvailable;
 
         private static void EnsureResolved()
@@ -42,7 +60,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] Failed to resolve RimTalk types: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] Failed to resolve RimTalk types: {ex.Message}");
             }
         }
 
@@ -63,7 +81,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
                 if (method == null)
                 {
-                    Log.Warning($"[RimMind-Bridge-RimTalk] RegisterPawnVariable method not found");
+                    RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] RegisterPawnVariable method not found");
                     return false;
                 }
 
@@ -72,7 +90,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] RegisterPawnVariable failed: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] RegisterPawnVariable failed: {ex.Message}");
                 return false;
             }
         }
@@ -92,14 +110,18 @@ namespace RimMind.Bridge.RimTalk.Bridge
                     new[] { typeof(string), typeof(string), typeof(Func<Map, string>), typeof(string), typeof(int) },
                     null);
 
-                if (method == null) return false;
+                if (method == null)
+                {
+                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RegisterEnvironmentVariable method not found");
+                    return false;
+                }
 
                 method.Invoke(null, new object?[] { modId, variableName, provider, description, priority });
                 return true;
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] RegisterEnvironmentVariable failed: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] RegisterEnvironmentVariable failed: {ex.Message}");
                 return false;
             }
         }
@@ -114,11 +136,19 @@ namespace RimMind.Bridge.RimTalk.Bridge
             try
             {
                 var nestedPawnType = _contextCategoriesType.GetNestedType("Pawn");
-                if (nestedPawnType == null) return false;
+                if (nestedPawnType == null)
+                {
+                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] ContextCategories.Pawn nested type not found");
+                    return false;
+                }
 
                 var categoryField = nestedPawnType.GetField(categoryKey,
                     BindingFlags.Public | BindingFlags.Static);
-                if (categoryField == null) return false;
+                if (categoryField == null)
+                {
+                    RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] ContextCategories.Pawn.{categoryKey} field not found");
+                    return false;
+                }
 
                 object? categoryValue = categoryField.GetValue(null);
                 if (categoryValue == null) return false;
@@ -130,14 +160,18 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
                 var method = _apiType.GetMethod("RegisterPawnHook",
                     BindingFlags.Public | BindingFlags.Static);
-                if (method == null) return false;
+                if (method == null)
+                {
+                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RegisterPawnHook method not found");
+                    return false;
+                }
 
                 method.Invoke(null, new object?[] { modId, categoryValue, opValue, handler, priority });
                 return true;
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] RegisterPawnHook failed: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] RegisterPawnHook failed: {ex.Message}");
                 return false;
             }
         }
@@ -160,11 +194,9 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
                 if (createMethod == null)
                 {
-                    createMethod = _apiType.GetMethod("CreatePromptEntry",
-                        BindingFlags.Public | BindingFlags.Static);
+                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] AddPromptEntry: CreatePromptEntry method with expected signature not found.");
+                    return false;
                 }
-
-                if (createMethod == null) return false;
 
                 object? roleObj = _promptRoleType != null ? Enum.ToObject(_promptRoleType, roleValue) : roleValue;
                 object? posObj = _promptPositionType != null ? Enum.ToObject(_promptPositionType, positionValue) : positionValue;
@@ -181,7 +213,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] AddPromptEntry failed: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] AddPromptEntry failed: {ex.Message}");
                 return false;
             }
         }
@@ -203,7 +235,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] UnregisterAllHooks failed: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] UnregisterAllHooks failed: {ex.Message}");
                 return false;
             }
         }
@@ -225,7 +257,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (Exception ex)
             {
-                Log.Warning($"[RimMind-Bridge-RimTalk] RemovePromptEntriesByModId failed: {ex.Message}");
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] RemovePromptEntriesByModId failed: {ex.Message}");
                 return 0;
             }
         }

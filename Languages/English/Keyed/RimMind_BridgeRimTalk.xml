@@ -3,7 +3,6 @@
   <!-- RimMindBridgeRimTalkMod.cs -->
   <RimMind.BridgeRimTalk.Settings.Category>RimMind - Bridge (RimTalk)</RimMind.BridgeRimTalk.Settings.Category>
   <RimMind.BridgeRimTalk.Settings.TabLabel>Bridge (RimTalk)</RimMind.BridgeRimTalk.Settings.TabLabel>
-
   <!-- BridgeRimTalkSettings.cs - Dialogue Gate -->
   <RimMind.BridgeRimTalk.Settings.Section.DialogueGate>Dialogue Gate</RimMind.BridgeRimTalk.Settings.Section.DialogueGate>
   <RimMind.BridgeRimTalk.Settings.EnableDialogueGate>Enable dialogue gate</RimMind.BridgeRimTalk.Settings.EnableDialogueGate>
@@ -16,7 +15,6 @@
   <RimMind.BridgeRimTalk.Settings.SkipPlayerDialogue.Desc>Remove RimMind's "Chat with X" float menu option when RimTalk is active</RimMind.BridgeRimTalk.Settings.SkipPlayerDialogue.Desc>
   <RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue>Keep RimMind player dialogue</RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue>
   <RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue.Desc>Keep RimMind's float menu option even when skipping player dialogue, allowing both chat systems to coexist</RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue.Desc>
-
   <!-- BridgeRimTalkSettings.cs - Context Push -->
   <RimMind.BridgeRimTalk.Settings.Section.ContextPush>Context Push</RimMind.BridgeRimTalk.Settings.Section.ContextPush>
   <RimMind.BridgeRimTalk.Settings.EnableContextPush>Enable context push</RimMind.BridgeRimTalk.Settings.EnableContextPush>
@@ -35,11 +33,11 @@
   <RimMind.BridgeRimTalk.Settings.InjectPersonaToTraits.Desc>Append personality description directly into RimTalk's Traits context section (may duplicate with personality variable)</RimMind.BridgeRimTalk.Settings.InjectPersonaToTraits.Desc>
   <RimMind.BridgeRimTalk.Settings.InjectPersonaToMood>Inject into mood context</RimMind.BridgeRimTalk.Settings.InjectPersonaToMood>
   <RimMind.BridgeRimTalk.Settings.InjectPersonaToMood.Desc>Append AI narrative directly into RimTalk's Mood context section</RimMind.BridgeRimTalk.Settings.InjectPersonaToMood.Desc>
-
   <!-- BridgeRimTalkSettings.cs - Context Pull -->
   <RimMind.BridgeRimTalk.Settings.Section.ContextPull>Context Pull</RimMind.BridgeRimTalk.Settings.Section.ContextPull>
   <RimMind.BridgeRimTalk.Settings.EnableContextPull>Enable context pull</RimMind.BridgeRimTalk.Settings.EnableContextPull>
   <RimMind.BridgeRimTalk.Settings.EnableContextPull.Desc>Pull dialogue history and other data from RimTalk, registering as RimMind context providers</RimMind.BridgeRimTalk.Settings.EnableContextPull.Desc>
   <RimMind.BridgeRimTalk.Settings.PullRimTalkHistory>Pull RimTalk dialogue history</RimMind.BridgeRimTalk.Settings.PullRimTalkHistory>
   <RimMind.BridgeRimTalk.Settings.PullRimTalkHistory.Desc>Register RimTalk's dialogue history as RimMind's context provider, so RimMind can read past RimTalk conversations</RimMind.BridgeRimTalk.Settings.PullRimTalkHistory.Desc>
+  <RimMind.BridgeRimTalk.Settings.RestartHint>Note: Changes to these settings require a game restart to take effect.</RimMind.BridgeRimTalk.Settings.RestartHint>
 </LanguageData>

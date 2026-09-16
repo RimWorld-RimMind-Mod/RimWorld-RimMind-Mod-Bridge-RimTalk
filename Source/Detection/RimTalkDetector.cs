@@ -16,8 +16,16 @@ namespace RimMind.Bridge.RimTalk.Detection
         {
             get
             {
-                try { return Find.TickManager?.TicksGame ?? 0; }
-                catch { return 0; }
+                try
+                {
+                    var tm = Find.TickManager;
+                    if (tm == null) return 0;
+                    return tm.TicksGame;
+                }
+                catch
+                {
+                    return 0;
+                }
             }
         }
 
@@ -26,12 +34,19 @@ namespace RimMind.Bridge.RimTalk.Detection
             get
             {
                 int now = SafeTicksGame;
-                if (_cachedResult == null || now - _cacheTick > CacheIntervalTicks)
+                if (_cachedResult == null || (now > 0 && now - _cacheTick > CacheIntervalTicks))
                 {
                     _cachedResult = ModsConfig.IsActive(RimTalkPackageId);
-                    _cacheTick = now;
+                    if (now > 0)
+                    {
+                        _cacheTick = now;
+                    }
                 }
                 return _cachedResult.Value;
+            }
+            internal set
+            {
+                _cachedResult = value;
             }
         }
 
@@ -39,6 +54,8 @@ namespace RimMind.Bridge.RimTalk.Detection
         {
             _cachedResult = null;
             _cacheTick = -1;
+            _apiAvailable = null;
+            _apiChecked = false;
         }
 
         private static bool? _apiAvailable;
@@ -54,6 +71,11 @@ namespace RimMind.Bridge.RimTalk.Detection
                     _apiChecked = true;
                 }
                 return _apiAvailable ?? false;
+            }
+            internal set
+            {
+                _apiAvailable = value;
+                _apiChecked = true;
             }
         }
     }
