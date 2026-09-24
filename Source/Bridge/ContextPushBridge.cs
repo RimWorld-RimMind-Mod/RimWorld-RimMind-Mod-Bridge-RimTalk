@@ -1,62 +1,76 @@
 using System.Text;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
-using RimMind.Advisor.Data;
-using RimMind.Memory.Data;
-using RimMind.Personality.Data;
+using RimMind.Application.Common.Interfaces.Extension;
 
 namespace RimMind.Bridge.RimTalk.Bridge
 {
-    public static class ContextPushBridge
+    public sealed class ContextPushBridge : IBridgeModule
     {
-        private const string ModId = "RimMind.Bridge.RimTalk";
+        private const string ModId = "RimMind.Bridge.RimTalk.Push";
 
-        public static void Register()
+        public string Id => "context_push";
+        public string OwnerModId => "RimMindBridgeRimTalk";
+        public bool IsRegistered { get; private set; }
+
+        public void Register()
         {
+            if (IsRegistered) return;
             if (!RimTalkDetector.IsRimTalkApiAvailable) return;
 
             var settings = BridgeRimTalkSettings.Get();
+            RimTalkContextPushPlan plan = RimTalkContextPushPlan.Build(settings);
 
             if (settings.enableContextPush)
             {
-                if (settings.pushPersonality)
+                if (plan.RegisterPersonality)
                     RegisterPersonalityVariable();
 
-                if (settings.pushStoryteller)
+                if (plan.RegisterStoryteller)
                     RegisterStorytellerVariable();
 
-                if (settings.pushMemory)
+                if (plan.RegisterMemory)
                     RegisterMemoryVariable();
 
-                if (settings.pushShaping)
+                if (plan.RegisterShaping)
                     RegisterShapingVariable();
 
-                if (settings.pushAdvisorLog)
+                if (plan.RegisterAdvisorLog)
                     RegisterAdvisorLogVariable();
 
-                RegisterPromptEntry();
+                RegisterPromptEntry(plan);
             }
+
+            IsRegistered = true;
         }
 
-        private static void RegisterPersonalityVariable()
+        private void RegisterPersonalityVariable()
         {
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
                 "rimmind_personality",
                 pawn =>
                 {
-                    var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
-                    if (profile == null || profile.IsEmpty) return "";
+                    var description = RimMindProviderReader.GetPawn(
+                        RimMindProviderReader.PersonalityDescription,
+                        pawn);
+                    var workTendencies = RimMindProviderReader.GetPawn(
+                        RimMindProviderReader.PersonalityWorkTendencies,
+                        pawn);
+                    var socialTendencies = RimMindProviderReader.GetPawn(
+                        RimMindProviderReader.PersonalitySocialTendencies,
+                        pawn);
+                    var narrative = RimMindProviderReader.GetPawn(
+                        RimMindProviderReader.PersonalityNarrative,
+                        pawn);
 
                     var sb = new StringBuilder();
-                    if (!string.IsNullOrEmpty(profile.description))
-                        sb.AppendLine(profile.description);
-                    if (!string.IsNullOrEmpty(profile.workTendencies))
-                        sb.AppendLine($"[Work] {profile.workTendencies}");
-                    if (!string.IsNullOrEmpty(profile.socialTendencies))
-                        sb.AppendLine($"[Social] {profile.socialTendencies}");
-                    if (!string.IsNullOrEmpty(profile.aiNarrative))
-                        sb.AppendLine($"[AI] {profile.aiNarrative}");
+                    sb.AppendLine(PersonaFormatter.BuildFullProfile(
+                        description,
+                        workTendencies,
+                        socialTendencies));
+                    if (!string.IsNullOrEmpty(narrative))
+                        sb.AppendLine($"[AI] {narrative}");
                     return sb.ToString().TrimEnd();
                 },
                 "RimMind personality profile",
@@ -64,148 +78,75 @@ namespace RimMind.Bridge.RimTalk.Bridge
             );
         }
 
-        private static void RegisterStorytellerVariable()
+        private void RegisterStorytellerVariable()
         {
             RimTalkApiShim.RegisterEnvironmentVariable(
                 ModId,
                 "rimmind_storyteller",
-                map =>
-                {
-                    var store = RimMindMemoryWorldComponent.Instance?.NarratorStore;
-                    if (store == null || store.IsEmpty) return "";
-
-                    var sb = new StringBuilder("[RimMind Storyteller]");
-                    int count = 0;
-                    foreach (var m in store.active)
-                    {
-                        if (count >= 5) break;
-                        sb.AppendLine($"- {m.content}");
-                        count++;
-                    }
-                    return sb.ToString().TrimEnd();
-                },
+                map => RimMindProviderReader.GetStatic(
+                    RimMindProviderReader.NarratorMemoryBrief),
                 "RimMind storyteller state",
                 80
             );
         }
 
-        private static void RegisterMemoryVariable()
+        private void RegisterMemoryVariable()
         {
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
                 "rimmind_memory",
-                pawn =>
-                {
-                    var store = RimMindMemoryWorldComponent.Instance?.GetOrCreatePawnStore(pawn);
-                    if (store == null || store.IsEmpty) return "";
-
-                    var sb = new StringBuilder("[RimMind Memory]");
-                    int count = 0;
-                    foreach (var m in store.active)
-                    {
-                        if (count >= 5) break;
-                        sb.AppendLine($"- {m.content}");
-                        count++;
-                    }
-                    if (store.dark.Count > 0)
-                    {
-                        sb.AppendLine("[Long-term]");
-                        foreach (var m in store.dark)
-                            sb.AppendLine($"- {m.content}");
-                    }
-                    return sb.ToString().TrimEnd();
-                },
+                pawn => RimMindProviderReader.GetPawn(
+                    RimMindProviderReader.PawnMemoryBrief,
+                    pawn),
                 "RimMind memory data",
                 60
             );
         }
 
-        private static void RegisterShapingVariable()
+        private void RegisterShapingVariable()
         {
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
                 "rimmind_shaping",
-                pawn =>
-                {
-                    var profile = AIPersonalityWorldComponent.Instance?.GetOrCreate(pawn);
-                    if (profile == null) return "";
-                    var history = profile.playerShapingHistory;
-                    if (history == null || history.Count == 0) return "";
-
-                    var sb = new StringBuilder("[RimMind Shaping]");
-                    int count = 0;
-                    int start = System.Math.Max(0, history.Count - 5);
-                    for (int i = start; i < history.Count; i++)
-                    {
-                        var r = history[i];
-                        sb.AppendLine($"- [{r.action}] {r.label}");
-                        count++;
-                    }
-                    return count > 0 ? sb.ToString().TrimEnd() : "";
-                },
+                pawn => RimMindProviderReader.GetPawn(
+                    RimMindProviderReader.PersonalityShaping,
+                    pawn),
                 "RimMind shaping history",
                 70
             );
         }
 
-        private static void RegisterAdvisorLogVariable()
+        private void RegisterAdvisorLogVariable()
         {
             RimTalkApiShim.RegisterPawnVariable(
                 ModId,
                 "rimmind_advisor_log",
-                pawn =>
-                {
-                    var history = AdvisorHistoryStore.Instance?.GetRecords(pawn);
-                    if (history == null || history.Count == 0) return "";
-
-                    var sb = new StringBuilder("[RimMind Advisor]");
-                    int count = 0;
-                    foreach (var r in history)
-                    {
-                        if (count >= 5) break;
-                        sb.AppendLine($"- {r.action}: {r.reason} ({r.result})");
-                        count++;
-                    }
-                    return sb.ToString().TrimEnd();
-                },
+                pawn => RimMindProviderReader.GetPawn(
+                    RimMindProviderReader.AdvisorHistoryBrief,
+                    pawn),
                 "RimMind advisor history",
                 80
             );
         }
 
-        private static void RegisterPromptEntry()
+        private static void RegisterPromptEntry(RimTalkContextPushPlan plan)
         {
-            var settings = BridgeRimTalkSettings.Get();
-
-            var sb = new StringBuilder();
-            sb.AppendLine("# RimMind Context");
-
-            if (settings.pushPersonality)
-            {
-                sb.AppendLine("{{ for p in pawns }}");
-                sb.AppendLine("## {{ p.name }}'s Personality:");
-                sb.AppendLine("{{ p.rimmind_personality }}");
-                sb.AppendLine("{{ end }}");
-            }
-
-            if (settings.pushStoryteller)
-            {
-                sb.AppendLine("# Storyteller State");
-                sb.AppendLine("{{rimmind_storyteller}}");
-            }
+            if (string.IsNullOrEmpty(plan.PromptContent)) return;
 
             RimTalkApiShim.AddPromptEntry(
                 name: "RimMind Context",
-                content: sb.ToString().TrimEnd(),
+                content: plan.PromptContent,
                 roleValue: 0,
                 positionValue: 0,
                 sourceModId: ModId
             );
         }
 
-        public static void Unregister()
+        public void Unregister()
         {
+            if (!IsRegistered) return;
             RimTalkApiShim.Cleanup(ModId);
+            IsRegistered = false;
         }
     }
 }
