@@ -1,20 +1,41 @@
 [h1]RimMind - Bridge: RimTalk[/h1]
+[h1]RimMind - Bridge: RimTalk (双模组协同桥梁)[/h1]
 
 你的殖民者脑子里住了两个 AI——让它们别再打架了。
+[i]连接 RimMind 与 RimTalk——统一角色性格与共享记忆，彻底杜绝人格分裂。[/i]
+[i]Bridge RimMind with RimTalk — Synchronize pawn personas and share memories without contradictions.[/i]
 
 [h2] 为什么需要这个模组？ [/h2]
 你同时装了 RimMind 和 RimTalk。听起来很棒——殖民者既有人格和记忆，又能自由聊天。但很快你会发现：
+[hr]
+[h2]📖 中文介绍 / Chinese Overview[/h2]
 
 [b]殖民者刚在 RimTalk 里说自己喜欢独处，转头在 RimMind 里又变成了社交达人。[/b]
+[b]RimMind-Bridge-RimTalk[/b] 解决同时安装 RimMind 与 RimTalk 时的双重人格脱节问题。它将 RimMind 生成的细腻人格画像与深层记忆无缝注入 RimTalk 对话引擎，确保小人在两套系统中性格如一、记忆连贯。
 
 两个 AI 互不相知，殖民者像失忆一样在两边说着矛盾的话。更糟的是，两个对话系统同时弹出，殖民者被拉扯成两半。
+[h3]🌟 核心特性[/h3]
+[list]
+[*] [b]人格档案同步[/b]：RimMind 的大五人格与背景设定自动流入 RimTalk，使对话口吻完全吻合当事人性格。
+[*] [b]跨系统记忆流通[/b]：在 RimTalk 中的交谈经历可被 RimMind 记忆系统捕获，形成共同过往。
+[*] [b]门控与防争抢[/b]：协调对话触发时机，杜绝两套界面重叠。
+[/list]
 
 Bridge: RimTalk 让它们[b]共享记忆、互不干扰[/b]。
+[hr]
+[h2]🌐 English Overview[/h2]
 
 [h2] 它让游戏变得更好玩 [/h2]
+[b]RimMind-Bridge-RimTalk[/b] aligns pawn personalities and historical memories across both RimMind and RimTalk.
 
 [b] 殖民者终于有了一致的人格 [/b]
 RimMind 为每个殖民者生成了独特的人格——性格描述、工作偏好、社交风格。Bridge 把这些注入 RimTalk，让 RimTalk 的对话也能[b]感知殖民者的内心[/b]。殖民者不再是 RimTalk 眼中的陌生人——他们在两边说的是同一个人。
+[h3]🌟 Key Highlights[/h3]
+[list]
+[*] [b]Unified Persona Sharing[/b]: Injects RimMind's Big Five profiles and lore into RimTalk dialogue generation.
+[*] [b]Bidirectional Memory Flow[/b]: Past RimTalk conversations become part of RimMind's permanent memories.
+[*] [b]Conflict-Free Coordination[/b]: Smoothly manages conversation triggers without UI overlapping.
+[/list]
 
 [b] 两个 AI 终于有了共同记忆 [/b]
 开启"上下文拉取"后，RimTalk 里发生的对话会流入 RimMind。殖民者在 RimTalk 里倾诉的烦恼，RimMind 也知道。两个系统不再是[b]失忆的两个灵魂[/b]，而是共享记忆的同一个殖民者。
@@ -43,3 +64,8 @@ A: 本模组通过反射调用 RimTalk API，所有调用都有 try-catch 保护
 
 [b] Q: 两个 AI 系统会冲突吗？ [/b]
 A: 不会。对话门控确保不会重复触发，上下文互通让两个系统共享信息而不是互相干扰。
+[hr]
+[h2]⚙️ 依赖与顺序 / Requirements & Order[/h2]
+[list]
+[*] [b]必需前置 (Required)[/b]: Harmony, [b]RimMind-Core[/b], [b]RimTalk[/b]
+[/list]
