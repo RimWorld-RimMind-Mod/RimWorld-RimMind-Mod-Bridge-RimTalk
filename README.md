@@ -43,6 +43,13 @@ graph TD
     Core --> BridgeRimTalk["Bridge-RimTalk"]
 ```
 
+## 🎮 实机特性展示 / In-Game Showcase
+
+![RimMind-Bridge-RimTalk In-Game Showcase](docs/images/showcase.jpg)
+
+- **气泡管道协调**：在安装 RimTalk 时协同气泡渲染管线，避免双方同时生成重复气泡与位置覆盖。
+- **人格记忆上下文注入**：将 RimMind 三层记忆和性格特质直接注入 RimTalk 提示词，实现双模组深度协同体验。
+
 ## 安装步骤
 
 ### 从源码安装
@@ -209,6 +216,13 @@ RimTalk is another popular RimWorld AI dialogue mod. When both RimMind and RimTa
 | RimMind-Bridge-RimChat | Coordination & mutual exclusion layer with RimChat mod | Core, RimChat | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimChat) |
 | **RimMind-Bridge-RimTalk** | **Dialogue bubbles & context bridge with RimTalk mod** | **Core, RimTalk** | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk) |
 | RimMind-Extension-ModelService | Extended model gateway, OpenCode Go subscription & multi-endpoint load balancing | Core | [Link](https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Extension-ModelService) |
+
+## 🎮 In-Game Showcase / Feature Demonstration
+
+![RimMind-Bridge-RimTalk In-Game Showcase](docs/images/showcase.jpg)
+
+- **Bubble Pipeline Coordination**: Coordinates speech bubble rendering with RimTalk, preventing visual occlusion and duplicate bubble clutter.
+- **Personality & Memory Prompt Injection**: Feeds RimMind's 3-tier memory and Big Five personality traits directly into RimTalk prompts, delivering a unified roleplay experience.
 
 ## Installation
 
