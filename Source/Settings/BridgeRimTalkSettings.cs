@@ -68,9 +68,10 @@ namespace RimMind.Bridge.RimTalk.Settings
             }
 
             SettingsUIDrawer.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPush".Translate());
+            string restartHint = "RimMind.BridgeRimTalk.Settings.RestartHint".Translate();
             listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnableContextPush".Translate(),
                 ref s.enableContextPush,
-                "RimMind.BridgeRimTalk.Settings.EnableContextPush.Desc".Translate());
+                "RimMind.BridgeRimTalk.Settings.EnableContextPush.Desc".Translate() + "\n\n" + restartHint);
             if (s.enableContextPush)
             {
                 listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushPersonality".Translate(),
@@ -97,23 +98,17 @@ namespace RimMind.Bridge.RimTalk.Settings
                         ref s.injectPersonaToMood,
                         "RimMind.BridgeRimTalk.Settings.InjectPersonaToMood.Desc".Translate());
                 }
-                GUI.color = Color.yellow;
-                listing.Label("  " + "RimMind.BridgeRimTalk.Settings.RestartHint".Translate());
-                GUI.color = Color.white;
             }
 
             SettingsUIDrawer.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPull".Translate());
             listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnableContextPull".Translate(),
                 ref s.enableContextPull,
-                "RimMind.BridgeRimTalk.Settings.EnableContextPull.Desc".Translate());
+                "RimMind.BridgeRimTalk.Settings.EnableContextPull.Desc".Translate() + "\n\n" + restartHint);
             if (s.enableContextPull)
             {
                 listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PullRimTalkHistory".Translate(),
                     ref s.pullRimTalkHistory,
-                    "RimMind.BridgeRimTalk.Settings.PullRimTalkHistory.Desc".Translate());
-                GUI.color = Color.yellow;
-                listing.Label("  " + "RimMind.BridgeRimTalk.Settings.RestartHint".Translate());
-                GUI.color = Color.white;
+                    "RimMind.BridgeRimTalk.Settings.PullRimTalkHistory.Desc".Translate() + "\n\n" + restartHint);
             }
 
             listing.End();
@@ -158,11 +153,10 @@ namespace RimMind.Bridge.RimTalk.Settings
                 h += 24f * 5;
                 if (s.pushPersonality)
                     h += 24f * 2;
-                h += 24f;
             }
             h += 24f + 24f;
             if (s.enableContextPull)
-                h += 24f + 24f;
+                h += 24f;
             return h + 40f;
         }
     }

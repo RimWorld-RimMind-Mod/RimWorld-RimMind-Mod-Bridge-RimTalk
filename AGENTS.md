@@ -84,10 +84,11 @@ AddPromptEntry / UnregisterAllHooks / RemovePromptEntriesByModId / Cleanup
 - 各桥接模块使用独立ModId确保Cleanup互不干扰
 - 新桥接模块实现 `IBridgeModule` 接口并加入 `RimTalkBridgeCoordinator._modules` 列表(由Coordinator统一foreach调度Register/Unregister)
 - 人格字符串构建统一通过 `PersonaFormatter.BuildFullProfile`(供ContextPushBridge/PersonaPushBridge复用,避免重复StringBuilder)
-- 子模组数据只通过 `RimMindProviderReader` 消费 Core Provider 字符串
+- 子模组数据只通过 `RimMindProviderReader` 消费 Core Provider 字符串；Pawn 查找与遍历统一走 `RimMindPawnLookup.FindPawnByNumber` 与 `RimMindPawnLookup.GetSpawnedColonistsSafe`
+- `DialogueGate.ShouldSkipDialogue` 对 `"PlayerInput"` 与 `ShouldSkipFloatMenuOption` 统一尊重 `!settings.forceRimMindPlayerDialogue`
 - 注册/注销通过 `RimTalkBridgeCoordinator` 统一调度
 - Harmony ID: `mcocdaa.RimMindBridgeRimTalk`
-- 翻译前缀: `RimMind.Bridge.RimTalk.*`
+- 翻译前缀: `RimMind.BridgeRimTalk.*`
 
 ## 操作边界
 

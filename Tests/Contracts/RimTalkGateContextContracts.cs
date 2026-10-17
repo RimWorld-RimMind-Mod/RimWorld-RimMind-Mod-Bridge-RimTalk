@@ -53,7 +53,7 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                     settings.skipPlayerDialogue = true;
                     settings.forceRimMindPlayerDialogue = true;
 
-                    Assert.True(DialogueGate.ShouldSkipDialogue(null, "PlayerInput"));
+                    Assert.False(DialogueGate.ShouldSkipDialogue(null, "PlayerInput"));
                     Assert.False(DialogueGate.ShouldSkipFloatMenuOption());
                 }));
         }
