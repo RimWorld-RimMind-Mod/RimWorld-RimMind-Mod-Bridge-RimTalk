@@ -18,7 +18,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             {
                 "Chitchat" => settings.skipChitchat,
                 "Auto" => settings.skipAutoDialogue,
-                "PlayerInput" => settings.skipPlayerDialogue,
+                "PlayerInput" => settings.skipPlayerDialogue && !settings.forceRimMindPlayerDialogue,
                 _ => false
             };
         }

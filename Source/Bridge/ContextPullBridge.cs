@@ -54,8 +54,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 async (ctx, ct) =>
                 {
                     if (ctx.PawnId <= 0) return null;
-                    var pawn = Find.WorldPawns.AllPawnsAlive.FirstOrDefault(p => p.thingIDNumber == ctx.PawnId)
-                        ?? Find.CurrentMap?.mapPawns?.FreeColonists.FirstOrDefault(p => p.thingIDNumber == ctx.PawnId);
+                    var pawn = RimMindPawnLookup.FindPawnByNumber(ctx.PawnId);
                     if (pawn == null) return null;
                     return BuildRimTalkHistoryContext(pawn);
                 }, ModId, stalenessTicks: 3000, invalidationTriggers: new[] { "RimTalkEvent" }));
@@ -90,13 +89,14 @@ namespace RimMind.Bridge.RimTalk.Bridge
             {
                 if (!ResolveTypes()) return null;
 
-                string pawnName = pawn.Name.ToStringShort;
-                var mapPawns = pawn.Map?.mapPawns;
-                if (mapPawns == null) return null;
+                string pawnName = pawn.Name?.ToStringShort ?? pawn.LabelShort;
+                if (pawn.Map == null) return null;
+                var spawnedColonists = RimMindPawnLookup.GetSpawnedColonistsSafe(pawn.Map);
+                if (spawnedColonists.Count == 0) return null;
 
                 var relevantMessages = new List<(string roleLabel, string content)>();
 
-                foreach (var otherPawn in mapPawns.FreeColonists)
+                foreach (var otherPawn in spawnedColonists)
                 {
                     var messages = _getMessageHistoryMethod!.Invoke(null,
                         new object?[] { otherPawn, true }) as IList;
@@ -156,7 +156,8 @@ namespace RimMind.Bridge.RimTalk.Bridge
             }
             catch (System.Exception ex)
             {
-                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] BuildRimTalkHistoryContext failed for {pawn.Name.ToStringShort}: {ex.Message}");
+                string fallbackName = pawn.Name?.ToStringShort ?? pawn.LabelShort;
+                RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] BuildRimTalkHistoryContext failed for {fallbackName}: {ex.Message}");
                 return null;
             }
         }
