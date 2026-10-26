@@ -1,13 +1,13 @@
 <div align="center">
 
 # RimMind-Bridge-RimTalk 🎨
-### 专为 RimWorld 1.6 打造的气泡管线融合、认知记忆桥接与防打架协同系统
+### 专为 RimWorld 1.6 & 1.7 打造的气泡管线融合、认知记忆桥接与防打架协同系统
 
 [English](README.md) | **简体中文**
 
 <p>
-  <a href="https://rimworldgame.com/"><img src="https://img.shields.io/badge/RimWorld-1.6-brightgreen.svg" alt="RimWorld 1.6"></a>
-  <a href="https://github.com/mcocdaa/RimWorld-RimMind-Mod-Core"><img src="https://img.shields.io/badge/核心依赖-RimMind--Core-blue.svg" alt="依赖: RimMind-Core"></a>
+  <a href="https://rimworldgame.com/"><img src="https://img.shields.io/badge/RimWorld-1.6%20%7C%201.7-brightgreen.svg" alt="RimWorld 1.6 | 1.7"></a>
+  <a href="https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Core"><img src="https://img.shields.io/badge/核心依赖-RimMind--Core-blue.svg" alt="依赖: RimMind-Core"></a>
   <a href="#"><img src="https://img.shields.io/badge/单元测试-6%2B%20通过-success.svg" alt="单元测试"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/开源协议-MIT-yellow.svg" alt="License: MIT"></a>
 </p>

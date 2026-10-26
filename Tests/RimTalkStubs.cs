@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using RimMind.Application.Common.Interfaces.Context;
 using RimMind.Application.Common.Interfaces.Extension;
 using RimMind.Domain.ValueObjects;
 
@@ -32,9 +34,28 @@ namespace Verse
         public static bool IsActive(string packageId) => false;
     }
 
-    public class Pawn { }
+    public sealed class Name
+    {
+        public Name(string shortName) => ToStringShort = shortName;
+        public string ToStringShort { get; set; }
+    }
 
-    public class Map { }
+    public class Pawn
+    {
+        public int thingIDNumber;
+        public Name? Name;
+        public string LabelShort = "Colonist";
+        public Map? Map;
+        public bool Dead;
+        public bool Destroyed;
+        public bool Spawned = true;
+        public bool IsPrisoner;
+    }
+
+    public class Map
+    {
+        public List<Pawn> SpawnedColonists { get; } = new List<Pawn>();
+    }
 
     public class TickManager
     {
@@ -51,6 +72,43 @@ namespace RimMind.Presentation.Api
 {
     public static class RimMindAPI
     {
+        public static class MainThreadSnapshot
+        {
+            public static RimMind.Application.Common.Threading.MainThreadReader Reader { get; set; } =
+                new RimMind.Application.Common.Threading.MainThreadReader(a => a(), () => true);
+
+            public static System.Threading.Tasks.Task<T> GetAsync<T>(
+                Func<T> readOnMainThread,
+                T fallback = default!,
+                TimeSpan? timeout = null,
+                System.Threading.CancellationToken ct = default)
+                => Reader.ReadAsync(
+                    readOnMainThread,
+                    fallback,
+                    timeout ?? RimMind.Application.Common.Threading.MainThreadReader.DefaultTimeout,
+                    ct);
+        }
+
+        public static class Context
+        {
+            public static StubContextKeyRegistry ContextKeys { get; } = new StubContextKeyRegistry();
+        }
+
+        public sealed class StubContextKeyRegistry
+        {
+            public List<ContextProviderDef> Definitions { get; } = new List<ContextProviderDef>();
+
+            public void Register(ContextProviderDef def)
+            {
+                Definitions.RemoveAll(d => d.Key == def.Key);
+                Definitions.Add(def);
+            }
+
+            public bool Unregister(string key) => Definitions.RemoveAll(d => d.Key == key) > 0;
+
+            public void Clear() => Definitions.Clear();
+        }
+
         public static class Providers
         {
             private static readonly Dictionary<string, Result<string?, RimMindError>> PawnResults =
@@ -128,6 +186,28 @@ namespace RimMind.Presentation.Api
                 public string Category { get; }
                 public Verse.Pawn Pawn { get; }
             }
+        }
+    }
+
+    public static class RimMindPawnLookup
+    {
+        public static List<Verse.Pawn> KnownPawns { get; } = new List<Verse.Pawn>();
+
+        public static Verse.Pawn? FindPawnByNumber(int num)
+        {
+            if (num <= 0) return null;
+            return KnownPawns.FirstOrDefault(p => p.thingIDNumber == num);
+        }
+
+        public static bool IsActiveSpawnedColonist(Verse.Pawn? pawn)
+        {
+            return pawn != null && !pawn.Dead && !pawn.Destroyed && pawn.Spawned && !pawn.IsPrisoner;
+        }
+
+        public static IReadOnlyList<Verse.Pawn> GetSpawnedColonistsSafe(Verse.Map? map)
+        {
+            if (map == null) return Array.Empty<Verse.Pawn>();
+            return map.SpawnedColonists.Where(IsActiveSpawnedColonist).ToList();
         }
     }
 }

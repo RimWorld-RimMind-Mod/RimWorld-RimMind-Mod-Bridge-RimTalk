@@ -21,6 +21,26 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build Core Dependency
+        run: |
+          git clone --depth 1 https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Core.git ../RimMind-Core
+          dotnet build ../RimMind-Core/Source/RimMindCore.csproj --configuration Release -p:GameVersion=1.6
+          dotnet build ../RimMind-Core/Source/RimMindCore.csproj --configuration Release -p:GameVersion=1.7
+
+      - name: Build Mod (1.6 & 1.7)
+        run: |
+          dotnet build Source/RimMindBridgeRimTalk.csproj --configuration Release -p:GameVersion=1.6
+          dotnet build Source/RimMindBridgeRimTalk.csproj --configuration Release -p:GameVersion=1.7
+          for ver in 1.6 1.7; do
+            mkdir -p "$ver/Assemblies"
+            cp -f "../RimMind-Core/$ver/Assemblies/"{0_RimMindDomain.dll,1_RimMindApplication.dll,2_RimMindCore.dll,Newtonsoft.Json.dll} "$ver/Assemblies/"
+          done
+
       - name: Determine Git Range
         id: git-range
         run: |

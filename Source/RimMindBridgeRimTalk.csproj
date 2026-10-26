@@ -3,11 +3,13 @@
   <PropertyGroup>
     <GameVersion Condition=" '$(GameVersion)' == '' ">1.6</GameVersion>
     <OutputType>Library</OutputType>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework Condition=" '$(GameVersion)' == '1.6' ">net48</TargetFramework>
+    <TargetFramework Condition=" '$(GameVersion)' != '1.6' ">net10.0</TargetFramework>
     <PlatformTarget>x64</PlatformTarget>
     <RootNamespace>RimMind.Bridge.RimTalk</RootNamespace>
     <AssemblyName>RimMindBridgeRimTalk</AssemblyName>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
     <OutputPath>../$(GameVersion)/Assemblies/</OutputPath>
     <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
@@ -20,7 +22,8 @@
 
   <ItemGroup>
     <PackageReference Include="Krafs.Rimworld.Ref" Version="$(GameVersion).*-*" PrivateAssets="All" />
-    <PackageReference Include="Lib.Harmony.Ref" Version="2.*" PrivateAssets="All" />
+    <PackageReference Include="Lib.Harmony.Ref" Version="2.*" Condition=" '$(GameVersion)' == '1.6' " PrivateAssets="All" />
+    <PackageReference Include="Lib.Harmony.Ref" Version="3.*-*" Condition=" '$(GameVersion)' != '1.6' " PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
