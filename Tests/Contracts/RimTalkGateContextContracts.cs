@@ -1,7 +1,10 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using RimMind.Application.Common.Interfaces.Context;
 using RimMind.Application.Common.Interfaces.Extension;
 using RimMind.Bridge.RimTalk.Bridge;
 using RimMind.Bridge.RimTalk.Detection;
@@ -293,6 +296,33 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                     FakePromptEntry prompt = Assert.Single(FakeRimTalkPromptAPI.PromptEntries);
                     Assert.Contains("rimmind_memory", prompt.Content);
                     Assert.DoesNotContain("rimmind_personality", prompt.Content);
+
+                    settings = PrepareBridgeHarness();
+                    settings.injectPersonaToTraits = true;
+                    settings.injectPersonaToMood = false;
+                    SeedProviderValues();
+                    new ContextPushBridge().Register();
+                    var pawn = new Pawn();
+                    AssertPawnVariable(
+                        "rimmind_personality",
+                        "RimMind.Bridge.RimTalk.Push",
+                        "RimMind personality profile",
+                        50,
+                        "[AI] Reflective",
+                        pawn);
+
+                    settings = PrepareBridgeHarness();
+                    settings.injectPersonaToTraits = true;
+                    settings.injectPersonaToMood = true;
+                    SeedProviderValues();
+                    new ContextPushBridge().Register();
+                    AssertPawnVariable(
+                        "rimmind_personality",
+                        "RimMind.Bridge.RimTalk.Push",
+                        "RimMind personality profile",
+                        50,
+                        string.Empty,
+                        pawn);
                 }),
                 ("real persona bridge registers four mapped variables and both hooks", () =>
                 {
@@ -412,6 +442,64 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                     Assert.Equal(
                         new[] { "Mood" },
                         FakeRimTalkPromptAPI.PawnHooks.Select(hook => hook.Category));
+                }),
+                ("context pull bridge formats header newline, prioritizes recency, and disables on bad tuple shape", () =>
+                {
+                    PrepareBridgeHarness();
+                    RimMindAPI.Context.ContextKeys.Clear();
+                    RimMindPawnLookup.KnownPawns.Clear();
+                    FakeTalkHistory.Histories.Clear();
+                    ContextPullBridge.ConfigureTypesForTesting(typeof(FakeTalkHistory));
+
+                    var map = new Map();
+                    var targetPawn = new Pawn { thingIDNumber = 10, Name = new Name("Alice"), Map = map };
+                    var otherPawn = new Pawn { thingIDNumber = 11, Name = new Name("Bob"), Map = map };
+                    map.SpawnedColonists.Add(targetPawn);
+                    map.SpawnedColonists.Add(otherPawn);
+                    RimMindPawnLookup.KnownPawns.Add(targetPawn);
+                    RimMindPawnLookup.KnownPawns.Add(otherPawn);
+
+                    FakeTalkHistory.Histories[targetPawn] = new ArrayList
+                    {
+                        new FakeTalkMessage { Item1 = 1, Item2 = "Alice older line", Tick = 100 },
+                        new FakeTalkMessage { Item1 = 2, Item2 = "Alice newest line", Tick = 300 }
+                    };
+                    FakeTalkHistory.Histories[otherPawn] = new ArrayList
+                    {
+                        new FakeTalkMessage { Item1 = 1, Item2 = "Bob mentions Alice at tick 200", Tick = 200 }
+                    };
+
+                    var pullBridge = new ContextPullBridge();
+                    pullBridge.Register();
+                    var def = Assert.Single(RimMindAPI.Context.ContextKeys.Definitions);
+                    string? text = def.Provider(
+                        new ProviderContext("dialogue", "trace") { PawnId = 10 },
+                        CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.NotNull(text);
+                    Assert.StartsWith("[RimTalk Dialog History]" + Environment.NewLine + "[User] Alice older line", text);
+                    int idx100 = text!.IndexOf("Alice older line", StringComparison.Ordinal);
+                    int idx200 = text.IndexOf("Bob mentions Alice at tick 200", StringComparison.Ordinal);
+                    int idx300 = text.IndexOf("Alice newest line", StringComparison.Ordinal);
+                    Assert.True(idx100 < idx200 && idx200 < idx300);
+
+                    // Inactive/dead pawn returns null
+                    targetPawn.Dead = true;
+                    Assert.Null(def.Provider(
+                        new ProviderContext("dialogue", "trace") { PawnId = 10 },
+                        CancellationToken.None).GetAwaiter().GetResult());
+                    targetPawn.Dead = false;
+
+                    // Structural tuple mismatch logs once and disables provider
+                    Log.Reset();
+                    FakeTalkHistory.Histories[targetPawn] = new ArrayList { new object() };
+                    Assert.Null(def.Provider(
+                        new ProviderContext("dialogue", "trace") { PawnId = 10 },
+                        CancellationToken.None).GetAwaiter().GetResult());
+                    Assert.Null(def.Provider(
+                        new ProviderContext("dialogue", "trace") { PawnId = 10 },
+                        CancellationToken.None).GetAwaiter().GetResult());
+                    Assert.Single(Log.Warnings);
                 }),
                 ("production source has no child-mod compile dependency", () =>
                 {
@@ -554,6 +642,21 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
             return (coordinator, modules);
         }
 
+        private sealed class FakeTalkHistory
+        {
+            public static Dictionary<Pawn, IList> Histories { get; } = new Dictionary<Pawn, IList>();
+
+            public static IList? GetMessageHistory(Pawn pawn, bool includeAll)
+                => Histories.TryGetValue(pawn, out var list) ? list : null;
+        }
+
+        private sealed class FakeTalkMessage
+        {
+            public object? Item1;
+            public string? Item2;
+            public long Tick;
+        }
+
         private sealed class BridgeModuleProbe : IBridgeModule
         {
             public BridgeModuleProbe(string id)
@@ -565,7 +668,7 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
             public string OwnerModId => "RimMindBridgeRimTalk";
             public bool IsRegistered { get; private set; }
             public bool RegisterCalled { get; set; }
-            public bool UnregisterCalled { get; private set; }
+            public bool UnregisterCalled { get; set; }
             public bool ThrowOnRegister { get; set; }
 
             public void Register()

@@ -51,26 +51,37 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 "rimmind_personality",
                 pawn =>
                 {
-                    var description = RimMindProviderReader.GetPawn(
-                        RimMindProviderReader.PersonalityDescription,
-                        pawn);
-                    var workTendencies = RimMindProviderReader.GetPawn(
-                        RimMindProviderReader.PersonalityWorkTendencies,
-                        pawn);
-                    var socialTendencies = RimMindProviderReader.GetPawn(
-                        RimMindProviderReader.PersonalitySocialTendencies,
-                        pawn);
-                    var narrative = RimMindProviderReader.GetPawn(
-                        RimMindProviderReader.PersonalityNarrative,
-                        pawn);
-
+                    var settings = BridgeRimTalkSettings.Get();
                     var sb = new StringBuilder();
-                    sb.AppendLine(PersonaFormatter.BuildFullProfile(
-                        description,
-                        workTendencies,
-                        socialTendencies));
-                    if (!string.IsNullOrEmpty(narrative))
-                        sb.AppendLine($"[AI] {narrative}");
+
+                    if (!settings.injectPersonaToTraits)
+                    {
+                        var description = RimMindProviderReader.GetPawn(
+                            RimMindProviderReader.PersonalityDescription,
+                            pawn);
+                        var workTendencies = RimMindProviderReader.GetPawn(
+                            RimMindProviderReader.PersonalityWorkTendencies,
+                            pawn);
+                        var socialTendencies = RimMindProviderReader.GetPawn(
+                            RimMindProviderReader.PersonalitySocialTendencies,
+                            pawn);
+                        var profile = PersonaFormatter.BuildFullProfile(
+                            description,
+                            workTendencies,
+                            socialTendencies);
+                        if (!string.IsNullOrEmpty(profile))
+                            sb.AppendLine(profile);
+                    }
+
+                    if (!settings.injectPersonaToMood)
+                    {
+                        var narrative = RimMindProviderReader.GetPawn(
+                            RimMindProviderReader.PersonalityNarrative,
+                            pawn);
+                        if (!string.IsNullOrEmpty(narrative))
+                            sb.AppendLine($"[AI] {narrative}");
+                    }
+
                     return sb.ToString().TrimEnd();
                 },
                 "RimMind personality profile",
