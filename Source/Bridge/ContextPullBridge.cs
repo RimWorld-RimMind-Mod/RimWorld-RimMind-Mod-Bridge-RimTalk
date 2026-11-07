@@ -83,7 +83,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                         if (!RimMindPawnLookup.IsActiveSpawnedColonist(pawn)) return null;
                         return BuildRimTalkHistoryContext(pawn!);
                     }, null, ct: ct).ConfigureAwait(false);
-                }, ModId, stalenessTicks: 3000, invalidationTriggers: new[] { "RimTalkEvent" }));
+                }, ModId, stalenessTicks: 3000)); // RimTalk history changes are external (no bus event): staleness only
         }
 
         private bool ResolveTypes()

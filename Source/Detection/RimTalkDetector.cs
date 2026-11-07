@@ -1,5 +1,5 @@
-using System;
 using HarmonyLib;
+using RimMind.Application.Features.Bridges;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Detection
@@ -7,10 +7,16 @@ namespace RimMind.Bridge.RimTalk.Detection
     public static class RimTalkDetector
     {
         public const string RimTalkPackageId = "cj.rimtalk";
-
-        private static bool? _cachedResult;
-        private static int _cacheTick = -1;
+        private const string RimTalkApiTypeName = "RimTalk.API.RimTalkPromptAPI";
         private const int CacheIntervalTicks = 6000;
+
+        internal static readonly SoftDependencyDetector Detector = new SoftDependencyDetector(
+            RimTalkPackageId,
+            new[] { RimTalkApiTypeName },
+            ModsConfig.IsActive,
+            AccessTools.TypeByName,
+            () => SafeTicksGame,
+            CacheIntervalTicks);
 
         private static int SafeTicksGame
         {
@@ -31,52 +37,19 @@ namespace RimMind.Bridge.RimTalk.Detection
 
         public static bool IsRimTalkActive
         {
-            get
-            {
-                int now = SafeTicksGame;
-                if (_cachedResult == null || (now > 0 && now - _cacheTick > CacheIntervalTicks))
-                {
-                    _cachedResult = ModsConfig.IsActive(RimTalkPackageId);
-                    if (now > 0)
-                    {
-                        _cacheTick = now;
-                    }
-                }
-                return _cachedResult.Value;
-            }
-            internal set
-            {
-                _cachedResult = value;
-            }
+            get => Detector.IsModActive();
+            internal set => Detector.SetForcedModActiveForTesting(value);
         }
 
         public static void InvalidateCache()
         {
-            _cachedResult = null;
-            _cacheTick = -1;
-            _apiAvailable = null;
-            _apiChecked = false;
+            Detector.ResetCache();
         }
-
-        private static bool? _apiAvailable;
-        private static bool _apiChecked;
 
         public static bool IsRimTalkApiAvailable
         {
-            get
-            {
-                if (!_apiChecked)
-                {
-                    _apiAvailable = IsRimTalkActive && AccessTools.TypeByName("RimTalk.API.RimTalkPromptAPI") != null;
-                    _apiChecked = true;
-                }
-                return _apiAvailable ?? false;
-            }
-            internal set
-            {
-                _apiAvailable = value;
-                _apiChecked = true;
-            }
+            get => Detector.IsAvailable();
+            internal set => Detector.SetForcedApiAvailableForTesting(value);
         }
     }
 }

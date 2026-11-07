@@ -1,16 +1,16 @@
 using System.Collections.Generic;
-using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Application.Common.Interfaces.Extension;
+using RimMind.Application.Features.Bridges;
+using RimMind.Bridge.RimTalk.Detection;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
 {
     /// <summary>
-    /// Coordinates registration of RimTalk bridge modules.
+    /// Coordinates registration of RimTalk bridge modules using Core's <see cref="ExternalModBridgeCoordinator"/>.
     /// Modules are iterated uniformly; each module decides whether to actually register
     /// based on its own settings/detector checks inside <see cref="IBridgeModule.Register"/>.
-    /// Unregister iterates all modules but each module's Unregister is a no-op if not registered,
-    /// making Register/Unregister symmetric (previously Register was conditional, Unregister unconditional).
+    /// Unregister iterates all modules symmetrically.
     /// </summary>
     public static class RimTalkBridgeCoordinator
     {
@@ -26,12 +26,14 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 new PersonaPushBridge()
             };
 
-        private static BridgeModuleCoordinator CreateCoordinator() =>
-            new BridgeModuleCoordinator(
-                GetModules(),
+        private static ExternalModBridgeCoordinator CreateCoordinator() =>
+            new ExternalModBridgeCoordinator(
                 () => RimTalkDetector.IsRimTalkActive,
-                message => Log.Message($"[RimMind-Bridge-RimTalk] {message}"),
-                message => Log.Warning($"[RimMind-Bridge-RimTalk] {message}"));
+                GetModules(),
+                gates: null,
+                logInfo: message => Log.Message($"[RimMind-Bridge-RimTalk] {message}"),
+                logWarn: message => Log.Warning($"[RimMind-Bridge-RimTalk] {message}"),
+                inactiveMessage: "RimTalk not active, bridge modules skipped.");
 
         public static void Register()
         {

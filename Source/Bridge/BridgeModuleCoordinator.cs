@@ -1,15 +1,13 @@
 using System;
 using System.Collections.Generic;
 using RimMind.Application.Common.Interfaces.Extension;
+using RimMind.Application.Features.Bridges;
 
 namespace RimMind.Bridge.RimTalk.Bridge
 {
     internal sealed class BridgeModuleCoordinator
     {
-        private readonly IReadOnlyList<IBridgeModule> _modules;
-        private readonly Func<bool> _isDependencyActive;
-        private readonly Action<string> _log;
-        private readonly Action<string> _warn;
+        private readonly ExternalModBridgeCoordinator _inner;
 
         public BridgeModuleCoordinator(
             IReadOnlyList<IBridgeModule> modules,
@@ -17,48 +15,26 @@ namespace RimMind.Bridge.RimTalk.Bridge
             Action<string> log,
             Action<string> warn)
         {
-            _modules = modules ?? throw new ArgumentNullException(nameof(modules));
-            _isDependencyActive = isDependencyActive
-                ?? throw new ArgumentNullException(nameof(isDependencyActive));
-            _log = log ?? throw new ArgumentNullException(nameof(log));
-            _warn = warn ?? throw new ArgumentNullException(nameof(warn));
+            if (modules == null) throw new ArgumentNullException(nameof(modules));
+            if (isDependencyActive == null) throw new ArgumentNullException(nameof(isDependencyActive));
+            if (log == null) throw new ArgumentNullException(nameof(log));
+            if (warn == null) throw new ArgumentNullException(nameof(warn));
+
+            _inner = new ExternalModBridgeCoordinator(
+                isDependencyActive,
+                modules,
+                gates: null,
+                logInfo: log,
+                logWarn: warn,
+                inactiveMessage: "RimTalk not active, bridge modules skipped.");
         }
 
-        public void RegisterAll()
-        {
-            if (!_isDependencyActive())
-            {
-                _log("RimTalk not active, bridge modules skipped.");
-                return;
-            }
+        public bool AreAllRegistered => _inner.AreAllRegistered;
 
-            foreach (IBridgeModule module in _modules)
-            {
-                try
-                {
-                    module.Register();
-                    _log($"{module.Id} registered={module.IsRegistered}.");
-                }
-                catch (Exception ex)
-                {
-                    _warn($"{module.Id} registration failed: {ex.Message}");
-                }
-            }
-        }
+        public void RegisterAll() => _inner.RegisterAll();
 
-        public void UnregisterAll()
-        {
-            foreach (IBridgeModule module in _modules)
-            {
-                try
-                {
-                    module.Unregister();
-                }
-                catch (Exception ex)
-                {
-                    _warn($"{module.Id} cleanup failed: {ex.Message}");
-                }
-            }
-        }
+        public void UnregisterAll() => _inner.UnregisterAll();
+
+        public void Refresh() => _inner.Refresh();
     }
 }

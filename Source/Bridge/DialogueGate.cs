@@ -1,3 +1,4 @@
+using RimMind.Application.Common.Constants;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
 using Verse;
@@ -16,9 +17,9 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
             return triggerType switch
             {
-                "Chitchat" => settings.skipChitchat,
-                "Auto" => settings.skipAutoDialogue,
-                "PlayerInput" => settings.skipPlayerDialogue && !settings.forceRimMindPlayerDialogue,
+                DialogueTriggerKinds.Chitchat => settings.skipChitchat,
+                DialogueTriggerKinds.Auto => settings.skipAutoDialogue,
+                DialogueTriggerKinds.PlayerInput => settings.skipPlayerDialogue && !settings.forceRimMindPlayerDialogue,
                 _ => false
             };
         }

@@ -1,0 +1,22 @@
+name: Unit Tests
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'Source/**'
+      - 'Tests/**'
+      - 'ArchTests/**'
+      - '.github/workflows/test.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'Source/**'
+      - 'Tests/**'
+      - 'ArchTests/**'
+      - '.github/workflows/test.yml'
+
+jobs:
+  test:
+    uses: RimWorld-RimMind-Mod/Workflows/.github/workflows/test.yml@main
+    secrets: inherit
