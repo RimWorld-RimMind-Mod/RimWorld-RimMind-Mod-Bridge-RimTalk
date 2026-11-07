@@ -171,6 +171,9 @@ jobs:
             --exclude='docs/' \
             --exclude='*.csproj' \
             --exclude='*.sln' \
+            --exclude='.coderabbit.yaml' \
+            --exclude='.pre-commit-config.yaml' \
+            --exclude='INTRODUCTION.txt' \
             --exclude='.gitignore' \
             --exclude='.gitattributes' \
             --exclude='*.md' \
