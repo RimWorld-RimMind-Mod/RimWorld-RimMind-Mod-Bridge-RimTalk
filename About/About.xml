@@ -8,7 +8,64 @@
     <li>1.6</li>
     <li>1.7</li>
   </supportedVersions>
-  <description>Coordination layer between RimMind suite and RimTalk. Enables dialogue mutual exclusion, context pushing via RimTalkPromptAPI, and persona data sharing. [v2.0 BREAKING CHANGES]</description>
+  <description>[h1]RimMind - Bridge: RimTalk (v2.0)[/h1]
+Speech bubble pipeline harmonization and bidirectional cognitive context bridge between the RimMind suite and the RimTalk mod. Unifies overhead dialogue rendering, prevents duplicate conversation triggers, and injects RimMind's Big-Five personality profiles, memories, advisor logs, and storyteller state into RimTalk prompts.
+
+[b]v2.0 Clean Architecture &amp; RimWorld 1.6 / 1.7 Dual-Version Support:[/b]
+[list]
+[*][b]RimWorld 1.6 &amp; 1.7 (Waylith / .NET 10) Ready[/b]: Native multi-target compilation supporting both RimWorld 1.6 (.NET Framework 4.8) and RimWorld 1.7 (.NET 10 / Harmony 2.x &amp; 3.x).
+[*][b]Zero Hard-Dependency Reflection Shim ([code]RimTalkApiShim[/code])[/b]: Integrates with RimTalk via safe reflection and public data seams, remaining safely inert when RimTalk is not installed. Note: v1.x saves are not compatible with v2.0.
+[*][b]Bidirectional Cognitive Data Flow[/b]: Pushes RimMind personality, memory, advisor, and storyteller variables into RimTalk while pulling RimTalk conversation history back into RimMind's context engine.
+[/list]
+
+[h2]What Is RimMind[/h2]
+RimMind is an enterprise-grade, AI-powered RimWorld mod suite. Integrated with Large Language Models (LLM), it transforms colonists into self-reflecting agents with distinct personalities, three-tier memories, natural spoken dialogues, autonomous mechanisms, and dynamic storytelling.
+
+[h2]Sub-mod List &amp; Dependency Relationships[/h2]
+[table]
+[tr][th]Mod[/th][th]Responsibility[/th][th]Dependencies[/th][th]GitHub[/th][/tr]
+[tr][td]RimMind-Core[/td][td]LLM runtime, 4-Zone context engine, async queue, ToolCall registry &amp; F8 Hub[/td][td]Harmony[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Core]Link[/url][/td][/tr]
+[tr][td]RimMind-Actions[/td][td]Composite ToolCall mechanisms, battlefield triage &amp; autonomous construction[/td][td]Core[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Actions]Link[/url][/td][/tr]
+[tr][td]RimMind-Advisor[/td][td]Colonist self-reflective advice cards, 5-domain autonomy &amp; player approval[/td][td]Core, Actions[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Advisor]Link[/url][/td][/tr]
+[tr][td]RimMind-Dialogue[/td][td]Contextual spoken dialogue via express_dialogue ToolCall &amp; speech bubbles[/td][td]Core[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Dialogue]Link[/url][/td][/tr]
+[tr][td]RimMind-Memory[/td][td]3-Tier cognitive memory hierarchy, work aggregation &amp; temporal decay[/td][td]Core[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Memory]Link[/url][/td][/tr]
+[tr][td]RimMind-Personality[/td][td]Big-Five psychological profiles, dawn monologues &amp; dynamic mood thoughts[/td][td]Core[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Personality]Link[/url][/td][/tr]
+[tr][td]RimMind-Storyteller[/td][td]AI Story Director, dramatic tension curve, chained arcs &amp; Storyteller Altar[/td][td]Core, Memory[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Storyteller]Link[/url][/td][/tr]
+[tr][td]RimMind-Extension-ModelService[/td][td]Multi-provider routing, Anthropic KV cache, local gateways &amp; load balancing[/td][td]Core[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Extension-ModelService]Link[/url][/td][/tr]
+[tr][td]RimMind-Bridge-RimChat[/td][td]RimChat compatibility bridge: dialogue/action mutual exclusion &amp; context sync[/td][td]Core, RimChat[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimChat]Link[/url][/td][/tr]
+[tr][td][b]RimMind-Bridge-RimTalk[/b][/td][td]RimTalk compatibility bridge: bubble harmonization &amp; bidirectional context[/td][td]Core, RimTalk[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk]Link[/url][/td][/tr]
+[/table]
+[code]Core ──┬── Actions ── Advisor
+       ├── Dialogue
+       ├── Memory ── Storyteller
+       ├── Personality
+       ├── Extension-ModelService
+       ├── Bridge-RimChat
+       └── Bridge-RimTalk[/code]
+
+[h2]Core Features[/h2]
+[list]
+[*][b]Dialogue Mutual Exclusion Gating[/b] - Automatically skips overlapping [code]RimMind-Dialogue[/code] triggers (chitchat, automatic dialogue, player input) when RimTalk is active so two speech bubble systems never clash.
+[*][b]Context Push (RimMind to RimTalk)[/b] - Registers RimMind data as RimTalk prompt variables ([code]rimmind_personality[/code], [code]rimmind_storyteller[/code], [code]rimmind_memory[/code], [code]rimmind_shaping[/code], [code]rimmind_advisor_log[/code], [code]rimmind_persona_desc[/code], [code]rimmind_persona_work[/code], [code]rimmind_persona_social[/code], [code]rimmind_persona_narrative[/code]).
+[*][b]Hook Context Enhancement[/b] - Optionally appends RimMind personality descriptions and psychological narratives directly into RimTalk's Traits and Mood context hooks.
+[*][b]Dialogue History Pull (RimTalk to RimMind)[/b] - Registers RimTalk's conversation history as the [code]rimtalk_history[/code] context provider in [code]RimMind-Core[/code], allowing Advisor, Personality, and Storyteller to reference RimTalk conversations.
+[/list]
+
+[h2]Pushed RimTalk Prompt Variables[/h2]
+[table]
+[tr][th]Variable Name[/th][th]Scope[/th][th]Data Source[/th][th]Default[/th][/tr]
+[tr][td]rimmind_personality / persona_*[/td][td]Pawn[/td][td]Personality Profile, Work/Social Prefs &amp; AI Narrative[/td][td]Pushed[/td][/tr]
+[tr][td]rimmind_storyteller[/td][td]Environment[/td][td]Storyteller Tension &amp; Active Narrative Arc[/td][td]Pushed[/td][/tr]
+[tr][td]rimmind_advisor_log[/td][td]Pawn[/td][td]Recent Advisor Proposals &amp; Action Outcomes[/td][td]Pushed[/td][/tr]
+[tr][td]rimmind_memory / rimmind_shaping[/td][td]Pawn[/td][td]3-Tier Memory &amp; Shape Voting History[/td][td]Optional (Toggle in Settings)[/td][/tr]
+[/table]
+
+[h2]Frequently Asked Questions[/h2]
+[b]Q: What is the difference between Context Push and Context Pull?[/b]
+A: [b]Push[/b] exposes RimMind's personality, advisor, and storyteller data inside RimTalk prompts so RimTalk lines stay true to each colonist's psychology. [b]Pull[/b] imports RimTalk conversations into RimMind so Advisor and Memory know what colonists discussed.
+
+[b]Q: Can I use this mod when RimTalk is disabled?[/b]
+A: Yes. It automatically detects whether RimTalk is active and disables all hooks and gating if RimTalk is not loaded.</description>
   <modDependencies>
     <li>
       <packageId>brrainz.harmony</packageId>
