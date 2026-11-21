@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using RimMind.Application.Common.Interfaces.Context;
 using RimMind.Application.Common.Interfaces.Extension;
+using RimMind.Application.Features.Bridges;
 using RimMind.Bridge.RimTalk.Bridge;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
@@ -115,6 +116,30 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                     Assert.True(setup.Modules[0].IsRegistered);
                     Assert.False(setup.Modules[1].IsRegistered);
                     Assert.True(setup.Modules[2].IsRegistered);
+                }),
+                ("RimTalkBridgeCoordinator registers and unregisters both skip gates and modules symmetrically", () =>
+                {
+                    PrepareBridgeHarness();
+                    RimMindAPI.Ext.Reset();
+                    RimMindAPI.Context.ContextKeys.Clear();
+                    ContextPullBridge.ConfigureTypesForTesting(typeof(FakeTalkHistory));
+                    RimTalkBridgeCoordinator.ResetForTesting();
+
+                    RimTalkBridgeCoordinator.Register();
+
+                    Assert.Equal(
+                        new[] { "rimtalk_bridge_dialogue", "rimtalk_bridge_floatmenu" },
+                        RimMindAPI.Ext.Get<ISkipCheck>().All.Select(g => g.Id));
+                    Assert.All(RimTalkBridgeCoordinator.Modules, m => Assert.True(m.IsRegistered));
+                    Assert.Single(RimMindAPI.Context.ContextKeys.Definitions);
+
+                    RimTalkBridgeCoordinator.Unregister();
+
+                    Assert.Empty(RimMindAPI.Ext.Get<ISkipCheck>().All);
+                    Assert.All(RimTalkBridgeCoordinator.Modules, m => Assert.False(m.IsRegistered));
+                    Assert.Empty(RimMindAPI.Context.ContextKeys.Definitions);
+
+                    RimTalkBridgeCoordinator.ResetForTesting();
                 }));
         }
 
@@ -624,7 +649,7 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
         }
 
         private static (
-            BridgeModuleCoordinator Coordinator,
+            ExternalModBridgeCoordinator Coordinator,
             List<BridgeModuleProbe> Modules) InstallModules(bool active)
         {
             Reset(active);
@@ -634,11 +659,12 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                 new BridgeModuleProbe("push"),
                 new BridgeModuleProbe("persona")
             };
-            var coordinator = new BridgeModuleCoordinator(
-                new List<IBridgeModule>(modules),
+            var coordinator = RimMindAPI.Bridges.CreateCoordinator(
                 () => active,
-                _ => { },
-                _ => { });
+                new List<IBridgeModule>(modules),
+                gates: null,
+                logInfo: _ => { },
+                logWarn: _ => { });
             return (coordinator, modules);
         }
 

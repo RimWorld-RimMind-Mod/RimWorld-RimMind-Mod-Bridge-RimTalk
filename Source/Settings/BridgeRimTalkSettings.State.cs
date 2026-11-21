@@ -21,7 +21,6 @@ namespace RimMind.Bridge.RimTalk.Settings
         public bool pullRimTalkHistory = true;
 
         private static BridgeRimTalkSettings? _instance;
-        private static bool _dirty;
 
         public BridgeRimTalkSettings()
         {
@@ -31,72 +30,27 @@ namespace RimMind.Bridge.RimTalk.Settings
         public static BridgeRimTalkSettings Get() =>
             _instance ?? new BridgeRimTalkSettings();
 
-        internal static void ResetForTesting()
+        internal static void ResetForTesting() => _instance = null;
+
+        public void ApplyDefaults()
         {
-            _instance = null;
-            _dirty = false;
+            enableDialogueGate = true;
+            skipChitchat = true;
+            skipAutoDialogue = true;
+            skipPlayerDialogue = true;
+            forceRimMindPlayerDialogue = false;
+
+            enableContextPush = true;
+            pushPersonality = true;
+            pushStoryteller = true;
+            pushMemory = false;
+            pushAdvisorLog = true;
+            pushShaping = false;
+            injectPersonaToTraits = false;
+            injectPersonaToMood = false;
+
+            enableContextPull = true;
+            pullRimTalkHistory = true;
         }
-
-        internal static (
-            bool,
-            bool,
-            bool,
-            bool,
-            bool,
-            bool,
-            bool,
-            bool,
-            bool,
-            bool,
-            bool,
-            bool,
-            bool,
-            bool,
-            bool) CaptureSnapshot()
-        {
-            BridgeRimTalkSettings settings = Get();
-            return (
-                settings.enableDialogueGate,
-                settings.skipChitchat,
-                settings.skipAutoDialogue,
-                settings.skipPlayerDialogue,
-                settings.forceRimMindPlayerDialogue,
-                settings.enableContextPush,
-                settings.pushPersonality,
-                settings.pushStoryteller,
-                settings.pushMemory,
-                settings.pushAdvisorLog,
-                settings.pushShaping,
-                settings.injectPersonaToTraits,
-                settings.injectPersonaToMood,
-                settings.enableContextPull,
-                settings.pullRimTalkHistory);
-        }
-
-        internal static void MarkDirtyIfChanged(
-            (
-                bool,
-                bool,
-                bool,
-                bool,
-                bool,
-                bool,
-                bool,
-                bool,
-                bool,
-                bool,
-                bool,
-                bool,
-                bool,
-                bool,
-                bool) before)
-        {
-            if (before != CaptureSnapshot())
-                _dirty = true;
-        }
-
-        internal static bool IsDirtyForTesting => _dirty;
-
-        internal static void ResetDirtyForTesting() => _dirty = false;
     }
 }

@@ -42,10 +42,10 @@ namespace RimMind.Bridge.RimTalk.Debug
 
             var sb = new StringBuilder();
             sb.AppendLine($"[RimMind-Bridge-RimTalk] Dialogue Gate Test for {pawn.Name.ToStringShort}:");
-            sb.AppendLine($"  ShouldSkipDialogue(Chitchat): {RimMindAPI.ShouldSkipDialogue(pawn, "Chitchat")}");
-            sb.AppendLine($"  ShouldSkipDialogue(Auto): {RimMindAPI.ShouldSkipDialogue(pawn, "Auto")}");
-            sb.AppendLine($"  ShouldSkipDialogue(PlayerInput): {RimMindAPI.ShouldSkipDialogue(pawn, "PlayerInput")}");
-            sb.AppendLine($"  ShouldSkipFloatMenu: {RimMindAPI.ShouldSkipFloatMenu()}");
+            sb.AppendLine($"  ShouldSkipDialogue(Chitchat): {RimMindAPI.Ext.ShouldSkipDialogue(pawn, "Chitchat")}");
+            sb.AppendLine($"  ShouldSkipDialogue(Auto): {RimMindAPI.Ext.ShouldSkipDialogue(pawn, "Auto")}");
+            sb.AppendLine($"  ShouldSkipDialogue(PlayerInput): {RimMindAPI.Ext.ShouldSkipDialogue(pawn, "PlayerInput")}");
+            sb.AppendLine($"  ShouldSkipFloatMenu: {RimMindAPI.Ext.ShouldSkipFloatMenu()}");
 
             Log.Message(sb.ToString());
         }
@@ -56,7 +56,7 @@ namespace RimMind.Bridge.RimTalk.Debug
             var sb = new StringBuilder();
             sb.AppendLine("[RimMind-Bridge-RimTalk] Context Push State:");
 
-            var categories = RimMindAPI.GetRegisteredCategories();
+            var categories = RimMindAPI.Providers.GetRegisteredCategories();
             var rimtalkCategories = categories.Where(c => c.StartsWith("rimmind_") || c.StartsWith("rimtalk_")).ToList();
             sb.AppendLine($"  RimMind registered rimtalk-related categories: {(rimtalkCategories.Count > 0 ? string.Join(", ", rimtalkCategories) : "none")}");
             sb.AppendLine("  (Note: Push variables are registered in RimTalk, not RimMind)");
@@ -80,7 +80,7 @@ namespace RimMind.Bridge.RimTalk.Debug
             var sb = new StringBuilder();
             sb.AppendLine("[RimMind-Bridge-RimTalk] Context Pull State:");
 
-            var categories = RimMindAPI.GetRegisteredCategories();
+            var categories = RimMindAPI.Providers.GetRegisteredCategories();
             var rimtalkCategories = categories.Where(c => c.StartsWith("rimtalk_")).ToList();
             sb.AppendLine($"  RimMind registered rimtalk-related providers: {(rimtalkCategories.Count > 0 ? string.Join(", ", rimtalkCategories) : "none")}");
 

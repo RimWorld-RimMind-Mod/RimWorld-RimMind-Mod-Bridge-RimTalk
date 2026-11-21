@@ -1,7 +1,5 @@
 using RimMind.Bridge.RimTalk.Bridge;
-using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
-using RimMind.Application.Common.Interfaces.Extension;
 using RimMind.Presentation;
 using RimMind.Presentation.Api;
 using RimMind.Presentation.Settings;
@@ -17,14 +15,7 @@ namespace RimMind.Bridge.RimTalk
         {
             Settings = base.Settings;
 
-            RimMindAPI.Extensions<ISettingsTab>().Register(new RimTalkSettingsTab());
-
-            if (RimTalkDetector.IsRimTalkActive)
-            {
-                RimMindAPI.Extensions<ISkipCheck>().Register(new RimTalkDialogueSkipCheck());
-                RimMindAPI.Extensions<ISkipCheck>().Register(new RimTalkFloatMenuSkipCheck());
-            }
-
+            RimMindAPI.Ext.Get<ISettingsTab>().Register(new RimTalkSettingsTab());
             RimTalkBridgeCoordinator.Register();
         }
 

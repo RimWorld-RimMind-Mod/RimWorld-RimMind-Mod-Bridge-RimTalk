@@ -1,6 +1,7 @@
+using RimMind.Presentation.Api;
+using RimMind.Presentation.UI;
 using UnityEngine;
 using Verse;
-using RimMind.Presentation.UI;
 
 namespace RimMind.Bridge.RimTalk.Settings
 {
@@ -29,135 +30,149 @@ namespace RimMind.Bridge.RimTalk.Settings
         }
 
         private static Vector2 _scrollPos = Vector2.zero;
+        private static float _measuredHeight;
+
         public static void DrawSettingsContent(Rect inRect)
         {
             var s = Get();
-            var snapshot = CaptureSnapshot();
-
-            Rect contentArea = SettingsUIDrawer.SplitContentArea(inRect);
-            Rect bottomBar = SettingsUIDrawer.SplitBottomBar(inRect);
-
-            float contentH = EstimateHeight(s);
-            Rect viewRect = new Rect(0f, 0f, contentArea.width - 16f, contentH);
-            Widgets.BeginScrollView(contentArea, ref _scrollPos, viewRect);
-
-            var listing = new Listing_Standard();
-            listing.Begin(viewRect);
-
-            SettingsUIDrawer.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.DialogueGate".Translate());
-            listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnableDialogueGate".Translate(),
-                ref s.enableDialogueGate,
-                "RimMind.BridgeRimTalk.Settings.EnableDialogueGate.Desc".Translate());
-            if (s.enableDialogueGate)
-            {
-                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.SkipChitchat".Translate(),
-                    ref s.skipChitchat,
-                    "RimMind.BridgeRimTalk.Settings.SkipChitchat.Desc".Translate());
-                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.SkipAutoDialogue".Translate(),
-                    ref s.skipAutoDialogue,
-                    "RimMind.BridgeRimTalk.Settings.SkipAutoDialogue.Desc".Translate());
-                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.SkipPlayerDialogue".Translate(),
-                    ref s.skipPlayerDialogue,
-                    "RimMind.BridgeRimTalk.Settings.SkipPlayerDialogue.Desc".Translate());
-                if (s.skipPlayerDialogue)
-                {
-                    listing.CheckboxLabeled("    " + "RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue".Translate(),
-                        ref s.forceRimMindPlayerDialogue,
-                        "RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue.Desc".Translate());
-                }
-            }
-
-            SettingsUIDrawer.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPush".Translate());
-            string restartHint = "RimMind.BridgeRimTalk.Settings.RestartHint".Translate();
-            listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnableContextPush".Translate(),
-                ref s.enableContextPush,
-                "RimMind.BridgeRimTalk.Settings.EnableContextPush.Desc".Translate() + "\n\n" + restartHint);
-            if (s.enableContextPush)
-            {
-                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushPersonality".Translate(),
-                    ref s.pushPersonality,
-                    "RimMind.BridgeRimTalk.Settings.PushPersonality.Desc".Translate());
-                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushStoryteller".Translate(),
-                    ref s.pushStoryteller,
-                    "RimMind.BridgeRimTalk.Settings.PushStoryteller.Desc".Translate());
-                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushMemory".Translate(),
-                    ref s.pushMemory,
-                    "RimMind.BridgeRimTalk.Settings.PushMemory.Desc".Translate());
-                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushAdvisorLog".Translate(),
-                    ref s.pushAdvisorLog,
-                    "RimMind.BridgeRimTalk.Settings.PushAdvisorLog.Desc".Translate());
-                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PushShaping".Translate(),
-                    ref s.pushShaping,
-                    "RimMind.BridgeRimTalk.Settings.PushShaping.Desc".Translate());
-                if (s.pushPersonality)
-                {
-                    listing.CheckboxLabeled("    " + "RimMind.BridgeRimTalk.Settings.InjectPersonaToTraits".Translate(),
-                        ref s.injectPersonaToTraits,
-                        "RimMind.BridgeRimTalk.Settings.InjectPersonaToTraits.Desc".Translate());
-                    listing.CheckboxLabeled("    " + "RimMind.BridgeRimTalk.Settings.InjectPersonaToMood".Translate(),
-                        ref s.injectPersonaToMood,
-                        "RimMind.BridgeRimTalk.Settings.InjectPersonaToMood.Desc".Translate());
-                }
-            }
-
-            SettingsUIDrawer.DrawSectionHeader(listing, "RimMind.BridgeRimTalk.Settings.Section.ContextPull".Translate());
-            listing.CheckboxLabeled("RimMind.BridgeRimTalk.Settings.EnableContextPull".Translate(),
-                ref s.enableContextPull,
-                "RimMind.BridgeRimTalk.Settings.EnableContextPull.Desc".Translate() + "\n\n" + restartHint);
-            if (s.enableContextPull)
-            {
-                listing.CheckboxLabeled("  " + "RimMind.BridgeRimTalk.Settings.PullRimTalkHistory".Translate(),
-                    ref s.pullRimTalkHistory,
-                    "RimMind.BridgeRimTalk.Settings.PullRimTalkHistory.Desc".Translate() + "\n\n" + restartHint);
-            }
-
-            listing.End();
-            Widgets.EndScrollView();
-
-            SettingsUIDrawer.DrawBottomBar(bottomBar, () =>
-            {
-                s.enableDialogueGate = true;
-                s.skipChitchat = true;
-                s.skipAutoDialogue = true;
-                s.skipPlayerDialogue = true;
-                s.forceRimMindPlayerDialogue = false;
-                s.enableContextPush = true;
-                s.pushPersonality = true;
-                s.pushStoryteller = true;
-                s.pushMemory = false;
-                s.pushShaping = false;
-                s.pushAdvisorLog = true;
-                s.injectPersonaToTraits = false;
-                s.injectPersonaToMood = false;
-                s.enableContextPull = true;
-                s.pullRimTalkHistory = true;
-            });
-
-            MarkDirtyIfChanged(snapshot);
-            if (_dirty)
-            {
-                Get().Write();
-                _dirty = false;
-            }
+            SettingsUIDrawer.DrawScrollableSettingsPage(
+                inRect,
+                ref _scrollPos,
+                ref _measuredHeight,
+                listing => DrawSettingsBody(listing, s),
+                onReset: () => s.ApplyDefaults(),
+                onDirtySave: () => s.Write());
         }
 
-        private static float EstimateHeight(BridgeRimTalkSettings s)
+        private static void DrawSettingsBody(Listing_Standard listing, BridgeRimTalkSettings s)
         {
-            float h = 30f;
-            h += 24f + 24f;
+            SettingsUIDrawer.DrawSectionHeader(
+                listing,
+                RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.Section.DialogueGate", "Dialogue Gate"));
+            listing.CheckboxLabeled(
+                RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.EnableDialogueGate", "Enable dialogue gate"),
+                ref s.enableDialogueGate,
+                RimMindAPI.Text.TrOr(
+                    "RimMind.BridgeRimTalk.Settings.EnableDialogueGate.Desc",
+                    "When RimTalk is active, skip RimMind-Dialogue's redundant triggers to avoid duplicate conversations"));
             if (s.enableDialogueGate)
-                h += 24f * 3 + (s.skipPlayerDialogue ? 24f : 0f);
-            h += 24f + 24f;
+            {
+                listing.CheckboxLabeled(
+                    "  " + RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.SkipChitchat", "Skip chitchat triggers"),
+                    ref s.skipChitchat,
+                    RimMindAPI.Text.TrOr(
+                        "RimMind.BridgeRimTalk.Settings.SkipChitchat.Desc",
+                        "Skip RimMind's Chitchat dialogue triggers when RimTalk is active"));
+                listing.CheckboxLabeled(
+                    "  " + RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.SkipAutoDialogue", "Skip auto dialogue"),
+                    ref s.skipAutoDialogue,
+                    RimMindAPI.Text.TrOr(
+                        "RimMind.BridgeRimTalk.Settings.SkipAutoDialogue.Desc",
+                        "Skip RimMind's auto dialogue triggers when RimTalk is active"));
+                listing.CheckboxLabeled(
+                    "  " + RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.SkipPlayerDialogue", "Skip player dialogue"),
+                    ref s.skipPlayerDialogue,
+                    RimMindAPI.Text.TrOr(
+                        "RimMind.BridgeRimTalk.Settings.SkipPlayerDialogue.Desc",
+                        "Remove RimMind's \"Chat with X\" float menu option when RimTalk is active"));
+                if (s.skipPlayerDialogue)
+                {
+                    listing.CheckboxLabeled(
+                        "    " + RimMindAPI.Text.TrOr(
+                            "RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue",
+                            "Keep RimMind player dialogue"),
+                        ref s.forceRimMindPlayerDialogue,
+                        RimMindAPI.Text.TrOr(
+                            "RimMind.BridgeRimTalk.Settings.ForceRimMindPlayerDialogue.Desc",
+                            "Keep RimMind's float menu option even when skipping player dialogue, allowing both chat systems to coexist"));
+                }
+            }
+
+            SettingsUIDrawer.DrawSectionHeader(
+                listing,
+                RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.Section.ContextPush", "Context Push"));
+            string restartHint = RimMindAPI.Text.TrOr(
+                "RimMind.BridgeRimTalk.Settings.RestartHint",
+                "Note: Changes to these settings require a game restart to take effect.");
+            listing.CheckboxLabeled(
+                RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.EnableContextPush", "Enable context push"),
+                ref s.enableContextPush,
+                RimMindAPI.Text.TrOr(
+                    "RimMind.BridgeRimTalk.Settings.EnableContextPush.Desc",
+                    "Push RimMind's data into RimTalk's prompt system as variables and prompt entries") + "\n\n" + restartHint);
             if (s.enableContextPush)
             {
-                h += 24f * 5;
+                listing.CheckboxLabeled(
+                    "  " + RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.PushPersonality", "Push personality data"),
+                    ref s.pushPersonality,
+                    RimMindAPI.Text.TrOr(
+                        "RimMind.BridgeRimTalk.Settings.PushPersonality.Desc",
+                        "Register RimMind personality profiles as RimTalk template variables (e.g. {{p.rimmind_personality}})"));
+                listing.CheckboxLabeled(
+                    "  " + RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.PushStoryteller", "Push storyteller state"),
+                    ref s.pushStoryteller,
+                    RimMindAPI.Text.TrOr(
+                        "RimMind.BridgeRimTalk.Settings.PushStoryteller.Desc",
+                        "Register storyteller narrative records as RimTalk environment variables"));
+                listing.CheckboxLabeled(
+                    "  " + RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.PushMemory", "Push memory data"),
+                    ref s.pushMemory,
+                    RimMindAPI.Text.TrOr(
+                        "RimMind.BridgeRimTalk.Settings.PushMemory.Desc",
+                        "Register colonist memory records as RimTalk pawn variables"));
+                listing.CheckboxLabeled(
+                    "  " + RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.PushAdvisorLog", "Push advisor log"),
+                    ref s.pushAdvisorLog,
+                    RimMindAPI.Text.TrOr(
+                        "RimMind.BridgeRimTalk.Settings.PushAdvisorLog.Desc",
+                        "Register advisor action history as RimTalk pawn variables"));
+                listing.CheckboxLabeled(
+                    "  " + RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.PushShaping", "Push shaping data"),
+                    ref s.pushShaping,
+                    RimMindAPI.Text.TrOr(
+                        "RimMind.BridgeRimTalk.Settings.PushShaping.Desc",
+                        "Register player shaping history as RimTalk pawn variables"));
                 if (s.pushPersonality)
-                    h += 24f * 2;
+                {
+                    listing.CheckboxLabeled(
+                        "    " + RimMindAPI.Text.TrOr(
+                            "RimMind.BridgeRimTalk.Settings.InjectPersonaToTraits",
+                            "Inject into traits context"),
+                        ref s.injectPersonaToTraits,
+                        RimMindAPI.Text.TrOr(
+                            "RimMind.BridgeRimTalk.Settings.InjectPersonaToTraits.Desc",
+                            "Append personality description directly into RimTalk's Traits context section (may duplicate with personality variable)"));
+                    listing.CheckboxLabeled(
+                        "    " + RimMindAPI.Text.TrOr(
+                            "RimMind.BridgeRimTalk.Settings.InjectPersonaToMood",
+                            "Inject into mood context"),
+                        ref s.injectPersonaToMood,
+                        RimMindAPI.Text.TrOr(
+                            "RimMind.BridgeRimTalk.Settings.InjectPersonaToMood.Desc",
+                            "Append AI narrative directly into RimTalk's Mood context section"));
+                }
             }
-            h += 24f + 24f;
+
+            SettingsUIDrawer.DrawSectionHeader(
+                listing,
+                RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.Section.ContextPull", "Context Pull"));
+            listing.CheckboxLabeled(
+                RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.EnableContextPull", "Enable context pull"),
+                ref s.enableContextPull,
+                RimMindAPI.Text.TrOr(
+                    "RimMind.BridgeRimTalk.Settings.EnableContextPull.Desc",
+                    "Pull dialogue history and other data from RimTalk, registering as RimMind context providers") + "\n\n" + restartHint);
             if (s.enableContextPull)
-                h += 24f;
-            return h + 40f;
+            {
+                listing.CheckboxLabeled(
+                    "  " + RimMindAPI.Text.TrOr(
+                        "RimMind.BridgeRimTalk.Settings.PullRimTalkHistory",
+                        "Pull RimTalk dialogue history"),
+                    ref s.pullRimTalkHistory,
+                    RimMindAPI.Text.TrOr(
+                        "RimMind.BridgeRimTalk.Settings.PullRimTalkHistory.Desc",
+                        "Register RimTalk's dialogue history as RimMind's context provider, so RimMind can read past RimTalk conversations") + "\n\n" + restartHint);
+            }
         }
     }
 }

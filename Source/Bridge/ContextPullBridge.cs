@@ -5,13 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using HarmonyLib;
-using RimMind.Bridge.RimTalk.Detection;
-using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Application.Common.Interfaces.Context;
 using RimMind.Application.Common.Interfaces.Extension;
+using RimMind.Application.Features.Bridges;
+using RimMind.Bridge.RimTalk.Detection;
+using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Domain.ValueObjects;
 using RimMind.Presentation.Api;
 using Verse;
@@ -21,14 +19,12 @@ namespace RimMind.Bridge.RimTalk.Bridge
     public sealed class ContextPullBridge : IBridgeModule
     {
         private const string ModId = "RimMind.BridgeRimTalk";
+        private const string TalkHistoryTypeName = "RimTalk.Data.TalkHistory";
+        private const string GetMessageHistoryMethodName = "GetMessageHistory";
         private const int MaxHistoryMessages = 6;
 
-        // Type-resolution cache is write-once and shared across instances (safe).
-        private static Type? _talkHistoryType;
-        private static MethodInfo? _getMessageHistoryMethod;
-        private static bool _typeResolved;
-        private static bool _disabledDueToStructuralFailure;
-        private static bool _warnedMissingTupleFields;
+        internal static readonly ReflectionAccessor Accessor =
+            RimMindAPI.Bridges.CreateReflectionAccessor("[RimMind-Bridge-RimTalk]");
 
         private static readonly ConcurrentDictionary<Type, MessageAccessors> _accessorCache =
             new ConcurrentDictionary<Type, MessageAccessors>();
@@ -39,13 +35,8 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
         internal static void ConfigureTypesForTesting(Type? talkHistoryType)
         {
-            _talkHistoryType = talkHistoryType;
-            _getMessageHistoryMethod = talkHistoryType?.GetMethod(
-                "GetMessageHistory",
-                BindingFlags.Public | BindingFlags.Static);
-            _typeResolved = true;
-            _disabledDueToStructuralFailure = false;
-            _warnedMissingTupleFields = false;
+            Accessor.ResetForTesting();
+            Accessor.SetCachedType(TalkHistoryTypeName, talkHistoryType);
             _accessorCache.Clear();
         }
 
@@ -56,8 +47,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             var settings = BridgeRimTalkSettings.Get();
             if (!settings.enableContextPull) return;
 
-            _disabledDueToStructuralFailure = false;
-            _warnedMissingTupleFields = false;
+            Accessor.ResetStructuralFailure();
 
             if (settings.pullRimTalkHistory)
                 RegisterRimTalkHistoryProvider();
@@ -67,16 +57,18 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
         private void RegisterRimTalkHistoryProvider()
         {
-            if (!ResolveTypes())
+            if (ResolveGetMessageHistoryMethod() == null)
             {
-                RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RimTalk history types not available, skipping provider registration.");
+                Accessor.WarnOnce(
+                    "history_unavailable",
+                    "[RimMind-Bridge-RimTalk] RimTalk history types not available, skipping provider registration.");
                 return;
             }
             RimMindAPI.Context.ContextKeys.Register(new ContextProviderDef(
                 "rimtalk_history", ContextLayer.L4_History, 0.5f,
                 async (ctx, ct) =>
                 {
-                    if (ctx.PawnId <= 0 || _disabledDueToStructuralFailure) return null;
+                    if (ctx.PawnId <= 0 || Accessor.IsStructurallyDisabled) return null;
                     return await RimMindAPI.MainThreadSnapshot.GetAsync<string?>(() =>
                     {
                         var pawn = RimMindPawnLookup.FindPawnByNumber(ctx.PawnId);
@@ -86,34 +78,25 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 }, ModId, stalenessTicks: 3000)); // RimTalk history changes are external (no bus event): staleness only
         }
 
-        private bool ResolveTypes()
+        private static MethodInfo? ResolveGetMessageHistoryMethod()
         {
-            if (_typeResolved) return _talkHistoryType != null && _getMessageHistoryMethod != null;
-            _typeResolved = true;
+            var talkHistoryType = Accessor.GetCachedType(TalkHistoryTypeName, warnIfMissing: true);
+            if (talkHistoryType == null) return null;
 
-            _talkHistoryType = AccessTools.TypeByName("RimTalk.Data.TalkHistory");
-            if (_talkHistoryType == null)
-            {
-                RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RimTalk.Data.TalkHistory type not found.");
-                return false;
-            }
-
-            _getMessageHistoryMethod = _talkHistoryType.GetMethod("GetMessageHistory",
-                BindingFlags.Public | BindingFlags.Static);
-            if (_getMessageHistoryMethod == null)
-            {
-                RimMindErrors.Warn("[RimMind-Bridge-RimTalk] TalkHistory.GetMessageHistory method not found.");
-                return false;
-            }
-
-            return true;
+            return Accessor.GetCachedMethod(
+                talkHistoryType,
+                GetMessageHistoryMethodName,
+                BindingFlags.Public | BindingFlags.Static,
+                warnIfMissing: true);
         }
 
         private string? BuildRimTalkHistoryContext(Pawn pawn)
         {
             try
             {
-                if (_disabledDueToStructuralFailure || !ResolveTypes()) return null;
+                if (Accessor.IsStructurallyDisabled) return null;
+                var getMessageHistoryMethod = ResolveGetMessageHistoryMethod();
+                if (getMessageHistoryMethod == null) return null;
 
                 string pawnName = pawn.Name?.ToStringShort ?? pawn.LabelShort ?? string.Empty;
                 if (pawn.Map == null) return null;
@@ -127,7 +110,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                     var otherPawn = spawnedColonists[cIdx];
                     if (otherPawn == null) continue;
 
-                    var messages = _getMessageHistoryMethod!.Invoke(null,
+                    var messages = getMessageHistoryMethod.Invoke(null,
                         new object?[] { otherPawn, true }) as IList;
                     if (messages == null || messages.Count == 0) continue;
 
@@ -142,14 +125,8 @@ namespace RimMind.Bridge.RimTalk.Bridge
                         var accessors = _accessorCache.GetOrAdd(msg.GetType(), static t => MessageAccessors.Resolve(t));
                         if (!accessors.IsValid)
                         {
-                            if (!_warnedMissingTupleFields)
-                            {
-                                _warnedMissingTupleFields = true;
-                                const string warnMsg = "ContextPullBridge: RimTalk message tuple fields not found; disabling RimTalk history pull.";
-                                RimMindErrors.Warn(warnMsg);
-                                Log.Warning(warnMsg);
-                            }
-                            _disabledDueToStructuralFailure = true;
+                            Accessor.MarkStructuralFailure(
+                                "ContextPullBridge: RimTalk message tuple fields not found; disabling RimTalk history pull.");
                             return null;
                         }
 
@@ -237,6 +214,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
         {
             if (!IsRegistered) return;
             RimMindAPI.Context.ContextKeys.Unregister("rimtalk_history");
+            Accessor.ResetStructuralFailure();
             IsRegistered = false;
         }
 
@@ -299,19 +277,19 @@ namespace RimMind.Bridge.RimTalk.Bridge
             public static MessageAccessors Resolve(Type type)
             {
                 const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
-                var roleField = type.GetField("Item1", flags);
-                var roleProp = roleField == null ? type.GetProperty("Item1", flags) : null;
-                var msgField = type.GetField("Item2", flags);
-                var msgProp = msgField == null ? type.GetProperty("Item2", flags) : null;
+                var roleField = Accessor.GetCachedField(type, "Item1", flags, warnIfMissing: false);
+                var roleProp = roleField == null ? Accessor.GetCachedProperty(type, "Item1", flags, warnIfMissing: false) : null;
+                var msgField = Accessor.GetCachedField(type, "Item2", flags, warnIfMissing: false);
+                var msgProp = msgField == null ? Accessor.GetCachedProperty(type, "Item2", flags, warnIfMissing: false) : null;
 
-                var tickField = type.GetField("Item3", flags)
-                    ?? type.GetField("Tick", flags)
-                    ?? type.GetField("tick", flags)
-                    ?? type.GetField("Timestamp", flags);
+                var tickField = Accessor.GetCachedField(type, "Item3", flags, warnIfMissing: false)
+                    ?? Accessor.GetCachedField(type, "Tick", flags, warnIfMissing: false)
+                    ?? Accessor.GetCachedField(type, "tick", flags, warnIfMissing: false)
+                    ?? Accessor.GetCachedField(type, "Timestamp", flags, warnIfMissing: false);
                 var tickProp = tickField == null
-                    ? (type.GetProperty("Item3", flags)
-                        ?? type.GetProperty("Tick", flags)
-                        ?? type.GetProperty("Timestamp", flags))
+                    ? (Accessor.GetCachedProperty(type, "Item3", flags, warnIfMissing: false)
+                        ?? Accessor.GetCachedProperty(type, "Tick", flags, warnIfMissing: false)
+                        ?? Accessor.GetCachedProperty(type, "Timestamp", flags, warnIfMissing: false))
                     : null;
 
                 return new MessageAccessors(roleField, roleProp, msgField, msgProp, tickField, tickProp);

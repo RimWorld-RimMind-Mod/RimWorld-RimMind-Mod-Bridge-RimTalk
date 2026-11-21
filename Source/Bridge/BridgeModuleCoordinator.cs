@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using RimMind.Application.Common.Interfaces.Extension;
 using RimMind.Application.Features.Bridges;
+using RimMind.Presentation.Api;
 
 namespace RimMind.Bridge.RimTalk.Bridge
 {
+    [Obsolete("Use RimMindAPI.Bridges.CreateCoordinator / ExternalModBridgeCoordinator directly.")]
     internal sealed class BridgeModuleCoordinator
     {
         private readonly ExternalModBridgeCoordinator _inner;
@@ -15,12 +17,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             Action<string> log,
             Action<string> warn)
         {
-            if (modules == null) throw new ArgumentNullException(nameof(modules));
-            if (isDependencyActive == null) throw new ArgumentNullException(nameof(isDependencyActive));
-            if (log == null) throw new ArgumentNullException(nameof(log));
-            if (warn == null) throw new ArgumentNullException(nameof(warn));
-
-            _inner = new ExternalModBridgeCoordinator(
+            _inner = RimMindAPI.Bridges.CreateCoordinator(
                 isDependencyActive,
                 modules,
                 gates: null,
@@ -30,11 +27,8 @@ namespace RimMind.Bridge.RimTalk.Bridge
         }
 
         public bool AreAllRegistered => _inner.AreAllRegistered;
-
         public void RegisterAll() => _inner.RegisterAll();
-
         public void UnregisterAll() => _inner.UnregisterAll();
-
         public void Refresh() => _inner.Refresh();
     }
 }

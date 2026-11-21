@@ -1,9 +1,11 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Reflection;
-using HarmonyLib;
+using System.Runtime.CompilerServices;
+using RimMind.Application.Features.Bridges;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Domain.ValueObjects;
+using RimMind.Presentation.Api;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Bridge
@@ -16,6 +18,18 @@ namespace RimMind.Bridge.RimTalk.Bridge
         private const string PromptEntryTypeName = "RimTalk.Prompt.PromptEntry";
         private const string PromptRoleTypeName = "RimTalk.Prompt.PromptRole";
         private const string PromptPositionTypeName = "RimTalk.Prompt.PromptPosition";
+
+        private static readonly Type[] RegisterPawnVariableSignature =
+            { typeof(string), typeof(string), typeof(Func<Pawn, string>), typeof(string), typeof(int) };
+
+        private static readonly Type[] RegisterEnvironmentVariableSignature =
+            { typeof(string), typeof(string), typeof(Func<Map, string>), typeof(string), typeof(int) };
+
+        internal static readonly ReflectionAccessor Accessor =
+            RimMindAPI.Bridges.CreateReflectionAccessor("[RimMind-Bridge-RimTalk]");
+
+        private static readonly ConcurrentDictionary<(Type Parent, string Name), Type?> NestedTypeCache =
+            new ConcurrentDictionary<(Type Parent, string Name), Type?>();
 
         private static Type? _apiType;
         private static Type? _hookRegistryType;
@@ -33,6 +47,16 @@ namespace RimMind.Bridge.RimTalk.Bridge
             Type? promptRoleType = null,
             Type? promptPositionType = null)
         {
+            Accessor.ResetForTesting();
+            NestedTypeCache.Clear();
+
+            Accessor.SetCachedType(ApiTypeName, apiType);
+            Accessor.SetCachedType(HookRegistryTypeName, hookRegistryType);
+            Accessor.SetCachedType(ContextCategoriesTypeName, contextCategoriesType);
+            Accessor.SetCachedType(PromptEntryTypeName, promptEntryType);
+            Accessor.SetCachedType(PromptRoleTypeName, promptRoleType);
+            Accessor.SetCachedType(PromptPositionTypeName, promptPositionType);
+
             _apiType = apiType;
             _hookRegistryType = hookRegistryType;
             _contextCategoriesType = contextCategoriesType;
@@ -48,20 +72,32 @@ namespace RimMind.Bridge.RimTalk.Bridge
         {
             if (_resolved) return;
             _resolved = true;
+            ResolveTypes();
+        }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ResolveTypes()
+        {
             try
             {
-                _apiType = AccessTools.TypeByName(ApiTypeName);
-                _hookRegistryType = AccessTools.TypeByName(HookRegistryTypeName);
-                _contextCategoriesType = AccessTools.TypeByName(ContextCategoriesTypeName);
-                _promptEntryType = AccessTools.TypeByName(PromptEntryTypeName);
-                _promptRoleType = AccessTools.TypeByName(PromptRoleTypeName);
-                _promptPositionType = AccessTools.TypeByName(PromptPositionTypeName);
+                _apiType = Accessor.GetCachedType(ApiTypeName);
+                _hookRegistryType = Accessor.GetCachedType(HookRegistryTypeName);
+                _contextCategoriesType = Accessor.GetCachedType(ContextCategoriesTypeName);
+                _promptEntryType = Accessor.GetCachedType(PromptEntryTypeName);
+                _promptRoleType = Accessor.GetCachedType(PromptRoleTypeName);
+                _promptPositionType = Accessor.GetCachedType(PromptPositionTypeName);
             }
             catch (Exception ex)
             {
                 RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] Failed to resolve RimTalk types: {ex.Message}");
             }
+        }
+
+        private static Type? GetCachedNestedType(Type parentType, string nestedName)
+        {
+            return NestedTypeCache.GetOrAdd(
+                (parentType, nestedName),
+                static key => key.Parent.GetNestedType(key.Name));
         }
 
         public static bool RegisterPawnVariable(string modId, string variableName,
@@ -73,17 +109,14 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
             try
             {
-                var method = _apiType.GetMethod("RegisterPawnVariable",
+                var method = Accessor.GetCachedMethod(
+                    _apiType,
+                    "RegisterPawnVariable",
                     BindingFlags.Public | BindingFlags.Static,
-                    null,
-                    new[] { typeof(string), typeof(string), typeof(Func<Pawn, string>), typeof(string), typeof(int) },
-                    null);
+                    RegisterPawnVariableSignature);
 
                 if (method == null)
-                {
-                    RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] RegisterPawnVariable method not found");
                     return false;
-                }
 
                 method.Invoke(null, new object?[] { modId, variableName, provider, description, priority });
                 return true;
@@ -104,17 +137,14 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
             try
             {
-                var method = _apiType.GetMethod("RegisterEnvironmentVariable",
+                var method = Accessor.GetCachedMethod(
+                    _apiType,
+                    "RegisterEnvironmentVariable",
                     BindingFlags.Public | BindingFlags.Static,
-                    null,
-                    new[] { typeof(string), typeof(string), typeof(Func<Map, string>), typeof(string), typeof(int) },
-                    null);
+                    RegisterEnvironmentVariableSignature);
 
                 if (method == null)
-                {
-                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RegisterEnvironmentVariable method not found");
                     return false;
-                }
 
                 method.Invoke(null, new object?[] { modId, variableName, provider, description, priority });
                 return true;
@@ -135,36 +165,36 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
             try
             {
-                var nestedPawnType = _contextCategoriesType.GetNestedType("Pawn");
+                var nestedPawnType = GetCachedNestedType(_contextCategoriesType, "Pawn");
                 if (nestedPawnType == null)
                 {
-                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] ContextCategories.Pawn nested type not found");
+                    Accessor.WarnOnce(
+                        "nested:ContextCategories.Pawn",
+                        "[RimMind-Bridge-RimTalk] ContextCategories.Pawn nested type not found");
                     return false;
                 }
 
-                var categoryField = nestedPawnType.GetField(categoryKey,
+                var categoryField = Accessor.GetCachedField(
+                    nestedPawnType,
+                    categoryKey,
                     BindingFlags.Public | BindingFlags.Static);
                 if (categoryField == null)
-                {
-                    RimMindErrors.Warn($"[RimMind-Bridge-RimTalk] ContextCategories.Pawn.{categoryKey} field not found");
                     return false;
-                }
 
                 object? categoryValue = categoryField.GetValue(null);
                 if (categoryValue == null) return false;
 
-                var hookOpEnum = _hookRegistryType.GetNestedType("HookOperation");
+                var hookOpEnum = GetCachedNestedType(_hookRegistryType, "HookOperation");
                 if (hookOpEnum == null) return false;
 
                 object? opValue = Enum.ToObject(hookOpEnum, hookOperation);
 
-                var method = _apiType.GetMethod("RegisterPawnHook",
+                var method = Accessor.GetCachedMethod(
+                    _apiType,
+                    "RegisterPawnHook",
                     BindingFlags.Public | BindingFlags.Static);
                 if (method == null)
-                {
-                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] RegisterPawnHook method not found");
                     return false;
-                }
 
                 method.Invoke(null, new object?[] { modId, categoryValue, opValue, handler, priority });
                 return true;
@@ -186,17 +216,22 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
             try
             {
-                var createMethod = _apiType.GetMethod("CreatePromptEntry",
+                var createMethod = Accessor.GetCachedMethod(
+                    _apiType,
+                    "CreatePromptEntry",
                     BindingFlags.Public | BindingFlags.Static,
-                    null,
-                    new[] { typeof(string), typeof(string), _promptRoleType ?? typeof(int), _promptPositionType ?? typeof(int), typeof(int), typeof(string) },
-                    null);
+                    new[]
+                    {
+                        typeof(string),
+                        typeof(string),
+                        _promptRoleType ?? typeof(int),
+                        _promptPositionType ?? typeof(int),
+                        typeof(int),
+                        typeof(string)
+                    });
 
                 if (createMethod == null)
-                {
-                    RimMindErrors.Warn("[RimMind-Bridge-RimTalk] AddPromptEntry: CreatePromptEntry method with expected signature not found.");
                     return false;
-                }
 
                 object? roleObj = _promptRoleType != null ? Enum.ToObject(_promptRoleType, roleValue) : roleValue;
                 object? posObj = _promptPositionType != null ? Enum.ToObject(_promptPositionType, positionValue) : positionValue;
@@ -204,7 +239,9 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 object? entry = createMethod.Invoke(null, new object?[] { name, content, roleObj, posObj, inChatDepth, sourceModId });
                 if (entry == null) return false;
 
-                var addMethod = _apiType.GetMethod("AddPromptEntry",
+                var addMethod = Accessor.GetCachedMethod(
+                    _apiType,
+                    "AddPromptEntry",
                     BindingFlags.Public | BindingFlags.Static);
                 if (addMethod == null) return false;
 
@@ -226,8 +263,11 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
             try
             {
-                var method = _apiType.GetMethod("UnregisterAllHooks",
-                    BindingFlags.Public | BindingFlags.Static);
+                var method = Accessor.GetCachedMethod(
+                    _apiType,
+                    "UnregisterAllHooks",
+                    BindingFlags.Public | BindingFlags.Static,
+                    warnIfMissing: false);
                 if (method == null) return false;
 
                 method.Invoke(null, new object?[] { modId });
@@ -248,8 +288,11 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
             try
             {
-                var method = _apiType.GetMethod("RemovePromptEntriesByModId",
-                    BindingFlags.Public | BindingFlags.Static);
+                var method = Accessor.GetCachedMethod(
+                    _apiType,
+                    "RemovePromptEntriesByModId",
+                    BindingFlags.Public | BindingFlags.Static,
+                    warnIfMissing: false);
                 if (method == null) return 0;
 
                 object? result = method.Invoke(null, new object?[] { modId });
