@@ -1,7 +1,7 @@
-using RimMind.Presentation.Settings;
 using RimMind.Bridge.RimTalk.Settings;
+using RimMind.Presentation.Api;
+using RimMind.Presentation.Settings;
 using UnityEngine;
-using Verse;
 
 namespace RimMind.Bridge.RimTalk
 {
@@ -9,9 +9,7 @@ namespace RimMind.Bridge.RimTalk
     {
         public string Id => "bridge_rimtalk";
         public string OwnerModId => "RimMindBridgeRimTalk";
-        public string Label => "RimMind.BridgeRimTalk.Settings.TabLabel".CanTranslate()
-            ? (string)"RimMind.BridgeRimTalk.Settings.TabLabel".Translate()
-            : "RimTalk Bridge";
+        public string Label => RimMindAPI.Text.TrOr("RimMind.BridgeRimTalk.Settings.TabLabel", "RimTalk Bridge");
         public void Draw(Rect rect) => BridgeRimTalkSettings.DrawSettingsContent(rect);
     }
 }

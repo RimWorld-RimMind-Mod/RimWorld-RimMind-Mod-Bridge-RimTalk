@@ -1,6 +1,5 @@
-using HarmonyLib;
 using RimMind.Application.Features.Bridges;
-using Verse;
+using RimMind.Presentation.Api;
 
 namespace RimMind.Bridge.RimTalk.Detection
 {
@@ -10,30 +9,10 @@ namespace RimMind.Bridge.RimTalk.Detection
         private const string RimTalkApiTypeName = "RimTalk.API.RimTalkPromptAPI";
         private const int CacheIntervalTicks = 6000;
 
-        internal static readonly SoftDependencyDetector Detector = new SoftDependencyDetector(
+        internal static readonly SoftDependencyDetector Detector = RimMindAPI.Bridges.CreateDetector(
             RimTalkPackageId,
             new[] { RimTalkApiTypeName },
-            ModsConfig.IsActive,
-            AccessTools.TypeByName,
-            () => SafeTicksGame,
             CacheIntervalTicks);
-
-        private static int SafeTicksGame
-        {
-            get
-            {
-                try
-                {
-                    var tm = Find.TickManager;
-                    if (tm == null) return 0;
-                    return tm.TicksGame;
-                }
-                catch
-                {
-                    return 0;
-                }
-            }
-        }
 
         public static bool IsRimTalkActive
         {

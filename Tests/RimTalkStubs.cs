@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using RimMind.Application.Common.Interfaces.Context;
 using RimMind.Application.Common.Interfaces.Extension;
+using RimMind.Application.Features.Bridges;
 using RimMind.Domain.ValueObjects;
 
 namespace Verse
@@ -72,6 +73,116 @@ namespace RimMind.Presentation.Api
 {
     public static class RimMindAPI
     {
+        public static class Bridges
+        {
+            private static readonly Action<string> DefaultLogWarn = msg =>
+            {
+                RimMindErrors.Warn(msg);
+                Verse.Log.Warning(msg);
+            };
+
+            public static SoftDependencyDetector CreateDetector(
+                string packageId,
+                IReadOnlyList<string>? candidateTypeNames = null,
+                int cacheIntervalTicks = SoftDependencyDetector.DefaultCacheIntervalTicks)
+            {
+                return new SoftDependencyDetector(
+                    packageId,
+                    candidateTypeNames,
+                    Verse.ModsConfig.IsActive,
+                    HarmonyLib.AccessTools.TypeByName,
+                    GetCurrentTickSafe,
+                    cacheIntervalTicks);
+            }
+
+            public static ReflectionAccessor CreateReflectionAccessor(
+                string? logPrefix = null,
+                Action<string>? warnCallback = null,
+                Func<string, Type?>? resolveType = null)
+            {
+                return new ReflectionAccessor(
+                    resolveType ?? HarmonyLib.AccessTools.TypeByName,
+                    warnCallback ?? DefaultLogWarn,
+                    logPrefix);
+            }
+
+            public static ExternalModBridgeCoordinator CreateCoordinator(
+                Func<bool> isModAvailable,
+                IReadOnlyList<IBridgeModule> modules,
+                IReadOnlyList<ISkipCheck>? gates = null,
+                Action<string>? logInfo = null,
+                Action<string>? logWarn = null,
+                string? inactiveMessage = null)
+            {
+                return new ExternalModBridgeCoordinator(
+                    isModAvailable,
+                    modules,
+                    gates,
+                    logInfo ?? Verse.Log.Message,
+                    logWarn ?? DefaultLogWarn,
+                    gate => Ext.Get<ISkipCheck>().Register(gate),
+                    gateId => Ext.Get<ISkipCheck>().Unregister(gateId),
+                    inactiveMessage);
+            }
+
+            private static int GetCurrentTickSafe()
+            {
+                try
+                {
+                    return Verse.Find.TickManager?.TicksGame ?? 0;
+                }
+                catch
+                {
+                    return 0;
+                }
+            }
+        }
+
+        public static class Ext
+        {
+            private static readonly Dictionary<Type, object> Registries = new Dictionary<Type, object>();
+
+            public static IExtensionRegistry<T> Get<T>() where T : class, IExtension
+            {
+                if (!Registries.TryGetValue(typeof(T), out var registry))
+                {
+                    registry = new StubExtensionRegistry<T>();
+                    Registries[typeof(T)] = registry;
+                }
+                return (IExtensionRegistry<T>)registry;
+            }
+
+            public static void Reset() => Registries.Clear();
+        }
+
+        public static class Text
+        {
+            public static string TrOr(string key, string fallback, params object[] args)
+            {
+                string template = fallback ?? key ?? string.Empty;
+                return args == null || args.Length == 0 ? template : string.Format(template, args);
+            }
+        }
+
+        public sealed class StubExtensionRegistry<T> : IExtensionRegistry<T> where T : class, IExtension
+        {
+            private readonly List<T> _items = new List<T>();
+
+            public void Register(T extension)
+            {
+                _items.RemoveAll(item => item.Id == extension.Id);
+                _items.Add(extension);
+            }
+
+            public bool Unregister(string id) => _items.RemoveAll(item => item.Id == id) > 0;
+
+            public int UnregisterByOwner(string ownerModId) => _items.RemoveAll(item => item.OwnerModId == ownerModId);
+
+            public IReadOnlyList<T> All => _items;
+
+            public T? FindById(string id) => _items.FirstOrDefault(item => item.Id == id);
+        }
+
         public static class MainThreadSnapshot
         {
             public static RimMind.Application.Common.Threading.MainThreadReader Reader { get; set; } =

@@ -21,16 +21,18 @@
     <Compile Include="Contracts\**\*.cs" />
     <Compile Include="..\..\RimMind-Core\TestSupport\ContractCaseRunner.cs"
              Link="Support\ContractCaseRunner.cs" />
-    <Compile Include="../Source/Bridge/BridgeModuleCoordinator.cs" />
     <Compile Include="../Source/Bridge/ContextPullBridge.cs" />
     <Compile Include="../Source/Bridge/ContextPushBridge.cs" />
     <Compile Include="../Source/Bridge/PersonaPushBridge.cs" />
+    <Compile Include="../Source/Bridge/RimTalkBridgeCoordinator.cs" />
     <Compile Include="../Source/Bridge/RimTalkContextPushPlan.cs" />
     <Compile Include="../Source/Bridge/DialogueGate.cs" />
     <Compile Include="../Source/Bridge/PersonaFormatter.cs" />
     <Compile Include="../Source/Bridge/RimMindProviderReader.cs" />
     <Compile Include="../Source/Bridge/RimTalkApiShim.cs" />
     <Compile Include="../Source/Detection/RimTalkDetector.cs" />
+    <Compile Include="../Source/Extensions/RimTalkDialogueSkipCheck.cs" />
+    <Compile Include="../Source/Extensions/RimTalkFloatMenuSkipCheck.cs" />
     <Compile Include="../Source/Settings/BridgeRimTalkSettings.State.cs" />
   </ItemGroup>
 
