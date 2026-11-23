@@ -4,7 +4,6 @@ using RimMind.Bridge.RimTalk.Bridge;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Presentation.Api;
-using RimWorld;
 using Verse;
 
 namespace RimMind.Bridge.RimTalk.Debug

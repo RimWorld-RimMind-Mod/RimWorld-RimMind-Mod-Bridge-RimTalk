@@ -341,7 +341,9 @@ namespace RimTalk.API
     {
         public enum HookOperation
         {
-            InsertBefore = 0
+            Append = 0,
+            Prepend = 1,
+            Override = 2
         }
     }
 
@@ -513,16 +515,29 @@ namespace RimTalk.API
     }
 }
 
+namespace RimTalk.Data
+{
+    public enum FakeTalkRole
+    {
+        System = 0,
+        User = 1,
+        AI = 2
+    }
+}
+
 namespace RimTalk.Prompt
 {
     public enum FakePromptRole
     {
-        System = 0
+        System = 0,
+        User = 1,
+        Assistant = 2
     }
 
     public enum FakePromptPosition
     {
-        BeforeHistory = 0
+        Relative = 0,
+        InChat = 1
     }
 
     public sealed class FakePromptEntry

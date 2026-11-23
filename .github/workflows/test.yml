@@ -1,11 +1,13 @@
 name: Unit Tests
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, master]
     paths:
       - 'Source/**'
       - 'Tests/**'
+      - 'IntegrationTests/**'
       - 'ArchTests/**'
       - '.github/workflows/test.yml'
   pull_request:
@@ -13,6 +15,7 @@ on:
     paths:
       - 'Source/**'
       - 'Tests/**'
+      - 'IntegrationTests/**'
       - 'ArchTests/**'
       - '.github/workflows/test.yml'
 

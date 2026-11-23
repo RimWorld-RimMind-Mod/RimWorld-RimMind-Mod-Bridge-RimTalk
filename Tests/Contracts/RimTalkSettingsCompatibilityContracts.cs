@@ -4,6 +4,8 @@ using RimMind.Bridge.RimTalk.Bridge;
 using RimMind.Bridge.RimTalk.Detection;
 using RimMind.Bridge.RimTalk.Settings;
 using RimMind.Testing;
+using RimTalk.API;
+using RimTalk.Prompt;
 using Verse;
 using Xunit;
 
@@ -140,6 +142,20 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                         "value",
                         _ => "context"));
                 }),
+                ("missing HookOperation nested enum warns once and fails closed", () =>
+                {
+                    Log.Reset();
+                    RimTalkDetector.IsRimTalkApiAvailable = true;
+                    RimTalkApiShim.ConfigureTypesForTesting(
+                        typeof(FakeRimTalkPromptAPI),
+                        hookRegistryType: typeof(MissingApi),
+                        contextCategoriesType: typeof(FakeContextCategories));
+
+                    Assert.False(RimTalkApiShim.RegisterPawnHook("owner", "Traits", "Append", (_, existing) => existing));
+                    Assert.False(RimTalkApiShim.RegisterPawnHook("owner", "Traits", "Append", (_, existing) => existing));
+                    Assert.Single(Log.Warnings);
+                    Assert.Contains("HookOperation", Log.Warnings[0]);
+                }),
                 ("cleanup remains safe when the dependency omits methods", () =>
                 {
                     PrepareShim(typeof(MissingApi));
@@ -156,7 +172,9 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
             RimTalkDetector.IsRimTalkApiAvailable = true;
             RimTalkApiShim.ConfigureTypesForTesting(
                 apiType,
-                promptEntryType: typeof(object));
+                promptEntryType: typeof(object),
+                promptRoleType: typeof(FakePromptRole),
+                promptPositionType: typeof(FakePromptPosition));
         }
 
         private static class CorrectPromptApi
@@ -164,8 +182,8 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
             public static object CreatePromptEntry(
                 string name,
                 string content,
-                int role,
-                int position,
+                FakePromptRole role,
+                FakePromptPosition position,
                 int depth,
                 string? sourceModId) => new object();
 

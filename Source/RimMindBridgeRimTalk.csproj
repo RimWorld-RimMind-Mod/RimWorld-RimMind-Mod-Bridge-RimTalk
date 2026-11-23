@@ -41,16 +41,4 @@
     </Reference>
   </ItemGroup>
 
-  <Target Name="DeployToModsFolder" AfterTargets="Build"
-          Condition=" '$(RIMWORLD_DIR)' != '' ">
-    <PropertyGroup>
-      <DeployPath>$(RIMWORLD_DIR)\Mods\RimMind-Bridge-RimTalk\</DeployPath>
-    </PropertyGroup>
-    <MakeDir Directories="$(DeployPath)" />
-    <Exec Command='robocopy "$(ProjectDir)..\About"      "$(DeployPath)About"     /MIR' IgnoreExitCode="true"/>
-    <Exec Command='robocopy "$(ProjectDir)..\Languages"  "$(DeployPath)Languages" /MIR' IgnoreExitCode="true"/>
-    <Exec Command='robocopy "$(ProjectDir)..\$(GameVersion)" "$(DeployPath)$(GameVersion)" /MIR' IgnoreExitCode="true"/>
-    <Message Text="--- RimMind-Bridge-RimTalk deployed to $(DeployPath) ---" Importance="high"/>
-  </Target>
-
 </Project>

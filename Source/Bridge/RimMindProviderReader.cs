@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using RimMind.Domain.ValueObjects;
 using RimMind.Presentation.Api;
 using Verse;
@@ -16,11 +17,26 @@ namespace RimMind.Bridge.RimTalk.Bridge
         internal const string NarratorMemoryBrief = "memory.narrator_brief";
         internal const string AdvisorHistoryBrief = "advisor.history_brief";
 
-        internal static string GetPawn(string category, Pawn pawn)
-            => Resolve(category, RimMindAPI.Providers.GetProviderData(category, pawn));
+        private static readonly ConcurrentDictionary<string, byte> WarnedCategories =
+            new ConcurrentDictionary<string, byte>(StringComparer.Ordinal);
+
+        internal static void ResetForTesting() => WarnedCategories.Clear();
+
+        internal static string GetPawn(string category, Pawn? pawn)
+        {
+            if (pawn == null || string.IsNullOrEmpty(category))
+                return string.Empty;
+
+            return Resolve(category, RimMindAPI.Providers.GetProviderData(category, pawn));
+        }
 
         internal static string GetStatic(string category)
-            => Resolve(category, RimMindAPI.Providers.GetStaticProviderData(category));
+        {
+            if (string.IsNullOrEmpty(category))
+                return string.Empty;
+
+            return Resolve(category, RimMindAPI.Providers.GetStaticProviderData(category));
+        }
 
         private static string Resolve(
             string category,
@@ -29,7 +45,18 @@ namespace RimMind.Bridge.RimTalk.Bridge
             if (result.IsOk)
                 return result.Value ?? string.Empty;
 
-            if (RimMindAPI.Providers.GetRegisteredCategories().Contains(category))
+            string errorMessage = result.Error.Message ?? string.Empty;
+            if (errorMessage.StartsWith("No provider registered", StringComparison.Ordinal)
+                || errorMessage.StartsWith("No static provider registered", StringComparison.Ordinal))
+            {
+                return string.Empty;
+            }
+
+            if (WarnedCategories.ContainsKey(category))
+                return string.Empty;
+
+            if (RimMindAPI.Providers.GetRegisteredCategories().Contains(category)
+                && WarnedCategories.TryAdd(category, 1))
             {
                 Log.WarningOnce(
                     $"[RimMind-Bridge-RimTalk] Provider '{category}' failed: {result.Error}",
