@@ -80,7 +80,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 RimTalkApiShim.RegisterPawnHook(
                     ModId,
                     "Traits",
-                    0,
+                    "Append",
                     (pawn, existing) =>
                     {
                         var formatted = PersonaFormatter.BuildFullProfile(
@@ -105,7 +105,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                 RimTalkApiShim.RegisterPawnHook(
                     ModId,
                     "Mood",
-                    0,
+                    "Append",
                     (pawn, existing) =>
                     {
                         var narrative = RimMindProviderReader.GetPawn(

@@ -9,7 +9,7 @@
     <li>1.7</li>
   </supportedVersions>
   <description>[h1]RimMind - Bridge: RimTalk (v2.0)[/h1]
-Speech bubble pipeline harmonization and bidirectional cognitive context bridge between the RimMind suite and the RimTalk mod. Unifies overhead dialogue rendering, prevents duplicate conversation triggers, and injects RimMind's Big-Five personality profiles, memories, advisor logs, and storyteller state into RimTalk prompts.
+Dialogue mutual-exclusion gating and bidirectional cognitive context bridge between the RimMind suite and the RimTalk mod. Prevents duplicate conversation triggers, pushes RimMind's Big-Five personality profiles, memories, advisor logs, and storyteller state into RimTalk prompt variables/hooks, and pulls RimTalk dialogue history back into RimMind.
 
 [b]v2.0 Clean Architecture &amp; RimWorld 1.6 / 1.7 Dual-Version Support:[/b]
 [list]
@@ -32,8 +32,8 @@ RimMind is an enterprise-grade, AI-powered RimWorld mod suite. Integrated with L
 [tr][td]RimMind-Personality[/td][td]Big-Five psychological profiles, dawn monologues &amp; dynamic mood thoughts[/td][td]Core[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Personality]Link[/url][/td][/tr]
 [tr][td]RimMind-Storyteller[/td][td]AI Story Director, dramatic tension curve, chained arcs &amp; Storyteller Altar[/td][td]Core, Memory[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Storyteller]Link[/url][/td][/tr]
 [tr][td]RimMind-Extension-ModelService[/td][td]Multi-provider routing, Anthropic KV cache, local gateways &amp; load balancing[/td][td]Core[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Extension-ModelService]Link[/url][/td][/tr]
-[tr][td]RimMind-Bridge-RimChat[/td][td]RimChat compatibility bridge: dialogue/action mutual exclusion &amp; context sync[/td][td]Core, RimChat[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimChat]Link[/url][/td][/tr]
-[tr][td][b]RimMind-Bridge-RimTalk[/b][/td][td]RimTalk compatibility bridge: bubble harmonization &amp; bidirectional context[/td][td]Core, RimTalk[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk]Link[/url][/td][/tr]
+[tr][td]RimMind-Bridge-RimChat[/td][td]RimChat compatibility bridge: dialogue/action mutual exclusion &amp; history pull[/td][td]Core, RimChat[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimChat]Link[/url][/td][/tr]
+[tr][td][b]RimMind-Bridge-RimTalk[/b][/td][td]RimTalk compatibility bridge: dialogue gating &amp; bidirectional context[/td][td]Core, RimTalk[/td][td][url=https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Bridge-RimTalk]Link[/url][/td][/tr]
 [/table]
 [code]Core ──┬── Actions ── Advisor
        ├── Dialogue
@@ -45,8 +45,8 @@ RimMind is an enterprise-grade, AI-powered RimWorld mod suite. Integrated with L
 
 [h2]Core Features[/h2]
 [list]
-[*][b]Dialogue Mutual Exclusion Gating[/b] - Automatically skips overlapping [code]RimMind-Dialogue[/code] triggers (chitchat, automatic dialogue, player input) when RimTalk is active so two speech bubble systems never clash.
-[*][b]Context Push (RimMind to RimTalk)[/b] - Registers RimMind data as RimTalk prompt variables ([code]rimmind_personality[/code], [code]rimmind_storyteller[/code], [code]rimmind_memory[/code], [code]rimmind_shaping[/code], [code]rimmind_advisor_log[/code], [code]rimmind_persona_desc[/code], [code]rimmind_persona_work[/code], [code]rimmind_persona_social[/code], [code]rimmind_persona_narrative[/code]).
+[*][b]Dialogue Mutual Exclusion Gating[/b] - Automatically skips overlapping [code]RimMind-Dialogue[/code] triggers (chitchat, automatic dialogue, player input) when RimTalk is active so both mods never fire duplicate conversations.
+[*][b]Context Push (RimMind to RimTalk)[/b] - Registers RimMind data as RimTalk prompt variables ([code]rimmind_personality[/code], [code]rimmind_storyteller[/code], [code]rimmind_memory[/code], [code]rimmind_shaping[/code], [code]rimmind_advisor_log[/code], [code]rimmind_persona_desc[/code], [code]rimmind_persona_work[/code], [code]rimmind_persona_social[/code], [code]rimmind_persona_narrative[/code]) plus a prompt entry.
 [*][b]Hook Context Enhancement[/b] - Optionally appends RimMind personality descriptions and psychological narratives directly into RimTalk's Traits and Mood context hooks.
 [*][b]Dialogue History Pull (RimTalk to RimMind)[/b] - Registers RimTalk's conversation history as the [code]rimtalk_history[/code] context provider in [code]RimMind-Core[/code], allowing Advisor, Personality, and Storyteller to reference RimTalk conversations.
 [/list]
@@ -78,21 +78,6 @@ A: Yes. It automatically detects whether RimTalk is active and disables all hook
       <downloadUrl>https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Core</downloadUrl>
     </li>
     <li>
-      <packageId>mcocdaa.RimMindAdvisor</packageId>
-      <displayName>RimMind - Advisor</displayName>
-      <downloadUrl>https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Advisor</downloadUrl>
-    </li>
-    <li>
-      <packageId>mcocdaa.RimMindPersonality</packageId>
-      <displayName>RimMind - Personality</displayName>
-      <downloadUrl>https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Personality</downloadUrl>
-    </li>
-    <li>
-      <packageId>mcocdaa.RimMindMemory</packageId>
-      <displayName>RimMind - Memory</displayName>
-      <downloadUrl>https://github.com/RimWorld-RimMind-Mod/RimWorld-RimMind-Mod-Memory</downloadUrl>
-    </li>
-    <li>
       <packageId>cj.rimtalk</packageId>
       <displayName>RimTalk</displayName>
       <steamWorkshopUrl>steam://url/CommunityFilePage/3551203752</steamWorkshopUrl>
@@ -104,6 +89,8 @@ A: Yes. It automatically detects whether RimTalk is active and disables all hook
     <li>mcocdaa.RimMindCore</li>
     <li>mcocdaa.RimMindMemory</li>
     <li>mcocdaa.RimMindPersonality</li>
+    <li>mcocdaa.RimMindDialogue</li>
+    <li>mcocdaa.RimMindActions</li>
     <li>mcocdaa.RimMindAdvisor</li>
     <li>mcocdaa.RimMindStoryteller</li>
   </loadAfter>

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Text;
 using LudeonTK;
@@ -40,8 +41,9 @@ namespace RimMind.Bridge.RimTalk.Debug
                 return;
             }
 
+            string pawnName = pawn.Name?.ToStringShort ?? pawn.LabelShort ?? "?";
             var sb = new StringBuilder();
-            sb.AppendLine($"[RimMind-Bridge-RimTalk] Dialogue Gate Test for {pawn.Name.ToStringShort}:");
+            sb.AppendLine($"[RimMind-Bridge-RimTalk] Dialogue Gate Test for {pawnName}:");
             sb.AppendLine($"  ShouldSkipDialogue(Chitchat): {RimMindAPI.Ext.ShouldSkipDialogue(pawn, "Chitchat")}");
             sb.AppendLine($"  ShouldSkipDialogue(Auto): {RimMindAPI.Ext.ShouldSkipDialogue(pawn, "Auto")}");
             sb.AppendLine($"  ShouldSkipDialogue(PlayerInput): {RimMindAPI.Ext.ShouldSkipDialogue(pawn, "PlayerInput")}");
@@ -57,12 +59,17 @@ namespace RimMind.Bridge.RimTalk.Debug
             sb.AppendLine("[RimMind-Bridge-RimTalk] Context Push State:");
 
             var categories = RimMindAPI.Providers.GetRegisteredCategories();
-            var rimtalkCategories = categories.Where(c => c.StartsWith("rimmind_") || c.StartsWith("rimtalk_")).ToList();
-            sb.AppendLine($"  RimMind registered rimtalk-related categories: {(rimtalkCategories.Count > 0 ? string.Join(", ", rimtalkCategories) : "none")}");
-            sb.AppendLine("  (Note: Push variables are registered in RimTalk, not RimMind)");
+            var sourceProviders = categories
+                .Where(c => c.StartsWith("personality.", StringComparison.Ordinal)
+                    || c.StartsWith("memory.", StringComparison.Ordinal)
+                    || c.StartsWith("advisor.", StringComparison.Ordinal))
+                .ToList();
+            sb.AppendLine($"  RimMind source providers available ({sourceProviders.Count}): {(sourceProviders.Count > 0 ? string.Join(", ", sourceProviders) : "none")}");
+            sb.AppendLine("  (Note: Push variables are registered in RimTalk via RimTalkApiShim)");
 
             var settings = BridgeRimTalkSettings.Get();
             sb.AppendLine("  Push Settings:");
+            sb.AppendLine($"    enableContextPush: {settings.enableContextPush}");
             sb.AppendLine($"    pushPersonality: {settings.pushPersonality}");
             sb.AppendLine($"    pushStoryteller: {settings.pushStoryteller}");
             sb.AppendLine($"    pushMemory: {settings.pushMemory}");
@@ -80,12 +87,15 @@ namespace RimMind.Bridge.RimTalk.Debug
             var sb = new StringBuilder();
             sb.AppendLine("[RimMind-Bridge-RimTalk] Context Pull State:");
 
-            var categories = RimMindAPI.Providers.GetRegisteredCategories();
-            var rimtalkCategories = categories.Where(c => c.StartsWith("rimtalk_")).ToList();
-            sb.AppendLine($"  RimMind registered rimtalk-related providers: {(rimtalkCategories.Count > 0 ? string.Join(", ", rimtalkCategories) : "none")}");
+            var contextKeys = RimMindAPI.Context.ContextKeys.GetAll();
+            var rimtalkKeys = contextKeys
+                .Where(k => k.Key.StartsWith("rimtalk_", StringComparison.Ordinal))
+                .ToList();
+            sb.AppendLine($"  RimMind registered rimtalk context keys ({rimtalkKeys.Count}): {(rimtalkKeys.Count > 0 ? string.Join(", ", rimtalkKeys.Select(k => $"{k.Key} ({k.OwnerMod})")) : "none")}");
 
             var settings = BridgeRimTalkSettings.Get();
             sb.AppendLine("  Pull Settings:");
+            sb.AppendLine($"    enableContextPull: {settings.enableContextPull}");
             sb.AppendLine($"    pullRimTalkHistory: {settings.pullRimTalkHistory}");
 
             Log.Message(sb.ToString());

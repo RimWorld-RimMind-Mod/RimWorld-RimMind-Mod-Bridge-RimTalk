@@ -18,7 +18,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
 {
     public sealed class ContextPullBridge : IBridgeModule
     {
-        private const string ModId = "RimMind.BridgeRimTalk";
+        private const string ModId = "RimMindBridgeRimTalk";
         private const string TalkHistoryTypeName = "RimTalk.Data.TalkHistory";
         private const string GetMessageHistoryMethodName = "GetMessageHistory";
         private const int MaxHistoryMessages = 6;
@@ -30,7 +30,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
             new ConcurrentDictionary<Type, MessageAccessors>();
 
         public string Id => "context_pull";
-        public string OwnerModId => "RimMindBridgeRimTalk";
+        public string OwnerModId => ModId;
         public bool IsRegistered { get; private set; }
 
         internal static void ConfigureTypesForTesting(Type? talkHistoryType)
@@ -45,24 +45,22 @@ namespace RimMind.Bridge.RimTalk.Bridge
             if (IsRegistered) return;
             if (!RimTalkDetector.IsRimTalkActive) return;
             var settings = BridgeRimTalkSettings.Get();
-            if (!settings.enableContextPull) return;
+            if (!settings.enableContextPull || !settings.pullRimTalkHistory) return;
 
             Accessor.ResetStructuralFailure();
 
-            if (settings.pullRimTalkHistory)
-                RegisterRimTalkHistoryProvider();
-
-            IsRegistered = true;
+            if (RegisterRimTalkHistoryProvider())
+                IsRegistered = true;
         }
 
-        private void RegisterRimTalkHistoryProvider()
+        private bool RegisterRimTalkHistoryProvider()
         {
             if (ResolveGetMessageHistoryMethod() == null)
             {
                 Accessor.WarnOnce(
                     "history_unavailable",
                     "[RimMind-Bridge-RimTalk] RimTalk history types not available, skipping provider registration.");
-                return;
+                return false;
             }
             RimMindAPI.Context.ContextKeys.Register(new ContextProviderDef(
                 "rimtalk_history", ContextLayer.L4_History, 0.5f,
@@ -76,6 +74,7 @@ namespace RimMind.Bridge.RimTalk.Bridge
                         return BuildRimTalkHistoryContext(pawn!);
                     }, null, ct: ct).ConfigureAwait(false);
                 }, ModId, stalenessTicks: 3000)); // RimTalk history changes are external (no bus event): staleness only
+            return true;
         }
 
         private static MethodInfo? ResolveGetMessageHistoryMethod()
@@ -197,17 +196,8 @@ namespace RimMind.Bridge.RimTalk.Bridge
 
         private static string FormatRoleLabel(object? roleValue)
         {
-            if (roleValue is int roleInt)
-            {
-                return roleInt switch
-                {
-                    0 => "System",
-                    1 => "User",
-                    2 => "AI",
-                    _ => roleInt.ToString()
-                };
-            }
-            return roleValue?.ToString() ?? "?";
+            string? label = roleValue?.ToString();
+            return string.IsNullOrWhiteSpace(label) ? "?" : label!;
         }
 
         public void Unregister()

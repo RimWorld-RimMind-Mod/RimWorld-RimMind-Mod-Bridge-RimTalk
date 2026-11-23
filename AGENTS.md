@@ -15,10 +15,16 @@ RimMind 与 RimTalk 模组协调层，对话门控 + 上下文双向推送/拉�
 
 | 项 | 值 |
 |----|-----|
-| Target | net48, C#9.0, Nullable enable |
-| Output | `../1.6/Assemblies/` |
+| Target | RimWorld 1.6 (`net48`) / 1.7 (`net10.0`), C# 9.0, Nullable enable |
+| Output | `../$(GameVersion)/Assemblies/` |
 | Assembly | RimMindBridgeRimTalk |
-| 依赖 | RimMind Core + 运行时反射的 RimTalk |
+| 依赖 | RimMind Core + 运行时反射的 RimTalk（其他 RimMind 子模组均可选） |
+
+```powershell
+dotnet test RimMind-Bridge-RimTalk/Tests/RimMindBridgeRimTalk.Tests.csproj -c Release
+dotnet build RimMind-Bridge-RimTalk/Source/RimMindBridgeRimTalk.csproj -c Release -p:GameVersion=1.6
+dotnet build RimMind-Bridge-RimTalk/Source/RimMindBridgeRimTalk.csproj -c Release -p:GameVersion=1.7
+```
 
 ## 源码结构
 
@@ -26,8 +32,7 @@ RimMind 与 RimTalk 模组协调层，对话门控 + 上下文双向推送/拉�
 Source/
 ├── RimMindBridgeRimTalkMod.cs    Mod入口(委托Coordinator)
 ├── Bridge/
-│   ├── RimTalkBridgeCoordinator.cs  统一注册/注销入口(委托 BridgeModuleCoordinator)
-│   ├── BridgeModuleCoordinator.cs   IBridgeModule 集合对称 RegisterAll/UnregisterAll 调度器
+│   ├── RimTalkBridgeCoordinator.cs  统一注册/注销入口(委托 Core ExternalModBridgeCoordinator)
 │   ├── DialogueGate.cs           对话门控(ShouldSkipDialogue/ShouldSkipFloatMenuOption)
 │   ├── RimMindProviderReader.cs  Core Provider 字符串读取与可选 Provider 失败告警边界
 │   ├── PersonaFormatter.cs       共享人格字符串构建器(BuildFullProfile,供Push/PersonaPush复用)
@@ -35,13 +40,15 @@ Source/
 │   ├── ContextPushBridge.cs      [IBridgeModule] 推送RimMind数据→RimTalk变量(5个)+PromptEntry(与PersonaPush Hook自动去重)
 │   ├── PersonaPushBridge.cs      [IBridgeModule] 细粒度人格推送(4个变量+Traits/Mood Hook)
 │   ├── ContextPullBridge.cs      [IBridgeModule] 拉取RimTalk对话→RimMind Provider(rimtalk_history, MainThreadSnapshot+MessageAccessors缓存)
-│   └── RimTalkApiShim.cs         反射封装层(延迟类型解析+异常隔离告警)
-├── Detection/RimTalkDetector.cs  RimTalk激活检测(6000 tick TTL 缓存 + IsRimTalkApiAvailable 一次性类型探测, InvalidateCache 重置全部状态)
+│   └── RimTalkApiShim.cs         反射封装层(委托 Core ReflectionAccessor + 按枚举名解析 HookOperation/PromptRole/PromptPosition)
+├── Detection/RimTalkDetector.cs  RimTalk激活检测(委托 Core SoftDependencyDetector, 6000 tick TTL 缓存 + API 类型探测)
 ├── Extensions/
 │   ├── RimTalkSettingsTab.cs     设置Tab UI
-│   ├── RimTalkFloatMenuSkipCheck.cs  FloatMenu SkipCheck Harmony补丁
-│   └── RimTalkDialogueSkipCheck.cs   Dialogue SkipCheck Harmony补丁
-├── Debug/BridgeRimTalkDebugActions.cs  6个DebugAction(含Force Unregister Bridges)
+│   ├── RimTalkFloatMenuSkipCheck.cs  FloatMenu ISkipCheck 扩展
+│   └── RimTalkDialogueSkipCheck.cs   Dialogue ISkipCheck 扩展
+├── Debug/
+│   ├── BridgeRimTalkDebugActions.cs            6个DebugAction(含Force Unregister Bridges)
+│   └── BridgeRimTalkBehaviorAutotestSuite.cs   游戏内行为自检套件
 └── Settings/BridgeRimTalkSettings.cs   15项设置(dirty-flag写盘,变更才标记WriteSettings)
 Tests/
 ├── RimTalkStubs.cs
@@ -52,8 +59,8 @@ Tests/
 
 ## 数据流
 
-- **Push（RimMind → RimTalk）**：Personality、Memory 和 Advisor 等子模组将字符串发布到 Core `RimMindAPI.Providers`；Bridge 只同步读取 Core Provider 结果，再通过 `RimTalkApiShim` 注册到 RimTalk（当启用 `injectPersonaToTraits` / `injectPersonaToMood` 时，`rimmind_personality` 自动跳过已由 `PersonaPushBridge` Hook 注入的段落以防重复）。Bridge 不编译引用任何子模组的 DTO、WorldComponent 或存储单例。
-- **Pull（RimTalk → RimMind）**：`ContextPullBridge` 注册 `rimtalk_history` Context Provider 时，通过 `RimMindAPI.MainThreadSnapshot.GetAsync` 将 Pawn 查找与存活校验（`RimMindPawnLookup.FindPawnByNumber` + `IsActiveSpawnedColonist`）及 `RimTalk.Data.TalkHistory` 反射读取统一封送到主线程快照执行，后台请求线程绝不直接触碰 Verse 或 RimTalk 实时集合。消息条目通过 `ConcurrentDictionary<Type, MessageAccessors>` 缓存 `Item1`/`Item2`（及可选 `Item3`/`Tick`/`Timestamp`）字段或属性访问器；若结构不兼容则触发单次告警（warn-once: `_warnedMissingTupleFields`）并置位 `_disabledDueToStructuralFailure` 自动停用拉取，避免重复反射开销与日志刷屏。
+- **Push（RimMind → RimTalk）**：Personality、Memory 和 Advisor 等子模组将字符串发布到 Core `RimMindAPI.Providers`；Bridge 只同步读取 Core Provider 结果（`RimMindProviderReader` 对缺失可选 Provider 静默短路，已注册失败按类目 warn-once），再通过 `RimTalkApiShim` 注册到 RimTalk（当启用 `injectPersonaToTraits` / `injectPersonaToMood` 时，`rimmind_personality` 自动跳过已由 `PersonaPushBridge` Hook 注入的段落以防重复）。Bridge 不编译引用任何子模组的 DTO、WorldComponent 或存储单例。
+- **Pull（RimTalk → RimMind）**：`ContextPullBridge` 注册 `rimtalk_history` Context Provider（`OwnerMod = "RimMindBridgeRimTalk"`，仅在实际注册成功后置 `IsRegistered = true`）时，通过 `RimMindAPI.MainThreadSnapshot.GetAsync` 将 Pawn 查找与存活校验（`RimMindPawnLookup.FindPawnByNumber` + `IsActiveSpawnedColonist`）及 `RimTalk.Data.TalkHistory` 反射读取统一封送到主线程快照执行，后台请求线程绝不直接触碰 Verse 或 RimTalk 实时集合。消息条目通过 `ConcurrentDictionary<Type, MessageAccessors>` 缓存 `Item1`/`Item2`（及可选 `Item3`/`Tick`/`Timestamp`）字段或属性访问器，角色名直接取 `roleValue?.ToString()`；若结构不兼容则调用 `Accessor.MarkStructuralFailure(...)` 触发单次告警并自动停用拉取，避免重复反射开销与日志刷屏。
 
 ## RimTalkApiShim 反射方法
 
@@ -62,24 +69,23 @@ RegisterPawnVariable / RegisterEnvironmentVariable / RegisterPawnHook
 AddPromptEntry / UnregisterAllHooks / RemovePromptEntriesByModId / Cleanup
 ```
 
-反射目标类型: `RimTalk.API.RimTalkPromptAPI`, `ContextHookRegistry`, `ContextCategories.Pawn`, `PromptEntry`, `PromptRole`, `PromptPosition`
+反射目标类型: `RimTalk.API.RimTalkPromptAPI`, `ContextHookRegistry`, `ContextCategories.Pawn`, `PromptEntry`, `PromptRole`, `PromptPosition`（枚举成员按名称解析，如 `Append`、`System`、`Relative`，严禁硬编码枚举整数值）。
 
 ## Provider注册
 
 | 模块 | ModId | 注册内容 |
 |------|-------|---------|
-| ContextPushBridge | `Push` | 5个RimTalk变量(rimmind_personality/storyteller/memory/shaping/advisor_log) + PromptEntry |
-| PersonaPushBridge | `Persona` | 4个RimTalk变量(rimmind_persona_desc/work/social/narrative) + Traits/Mood Hook |
-| ContextPullBridge | `BridgeRimTalk` | RimMind Provider: rimtalk_history(L4_History, 0.5f, 6条) |
+| ContextPushBridge | `RimMind.Bridge.RimTalk.Push` | 5个RimTalk变量(rimmind_personality/storyteller/memory/shaping/advisor_log) + PromptEntry |
+| PersonaPushBridge | `RimMind.Bridge.RimTalk.Persona` | 4个RimTalk变量(rimmind_persona_desc/work/social/narrative) + Traits/Mood Hook |
+| ContextPullBridge | `RimMindBridgeRimTalk` | RimMind ContextKey: rimtalk_history(L4_History, 0.5f, 6条) |
 
 ## 已知限制
 
-- DialogueGate无Unregister方法(skip check注册后无法清理)
-- Cleanup不清理Variables(RimTalk API不提供Unregister;_registeredVariableIds死代码已归档至Refs/backup/RimMind-Bridge-RimTalk/,原仅写入从不读取)
-- 设置变更需重启(Push/Pull注册仅在启动时执行)
-- ContextPullBridge 反射容错：通过 `MessageAccessors` 缓存 `Item1`/`Item2` 字段或属性访问器；若 RimTalk 消息结构变化导致字段缺失，仅打印一次告警（`_warnedMissingTupleFields`）并置位 `_disabledDueToStructuralFailure` 熔断停用，直至重新 `Register()`
-- DialogueGate全局门控(pawn参数已保留用于未来按pawn门控扩展,当前为全局门控)
-- Unregister无自动调用点(RimWorld Mod生命周期无Dispose,需通过DebugAction"Force Unregister Bridges"手动清理)
+- Cleanup 不清理 RimTalk 侧已注册的 Variables（RimTalk API 仅提供 `UnregisterAllHooks` 与 `RemovePromptEntriesByModId`）
+- 设置变更需重启（Push/Pull 注册仅在启动时执行）
+- ContextPullBridge 反射容错：通过 `MessageAccessors` 缓存 `Item1`/`Item2` 字段或属性访问器；若 RimTalk 消息结构变化导致字段缺失，调用 Core `ReflectionAccessor.MarkStructuralFailure` 单次告警并熔断停用，直至重新 `Register()`
+- DialogueGate 全局门控（`pawn` 参数已保留用于未来按 pawn 门控扩展，当前为全局门控；可通过 `RimTalkBridgeCoordinator.Unregister()` 对称注销 SkipCheck）
+- Unregister 无自动调用点（RimWorld Mod 生命周期无 Dispose，需通过 DebugAction "Force Unregister Bridges" 手动清理）
 
 ## 代码约定
 

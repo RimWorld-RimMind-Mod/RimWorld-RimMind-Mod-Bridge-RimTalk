@@ -147,8 +147,8 @@ namespace RimMind.Bridge.RimTalk.Bridge
             RimTalkApiShim.AddPromptEntry(
                 name: "RimMind Context",
                 content: plan.PromptContent,
-                roleValue: 0,
-                positionValue: 0,
+                roleName: "System",
+                positionName: "Relative",
                 sourceModId: ModId
             );
         }

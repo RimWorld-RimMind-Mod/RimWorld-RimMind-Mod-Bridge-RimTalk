@@ -14,6 +14,7 @@ using RimMind.Domain.ValueObjects;
 using RimMind.Presentation.Api;
 using RimMind.Testing;
 using RimTalk.API;
+using RimTalk.Data;
 using RimTalk.Prompt;
 using Verse;
 using Xunit;
@@ -184,12 +185,14 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                         new[] { "test.static" },
                         RimMindAPI.Providers.StaticCalls);
                 }),
-                ("missing optional providers are silent", () =>
+                ("missing optional providers and null pawns are silent", () =>
                 {
                     ResetProviders();
 
                     Assert.Equal(string.Empty,
                         RimMindProviderReader.GetPawn("missing.category", new Pawn()));
+                    Assert.Equal(string.Empty,
+                        RimMindProviderReader.GetPawn("missing.category", null));
                     Assert.Empty(Log.Warnings);
                 }),
                 ("registered provider failures warn once per category", () =>
@@ -281,7 +284,7 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                     FakePromptEntry prompt = Assert.Single(FakeRimTalkPromptAPI.PromptEntries);
                     Assert.Equal("RimMind Context", prompt.Name);
                     Assert.Equal(FakePromptRole.System, prompt.Role);
-                    Assert.Equal(FakePromptPosition.BeforeHistory, prompt.Position);
+                    Assert.Equal(FakePromptPosition.Relative, prompt.Position);
                     Assert.Equal(0, prompt.InChatDepth);
                     Assert.Equal("RimMind.Bridge.RimTalk.Push", prompt.SourceModId);
                     Assert.Contains("rimmind_personality", prompt.Content);
@@ -486,23 +489,26 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
 
                     FakeTalkHistory.Histories[targetPawn] = new ArrayList
                     {
-                        new FakeTalkMessage { Item1 = 1, Item2 = "Alice older line", Tick = 100 },
-                        new FakeTalkMessage { Item1 = 2, Item2 = "Alice newest line", Tick = 300 }
+                        new FakeTalkMessage { Item1 = FakeTalkRole.User, Item2 = "Alice older line", Tick = 100 },
+                        new FakeTalkMessage { Item1 = FakeTalkRole.AI, Item2 = "Alice newest line", Tick = 300 }
                     };
                     FakeTalkHistory.Histories[otherPawn] = new ArrayList
                     {
-                        new FakeTalkMessage { Item1 = 1, Item2 = "Bob mentions Alice at tick 200", Tick = 200 }
+                        new FakeTalkMessage { Item1 = FakeTalkRole.User, Item2 = "Bob mentions Alice at tick 200", Tick = 200 }
                     };
 
                     var pullBridge = new ContextPullBridge();
                     pullBridge.Register();
+                    Assert.True(pullBridge.IsRegistered);
                     var def = Assert.Single(RimMindAPI.Context.ContextKeys.Definitions);
+                    Assert.Equal("RimMindBridgeRimTalk", def.OwnerMod);
                     string? text = def.Provider(
                         new ProviderContext("dialogue", "trace") { PawnId = 10 },
                         CancellationToken.None).GetAwaiter().GetResult();
 
                     Assert.NotNull(text);
                     Assert.StartsWith("[RimTalk Dialog History]" + Environment.NewLine + "[User] Alice older line", text);
+                    Assert.Contains("[AI] Alice newest line", text);
                     int idx100 = text!.IndexOf("Alice older line", StringComparison.Ordinal);
                     int idx200 = text.IndexOf("Bob mentions Alice at tick 200", StringComparison.Ordinal);
                     int idx300 = text.IndexOf("Alice newest line", StringComparison.Ordinal);
@@ -525,6 +531,22 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
                         new ProviderContext("dialogue", "trace") { PawnId = 10 },
                         CancellationToken.None).GetAwaiter().GetResult());
                     Assert.Single(Log.Warnings);
+
+                    // Missing TalkHistory type leaves IsRegistered false
+                    RimMindAPI.Context.ContextKeys.Clear();
+                    ContextPullBridge.ConfigureTypesForTesting(null);
+                    var unavailablePullBridge = new ContextPullBridge();
+                    unavailablePullBridge.Register();
+                    Assert.False(unavailablePullBridge.IsRegistered);
+                    Assert.Empty(RimMindAPI.Context.ContextKeys.Definitions);
+
+                    // Disabled pullRimTalkHistory leaves IsRegistered false
+                    ContextPullBridge.ConfigureTypesForTesting(typeof(FakeTalkHistory));
+                    BridgeRimTalkSettings.Get().pullRimTalkHistory = false;
+                    var disabledPullBridge = new ContextPullBridge();
+                    disabledPullBridge.Register();
+                    Assert.False(disabledPullBridge.IsRegistered);
+                    Assert.Empty(RimMindAPI.Context.ContextKeys.Definitions);
                 }),
                 ("production source has no child-mod compile dependency", () =>
                 {
@@ -554,6 +576,7 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
             RimTalkDetector.IsRimTalkApiAvailable = true;
             BridgeRimTalkSettings.ResetForTesting();
             RimMindAPI.Providers.Reset();
+            RimMindProviderReader.ResetForTesting();
             Log.Reset();
             FakeRimTalkPromptAPI.Reset();
             RimTalkApiShim.ConfigureTypesForTesting(
@@ -611,13 +634,14 @@ namespace RimMind.Bridge.RimTalk.Tests.Contracts
             FakeRimTalkPromptAPI.PawnHookRegistration hook)
         {
             Assert.Equal("RimMind.Bridge.RimTalk.Persona", hook.ModId);
-            Assert.Equal(FakeContextHookRegistry.HookOperation.InsertBefore, hook.Operation);
+            Assert.Equal(FakeContextHookRegistry.HookOperation.Append, hook.Operation);
             Assert.Equal(90, hook.Priority);
         }
 
         private static void ResetProviders()
         {
             RimMindAPI.Providers.Reset();
+            RimMindProviderReader.ResetForTesting();
             Log.Reset();
         }
 
